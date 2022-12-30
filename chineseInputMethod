@@ -10,3 +10,9 @@
 3. install font (文泉)
   sudo apt-get install ttf-wqy-microhei ttf-wqy-zenhei xfonts-wqy
 
+# ---- Ubuntu ---- 
+sudo apt install fcitx fcitx-chewing
+sudo apt install ibus-chewing
+
+Windows + space key to switch input method
+

@@ -11,7 +11,8 @@ rsync -avu --delete "/media/pi/TRANSCEND/StudyData/" "/home/pi/StudyData/"
 rsync -avu --delete "/media/pi/TRANSCEND/ProgramLearnning/" "/home/pi/ProgramLearnning/"
 
 rsync -avu --delete "/home/pi/rasp_note/" "/media/pi/TRANSCEND/rasp_note/"
-
+rsync -avu --delete "/home/pi/StudyData/" "/media/pi/My Passport/StudyData"
+rsync -avu --delete "/home/pi/rasp_note/" "/media/pi/My Passport/rasp_note"
 #------------------------------------------------------------------------------
 rsync -avu --delete "/media/pi/usb_64G/StudyData/" "/home/pi/StudyData/"
 

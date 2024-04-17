@@ -1,0 +1,53 @@
+keytool -genkey -noprompt -trustcacerts
+  -keyalg RSA
+  -alias ${cert.alias}
+  -dname  ${dn.name}
+  -keypass ${key.pass}
+  -keystore ${keystore.file}
+  -storepass ${keystore.pass}
+
+keytool -genkey
+  -alias keyAlias
+  -keyalg RSA
+  -keypass changeit
+  -storepass changeit
+  -keystore keystore.jks
+
+-------------------------------------------------------------------------------
+keytool -list -v
+  -keystore ${keystore.file}
+  -storepass ${keystore.pass}
+
+keytool -list -v
+  -alias ${cert.alias}
+  -keystore ${keystore.file}
+  -storepass ${keystore.pass}
+
+-------------------------------------------------------------------------------
+keytool -export
+  -alias keyAlias
+  -keystore keystore.jks
+  -storepass changeit
+  -file server.cer
+
+keytool -import -v -trustcacerts
+  -file server.cer
+  -alias keyAlias
+  -keystore cacerts.jks
+  -keypass changeit
+
+keytool -import -v -trustcacerts
+  -file server.cer
+  -alias keyAlias
+  -keypass changeit
+  -keystore cacerts.jks
+  -storepass changeit
+
+keytool -delete -noprompt
+  -alias ${cert.alias}
+  -keystore ${keystore.file}
+  -storepass ${keystore.pass}
+
+-------------------------------------------------------------------------------
+
+

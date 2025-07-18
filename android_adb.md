@@ -54,6 +54,22 @@
 `adb shell bugreport > fileName`  // Will dump the whole device information like dumpstate, dumpsys and logcat output.
 `adb bugreport`                   // print bug reports
 
+`adb shell pidof xxxPkg`
+`adb shell logcat -d --pid=xxxPid`
+
+### priority (lowest to highest)
+V: Verbose
+D: Debug
+I: Info
+W: Warning
+E: Error
+F: Fatal
+S: Silent (highest priority, where nothing is ever printed)
+
+`adb logcat ActivityManager:I MyApp:D *:S`
+
+[RefWeb](https://developer.android.com/tools/logcat)
+
 ## install APK
 `adb -e install yourApk`
   -d                        - directs command to the only connected USB device...
@@ -111,26 +127,32 @@ adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPa
 `adb shell pm uninstall xxx.apk`
 
 ## dumpsys
+dumpsys is an android tool that runs on the device and dumps interesting information about the status of system services.
+`adb shell dumpsys -h`
+`adb shell dumpsys -l`                  // list services
+`adb shell dumpsys -l | grep activity`  // here, activity is a service
+`adb shell dumpsys activity -h`
 ### get info
-`adb shell dumpsys iphonesybinfo`     // get the IMEI
-`adb shell dumpsys battery`           // battery status
-`adb shell dumpsys package packages`  // list info on all apps
+`adb shell dumpsys package packages`              // list info on all apps
+`adb shell dumpsys activity activities | head`    // see which is the top activity
 `adb shell dumpsys activity <package>/<activity>` // activity info
-`adb shell dumpsys window windows | grep -E 'mCurrentFocus|mFocusedApp'` // print current app's opened activity
+`adb shell dumpsys iphonesybinfo`                 // get the IMEI
+`adb shell dumpsys window windows | grep -E 'mCurrentFocus|mFocusedApp` // print current app's opened activity
 
 ### set settings
+`adb shell dumpsys battery`                       // battery status
 `adb shell dumpsys battery set level <n>` // change the level from 0 to 100
 `adb shell dumpsys battery set status<n>` // change the level to unknown, charging, discharging, not charging or full
 `adb shell dumpsys battery reset`         // reset the battery
 `adb shell dumpsys battery set usb <n>`   // change the status of USB connection. ON or OFF
-`adb shell 'dumpsys | grep ntp'`
+`adb shell dumpsys | grep ntp`
 
 ## getprop: get device android version
 `adb shell getprop`
 `adb shell getprop ro.build.version.release`
 `adb shell getprop ro.build.version.sdk`
-`adb shell 'getprop | grep hardware'`
-`adb shell 'getprop | grep ro.product.cpu'`
+`adb shell getprop | grep hardware`
+`adb shell getprop | grep ro.product.cpu`
 
 ## wm: window manager
 `adb shell wm size`           // displays the current screen resolution
@@ -173,11 +195,11 @@ adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPa
 `adb shell 'am broadcast -a org.example.app.sp.PUT --es name Game --es key level --ei value 10'`
 
 6. Data types
-`adb shell 'am broadcast -a org.example.app.sp.PUT --es key string --es value "hello world!"'`
-`adb shell 'am broadcast -a org.example.app.sp.PUT --es key boolean --ez value true'`
-`adb shell 'am broadcast -a org.example.app.sp.PUT --es key float --ef value 3.14159'`
-`adb shell 'am broadcast -a org.example.app.sp.PUT --es key int --ei value 2015'`
-`adb shell 'am broadcast -a org.example.app.sp.PUT --es key long --el value 9223372036854775807'`
+`adb shell am broadcast -a org.example.app.sp.PUT --es key string --es value "hello world!"`
+`adb shell am broadcast -a org.example.app.sp.PUT --es key boolean --ez value true`
+`adb shell am broadcast -a org.example.app.sp.PUT --es key float --ef value 3.14159`
+`adb shell am broadcast -a org.example.app.sp.PUT --es key int --ei value 2015`
+`adb shell am broadcast -a org.example.app.sp.PUT --es key long --el value 9223372036854775807`
 
 7. Restart application process after making changes
 `adb shell 'am broadcast -a org.example.app.sp.CLEAR --ez restart true'`

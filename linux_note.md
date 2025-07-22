@@ -34,7 +34,8 @@
 
 `cat filename | grep -i filterStr`  
 `cat filenmae | grep -i "string1\|string2"`  
-`cat filename | sort | uniq`
+`cat filename | sort | uniq`  
+`cut -c 20-80 filename`
 
 ## Search command or file
 

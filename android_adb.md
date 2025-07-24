@@ -8,6 +8,13 @@
 `adb shell`    // Open or run commands in a terminal on the host Android device.
 `exit`
 
+# memory usage
+`adb shell free -h`
+`adb shell procrank`
+`adb shell dumpsys meminfo`
+`adb shell cat /proc/meminfo`
+`adb shell dmesg | grep -i "out of memory"`
+
 # adb common commands
 `adb help`          // List all comands
 `adb shell ls`      // list directory contents

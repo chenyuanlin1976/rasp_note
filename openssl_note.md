@@ -1,0 +1,50 @@
+# openssl note
+
+[RefWebsite](https://www.digicert.com/kb/ssl-support/openssl-quick-reference-guide.htm)
+
+OpenSSL is an open-source command line tool that is commonly used to generate private keys, create CSRs, install your SSL/TLS certificate, and identify certificate information.  
+`openssl version -a`
+
+## How to show the contents of a certificate
+
+1. Command to show certificate content in OpenSSL:  
+   `openssl x509 -in <cert_file_name> -noout -text`
+
+2. Command to show certificates or key pairs that are stored in a keystore using keytool.  
+   PrivateKeyEntry means that it stores both private key and certificate chain entries.  
+   TrustedCertEntry means that it only stores trusted certificate and certificate chain entries:  
+   `keytool -list -v -in <keystore_file_name>`
+
+## How to show certificate finger print or thumb print
+
+1. Command to show a certificate fingerprint in OpenSSL by default is sha1 fingerprint in OpenSSL. Ensure you are using the same hash algorism when comparing to another certificate  
+   `openssl x509 -in <certificate file> -noout -fingerprint [-sha1 or -sha256 or -sha512]`
+
+2. Command to show certificate fingerprint in keytool by default is sha256  
+   `keytool -list -keystore <keystore file>`
+
+## How to convert certificate and private key between different formats
+
+1. Convert certificate format from DER to PEM  
+   `openssl x509 -in <certificate file in DER format> -inform DER -out <certificate file in PEM format>`
+
+2. Convert certificate format from PKCS7to PEM  
+   `openssl pkcs7 -print_certs -in <certificate file in PKCS7 format> -inform DER -out <certificate file in PEM format>`
+
+3. Convert certificate and private key format from PKCS12 to PEM.  
+   The first command is to extract certificate file in a PEM format,  
+   the second command is to extract private key file in a PEM format.  
+   `openssl pkcs12 -in <certificate file in PKCS12 format> -name <alias name> -nokeys -out <certificate file in PEM format>`  
+   `openssl pkcs12 -in <certificate file in PKCS12 format> -name <alias name> -nodes -nocerts -out <private key file in PEM format>`
+
+4. Convert certificate or private key pair files from PEM to PKCS12 keystore  
+   `openssl pkcs12 -export -in <certificate file in PEM format> -inkey <private key file in PEM format> -name <alias name> -out <keystore file in PKCS12 format>`
+
+## How to validate a private or public key pair using OpenSSL
+
+1. Calculate private key modulus hash value:  
+   `openssl rsa -modulus -noout -in <private key file> | openssl md5`
+2. Calculate certificate modulus hash value:  
+   `openssl x509 -modulus -noout -in <certificate file> | openssl md5`
+
+If the two hash strings are the same, it means the key pair matches. Otherwise, it is not a valid key pair.

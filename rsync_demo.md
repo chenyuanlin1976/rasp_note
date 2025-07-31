@@ -1,0 +1,33 @@
+# rsync command note
+
+`rsync -avu --delete "/home/user/A/" "/home/user/B"`  
+   -a Do the sync preserving all filesystem attributes  
+   -v run verbosely  
+   -u only copy files with a newer modification time (or size difference if the times are equal)  
+   --delete delete the files in target folder that do not exist in the source
+
+## command example 1
+
+`rsync -avu --delete "/media/pi/TRANSCEND/StudyData/" "/home/pi/StudyData/"`
+
+`rsync -avu --delete "/media/pi/TRANSCEND/ProgramLearnning/" "/home/pi/ProgramLearnning/"`
+
+`rsync -avu --delete "/home/pi/rasp_note/" "/media/pi/TRANSCEND/rasp_note/"`  
+`rsync -avu --delete "/home/pi/StudyData/" "/media/pi/My Passport/StudyData"`  
+`rsync -avu --delete "/home/pi/rasp_note/" "/media/pi/My Passport/rasp_note"`
+
+## command example 2
+
+`rsync -avu --delete "/media/pi/usb_64G/StudyData/" "/home/pi/StudyData/"`  
+`rsync -avu --delete "/media/pi/usb_64G/ProgramLearnning/" "/home/pi/ProgramLearnning/"`  
+`rsync -avu --delete "/home/pi/rasp_note/" "/media/pi/usb_64G/rasp_note/"`
+
+## command example 3
+
+`rsync -avu --delete  "/home/pi/StudyData/" "/media/pi/D0E8-6E99/StudyData/"`  
+`rsync -avu --delete "/home/pi/ProgramLearnning/" "/media/pi/D0E8-6E99/ProgramLearnning/"`  
+`rsync -avu --delete "/home/pi/rasp_note/" "/media/pi/D0E8-6E99/rasp_note/"`
+
+## diff command
+
+`diff -qr "/media/pi/TRANSCEND/StudyData/" "/home/pi/StudyData/"`

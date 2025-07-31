@@ -1,37 +1,72 @@
-# how-to-start-a-service-when-apk-is-installed-for-the-first-time
-1. All applications, upon installation, are placed in a "stopped" state.
-This is the same state that the application winds up in after the user force-stops the app from the Settings application.
-While in this "stopped" state, the application will not run for any reason, except by a manual launch of an activity.
-Notably, no BroadcastReceviers will be invoked, regardless of the event for which they have registered, until the user runs the app manually.
+# android note
 
-The app won't run any services or broadcast receivers unless it's in started state.
-It's in started state after it's been run from launcher or via ADB.
+## how-to-start-a-service-when-apk-is-installed-for-the-first-time
 
-2. Applications installed on the /system partition are not subject to being placed into the "stopped" state after installation.
-a. /system/app: For standard system applications.
-b. /system/priv-app: For privileged system applications that require special permissions or access to hidden APIs.
+1. All applications, upon installation, are placed in a "stopped" state.  
+   This is the same state that the application winds up in after the user force-stops the app from the Settings application.  
+   While in this "stopped" state, the application will not run for any reason, except by a manual launch of an activity.  
+   Notably, no BroadcastReceviers will be invoked, regardless of the event for which they have registered, until the user runs the app manually.  
 
-If you have root, you can do,
-`$adb root`
-`$adb remount`
+   The app won't run any services or broadcast receivers unless it's in started state.  
+   It's in started state after it's been run from launcher or via ADB.
+
+2. Applications installed on the /system partition are not subject to being placed into the "stopped" state after installation.  
+
+   a. /system/app: For standard system applications.  
+   b. /system/priv-app: For privileged system applications that require special permissions or access to hidden APIs.
+
+If you have root, you can do,  
+`$adb root`  
+`$adb remount`  
 `$adb push yourApk /system/app`
 
-And it can immediately receive broadcast intents.
+And it can immediately receive broadcast intents.  
 This certainly doesn NOT provide a general purpose solution, but i wanted to mention it for completeness.
 
-EDIT: Keep in mind that different versions of Android locate system APKs in different places.
+EDIT: Keep in mind that different versions of Android locate system APKs in different places.  
 For example, Android 8 puts them under /system/app//.apk. Shell into your device and poke around and follow the same scheme used for other system APKs.
 
-He will be able to update a system app. As long as you have the same package name and signing you can update a system app.
+He will be able to update a system app. As long as you have the same package name and signing you can update a system app.  
 The update will be placed on the data partition but still have the "system" status since a previous version is available on the system partition.
 
-That's because all installed applications are in stopped state. In this state applications will not receive ANY broadcast notifications.
-In order to activate your application some other application (or user) needs to start your service or activity, or content provider.
+That's because all installed applications are in stopped state. In this state applications will not receive ANY broadcast notifications.  
+In order to activate your application some other application (or user) needs to start your service or activity, or content provider.  
 The usual workflow is when user clicks on your application's icon.
 
 [Ref](https://stackoverflow.com/questions/8531926/how-to-start-a-service-when-apk-is-installed-for-the-first-time)
 
-# factory reset
-A factory reset on an Android device erases all user data and settings,
-but it does not remove pre-installed system apps located in the /system/app or /system/priv-app directories.
+## factory reset
+
+A factory reset on an Android device erases all user data and settings,  
+but it does not remove pre-installed system apps located in the /system/app or /system/priv-app directories.  
 These system apps, along with the operating system itself, are located on a separate partition that is not affected by the factory reset process.
+
+## phrases
+
++ "--------- beginning of system",  
++ "--------- beginning of kernel",  
++ "--------- beginning of crash",  
++ "--------- beginning of main",  
+
+appearing in logcat output signify distinct sections within the Android logging system,  
+particularly relevant when diagnosing system-level issues or application crashes.
+
+### beginning of system
+
+   This line indicates the start of logs related to the Android system processes and services.  
+   It marks the point where the Android framework and its core components begin their logging activities after the kernel has initialized.
+
+### beginning of kernel
+
+   This line signifies the beginning of the kernel logs.  
+   These logs originate directly from the Linux kernel running on the Android device and contain information about hardware initialization, device drivers, low-level system events, and potential kernel panics or errors. This section is crucial for diagnosing issues related to the device's fundamental operation.
+
+### beginning of crash
+
+   This line specifically denotes the start of logs related to a crash event, whether it's an application crash (e.g., AndroidRuntime exceptions), a native crash, or a system process crash.  
+   Following this line, detailed stack traces and error messages related to the crash will typically be present, providing crucial information for debugging the cause of the crash.
+
+### Summary
+
+These markers help in navigating and understanding the vast amount of information generated by logcat,  
+allowing developers and system administrators to quickly pinpoint the relevant sections when investigating specific problems like application instability or device reboots.

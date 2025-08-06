@@ -1,6 +1,6 @@
 # NOTICE
 
-  the default input/output file format of openssl is PEM  
+  the default input/output file format of `openssl` is PEM  
   Android Studio requires using PKCS12 format.
 
 `openssl pkcs8 -in platform.pk8 -inform DER -outform PEM -out platform.priv.pem -nocrypt`  
@@ -34,8 +34,7 @@
 
 ## sign and verify
 
-`apksigner sign --ks keystore.jks --ks-key-alias keyAlias_name | --key key.pk8 --cert cert.x509.pem [signer_options] app-name.apk`  
-or  
+`apksigner sign --ks keystore.jks --ks-key-alias keyAlias_name | --key key.pk8 --cert cert.x509.pem [signer_options] app-name.apk` or  
 `apksigner sign --ks keystore_name --ks-key-alias keyAlias_name app_name.apk`
 
 `apksigner verify [options] app-name.apk`
@@ -90,26 +89,26 @@ It's easier to stay track of what applications belong to you.
 
 How can I get it? In android we can generate keystore for debug and release build.key
 
-1. We will configure debug keystore.  
-  Run this command in your main android project directory,
-  keytool -gnekey -v
-          -keystore debug.keystore
-          -storepass android
-          -alias androiddebugkey
-          -keypass android
-          -keyalg RSA
-          -keysize 2048
-          -validity 10000
+**We will configure debug keystore. Run this `keytool` command in your main android project directory,**  
 
-  After that you need to add some detail which will ask by terminal, fill it.  
-  Now you can use this keystore for creating a debug android build.
-2. Generate release keystore.  
-  keytool -genkey -v
-          -keystore my_key.keystore
-          -alias alias_name
-          -keyalg RSA
-          -keysize 2048
-          -validity 10000
++ -gnekey -v  
++ -keystore debug.keystore  
++ -storepass android  
++ -alias androiddebugkey  
++ -keypass android  
++ -keyalg RSA  
++ -keysize 2048  
++ -validity 10000  
+After that you need to add some detail which will ask by terminal, fill it.  
+Now you can use this keystore for creating a debug android build.
 
-  After that you need to add some detail which will ask by terminal, fill it.
-  Now you can use this keystore for creating a release android build.
+**Generate release keystore with `keytool` command. options is listed below.**
+
++ -genkey -v  
++ -keystore my_key.keystore  
++ -alias alias_name  
++ -keyalg RSA  
++ -keysize 2048  
++ -validity 10000  
+After that you need to add some detail which will ask by terminal, fill it.  
+Now you can use this keystore for creating a release android build.

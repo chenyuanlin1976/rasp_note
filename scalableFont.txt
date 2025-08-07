@@ -1,7 +1,0 @@
-scalable font: 
-Type 1 PostScript (Adobe)
-TrueType (Apple): *.ttf (Type code: tfil)
-OpenType (Adobe/Microsoft): *.otf, *.otc,  *.ttf, *.ttc (Type code: OTTO)
-
-
-

@@ -1,0 +1,6 @@
+# fix Youtube lagging
+
+`sudo raspi-config`
+
+Advanced Options -> Memory Split -> Change to 128 -> Reboot.  
+Performance options -> GPU Memory -> 256 -> Reboot.

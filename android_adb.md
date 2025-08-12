@@ -153,6 +153,14 @@ adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPa
 `adb shell pm install xxx.apk`  
 `adb shell pm uninstall xxx.apk`
 
+### settings
+
+`adb shell settings list global`
+`adb shell settings list secure`
+`adb shell settings list system`  
+`adb shell settings get system screen_brightness`  
+`adb shell settings put system screen_brightness 120`
+
 ### dumpsys
 
 dumpsys is an android tool that runs on the device and dumps interesting information about the status of system services.  
@@ -169,7 +177,7 @@ dumpsys is an android tool that runs on the device and dumps interesting informa
 `adb shell dumpsys iphonesybinfo`                 // get the IMEI  
 `adb shell dumpsys window windows | grep -E 'mCurrentFocus|mFocusedApp` // print current app's opened activity
 
-#### set settings
+#### set settings with dumpsys
 
 `adb shell dumpsys battery`                       // battery status  
 `adb shell dumpsys battery set level <n>` // change the level from 0 to 100  

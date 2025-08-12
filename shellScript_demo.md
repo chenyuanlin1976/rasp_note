@@ -16,6 +16,84 @@ sum=`expr 10 + 6`
 echo "Sum: $sum"
 ```
 
+## operation
+
+### Addition
+
+```bash
+count=1
+count=$(($count+1))
+echo "counter=$count"
+```
+
+### Subtraction
+
+```bash
+n=3
+n=$(($n-1))
+echo "num=$n"
+```
+
+### Multiplication
+
+```bash
+n=3
+n2=$(($n*5))
+echo "number=$n2"
+```
+
+### Division
+
+```bash
+n=24
+n3=$(($n/3))
+echo "number=$n3"
+```
+
+## multi condition
+
+And: `condition_1 -a condition_2`
+Or : `condition_1 -o condition_2`
+
+## common conditions
+
+### file existence
+
+| options | check point |
+|---|---|
+|-e fileName | if file exists |
+|-f fileName | if filename exists and is file |
+|-d fileName | if filename exists and is directory |
+|-x fileName | if filename exists and is executable |
+|-L fileName | if filename exists and is soft-link |
+|-S fileName | if filename exists and is socket |
+
+```bash
+if [ -f somefile ]; then
+  echo "Yes"
+fi
+```
+
+### two numbers
+
+| condition | description |
+|---|---|
+| "$a" -eq "$b" | if two number equal |
+| "$a" -ne "$b" | if two number not equal |
+| "$a" -gt "$b" | if a is larger than b |
+| "$a" -ge "$b" | if a is larger or equal to b |
+| "$a" -lt "$b" | if a is small than b |
+| "$a" -le "$b" | if a is small or equal to b |
+
+### string comparison
+
+| condition | description |
+|---|---|
+| "$str1" == "$str2" | if two strings equal |
+| "$str1" != "$str2" | if two strings not equal |
+| -n "$str1" | if string length is not 0 |
+| -z "$str1" | if string length is 0 |
+
 ## if
 
 ```bash
@@ -92,6 +170,20 @@ esac
 ```
 
 ## for loop
+
+```bash
+for (( i=1; i<=5; i=i+1 )); do
+  echo "$i"
+done
+```
+
+```bash
+SUM=0
+for (( i=1; i<=5; i++ )); do
+  SUM=$(( ${SUM} + ${i} ))
+done
+echo "SUM=${SUM}"
+```
 
 ```bash
 MEMBERS="Steven Tom Lisa Sandy"
@@ -173,4 +265,25 @@ function funcExample() {
 }
 
 funcExample 'world' 'rock'
+```
+
+## delay
+
+`sleep 1`
+
+## read line by line
+
+IFS is Internal Field Separator.
+
+```bash
+while IFS= read -r line; do
+  echo "$line"
+done < "inputFile"
+```
+
+```bash
+while IFS=":" read -r f1 f2; do
+  echo "key: " $f1
+  echo "val: " $f2
+done < inputFile
 ```

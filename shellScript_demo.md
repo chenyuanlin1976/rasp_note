@@ -52,8 +52,17 @@ echo "number=$n3"
 
 ## multi condition
 
-And: `condition_1 -a condition_2`  
-Or : `condition_1 -o condition_2`
+And: [ condition_1 ] && [ condition_2 ]  
+Or : [ condition_1 ] || [ condition_2 ]
+
+```bash
+var_a=17
+if [ $var_a -ge 13 ] && [ $var_a -le 19 ]; then
+  echo "He is a teenager"
+else
+  echo "He is not a teenager"
+fi
+```
 
 ## common conditions
 
@@ -99,9 +108,8 @@ fi
 ## if
 
 ```bash
-x=17
-y=23
-
+x="apple"
+y="lemon"
 if [ $x == $y ]; then
   echo "x is equal to y"
 fi
@@ -114,6 +122,8 @@ fi
 ## if, elif
 
 ```bash
+x=17
+y=23
 if [ $x -gt $y ]; then
   echo "x is greater than y"
 elif  [ $x -lt $y ]; then

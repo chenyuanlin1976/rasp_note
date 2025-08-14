@@ -32,23 +32,38 @@
 
 ## text file handle
 
-`cat filename | grep -i filterStr`  
-`cat filenmae | grep -i "string1\|string2"`  
+`head filename`  
+`tail filename`  
+`cat filename | grep -i pattern`  
+`cat filenmae | grep -i "pattern1\|pattern2"`  
 `cat filename | sort | uniq`  
-`cut -c 20-80 filename`
+`cat filename | tr str1 str2`  
+`cut -c20-80 filename`  
+`column -t -s ',' filename`
+
+### grep
+
+`grep [OPTION...] PATTERNS [FILE...]`
+
++ **OPTION**  
+  + -e PATTERNS, --regexp=PATTERNS  
+  + -i, --ignore-case  
+  + -v, --invert-match  
 
 ## Search command or file
 
 ### which - locate a command
 
-It Locates executable commands within the directories specified in the user's PATH environment variable.  
+It Locates executable commands within the directories specified in the user's PATH environment variable.
+
 `which ls`
 
 ### whereis - locate the binary, source, and manual page files for a command
 
 whereis: This command is specifically designed to locate the binary (executable), source files, and manual pages for a given command.  
 It searches in standard locations where programs are typically installed and their associated files are stored.  
-whereis is very fast because it only searches a limited set of predefined directories.  
+whereis is very fast because it only searches a limited set of predefined directories.
+
 `whereis ls`
 
 ### locate
@@ -57,6 +72,7 @@ locate: This command searches a pre-built database of filenames, typically locat
 This database is updated periodically by the updatedb command.  
 locate is extremely fast because it does not search the file system in real-time but rather queries an index.  
 However, it may not find newly created or recently modified files until the database is updated.  
+
 `locate filename`
 
 ### find - search for files in a directory hierarchy
@@ -64,6 +80,7 @@ However, it may not find newly created or recently modified files until the data
 find: This command performs a real-time, comprehensive search of the file system based on specified criteria.  
 It can search by name, type, size, modification time, ownership, and more.  
 find is powerful and flexible but can be slow, especially when searching large directories or entire file systems, as it directly traverses the directory structure.  
+
 `find /path/to/search -name "filename.txt"`
 
 ### chmod
@@ -94,3 +111,7 @@ echo "$VAR1"
 VAR2=$(date +"%T")
 echo "$VAR2"
 ```
+
+### lsmod
+
+### lsusb

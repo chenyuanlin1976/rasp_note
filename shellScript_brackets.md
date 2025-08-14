@@ -14,7 +14,15 @@ It doesn't like space where curly braces are concerned. We'll go through in orde
 
 ---
 
-## parenthesis ()
+## Catalog
+
++ [Parenthesis](#parenthesis-)
++ [Square brackets](#square-brackets-)
++ [Curly braces](#curly-braces-)
+
+---
+
+## Parenthesis ()
 
 ### Single parenthesis ( command )
 
@@ -30,7 +38,7 @@ echo $a
 ls
 ```
 
-### Dollar Single Parentheses $( command )
+### Dollar single parentheses $( command )
 
 **Command Substitution**: The output of the command(s) inside is captured and substituted into the surrounding command line.  
 This is for interpolating a subshell command output into a **string**.  
@@ -48,19 +56,19 @@ var=$( ls )
 echo $var
 ```
 
-### Dollar Single Parentheses Dollar question mark $( command )$?
+### Dollar single parentheses dollar question mark $( command )$?
 
 If you want to interpolate a command, but only the exit code and not the value, this is what you use.
 
 `echo $( grep -q PATTERN FILE )$?`
 
-### Angle Parentheses <( stuff ) is known as a process substitution
+### Angle parentheses <( stuff ) is known as a process substitution
 
 It's a lot like a pipe, except you can use it anywhere a command expects a **file argument**.
 
 `sort -nr -k 5 <( ls -l /bin ) <( ls -l /usr/bin ) <( ls -l /sbin )`
 
-### Double Parentheses (( arithmetic ))
+### Double parentheses (( arithmetic ))
 
 **Arithmetic Evaluation**: Used for **integer arithmetic** operations.  
 Variables are treated as integers, and various arithmetic and boolean operators are supported.  
@@ -76,7 +84,7 @@ i=7
 echo $i
 ```
 
-### Dollar Double Parentheses $(( arithmetic ))
+### Dollar double parentheses $(( arithmetic ))
 
 **Arithmetic Expansion**: Performs arithmetic operations and substitutes the numerical result into the command line.  
 you can use Dollar Double Parentheses $((  )) to perform an Arithmetic Interpolation,  
@@ -90,7 +98,7 @@ echo $message
 
 ---
 
-## Square brackets[]
+## Square brackets []
 
 ### Single square brackets [  ]
 
@@ -121,7 +129,7 @@ fi
 
 ---
 
-## Curly Braces{}
+## Curly Braces {}
 
 ### Single curly braces
 
@@ -131,6 +139,14 @@ fi
 
 `echo h{a,e,i,o,u}p`  
 `echo {01..10}`
+
+```bash
+sum=0
+for i in {1..100}; do
+  (( sum=$sum+i ))
+done
+echo $sum
+```
 
 ### dollar curly braces ${contents}
 

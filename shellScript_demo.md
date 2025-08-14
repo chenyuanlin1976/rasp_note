@@ -52,7 +52,7 @@ echo "number=$n3"
 
 ## multi condition
 
-And: `condition_1 -a condition_2`
+And: `condition_1 -a condition_2`  
 Or : `condition_1 -o condition_2`
 
 ## common conditions
@@ -69,8 +69,8 @@ Or : `condition_1 -o condition_2`
 |-S fileName | if filename exists and is socket |
 
 ```bash
-if [ -f somefile ]; then
-  echo "Yes"
+if [ -f filename ]; then
+  echo "file exists"
 fi
 ```
 
@@ -93,6 +93,8 @@ fi
 | "$str1" != "$str2" | if two strings not equal |
 | -n "$str1" | if string length is not 0 |
 | -z "$str1" | if string length is 0 |
+
+---
 
 ## if
 
@@ -135,6 +137,8 @@ else
 fi
 ```
 
+---
+
 ## case
 
 ```bash
@@ -169,6 +173,8 @@ case $language in
 esac
 ```
 
+---
+
 ## for loop
 
 ```bash
@@ -188,8 +194,7 @@ echo "SUM=${SUM}"
 ```bash
 MEMBERS="Steven Tom Lisa Sandy"
 
-for i in $MEMBERS
-do
+for i in $MEMBERS; do
   echo $i
 done 
 ```
@@ -199,6 +204,8 @@ for p in 2 3 5 7 11; do
   echo "prime number: $p"
 done
 ```
+
+---
 
 ## while loop
 
@@ -218,6 +225,8 @@ while [ $counter -le 5 ]; do
 done
 ```
 
+---
+
 ## until loop
 
 ```bash
@@ -227,6 +236,8 @@ until [ $count -gt 5 ]; do
   count=`expr $count + 1`
 done
 ```
+
+---
 
 ## check exist
 
@@ -269,7 +280,7 @@ funcExample 'world' 'rock'
 
 ## delay
 
-`sleep 1`
+`sleep 1s`
 
 ## read line by line
 

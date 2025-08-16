@@ -41,14 +41,19 @@
 `cut -c20-80 filename`  
 `column -t -s ',' filename`
 
-### grep
+### grep - print lines that match patterns
 
 `grep [OPTION...] PATTERNS [FILE...]`
 
 + **OPTION**  
   + -e PATTERNS, --regexp=PATTERNS  
-  + -i, --ignore-case  
-  + -v, --invert-match  
+  + -f, Obtain patterns from FILE, one per line  
+  + -i, Ignore case distinctions in patterns and input data  
+  + -v, Invert the sense of matching, to select non-matching lines.
+
+`cat filename | grep -A3 pattern`  
+`cat filename | grep -B3 pattern`  
+`cat filename | grep -C3 pattern`  
 
 ## Search command or file
 
@@ -83,12 +88,12 @@ find is powerful and flexible but can be slow, especially when searching large d
 
 `find /path/to/search -name "filename.txt"`
 
-### chmod
+### chmod - change file mode bits
 
 `find . -type d -exec chmod 755 {} \;`  
 `find . -type f -exec chmod 644 {} \;`
 
-### date
+### date - print or set the system date and time
 
 VARIABLE_NAME=$(date +FORMAT_STRING)
 
@@ -112,6 +117,8 @@ VAR2=$(date +"%T")
 echo "$VAR2"
 ```
 
-### lsmod
+### lsmod - Show the status of modules in the Linux Kernel
 
-### lsusb
+### insmod - Simple program to insert a module into the Linux Kernel
+
+### lsusb - list USB devices

@@ -1,6 +1,6 @@
 # awk - pattern scanning and text processing language
 
-<https://www.geeksforgeeks.org/linux-unix/awk-command-unixlinux-examples/>
+<https://invisible-island.net/mawk/manpage/mawk.html>
 
 Awk is a **scripting language** used for **manipulating data and generating reports**.  
 The awk command programming language requires no compiling and allows the user to use variables, numeric functions, string functions, and logical operators.  
@@ -11,6 +11,10 @@ and the **action** that is to be taken when a match is found within a line.
 
 Awk is mostly used for pattern scanning and processing.  
 It searches one or more files to see if they contain lines that matches with the specified patterns and then perform the associated actions.  
+
+AWK is a data-driven scripting language originally designed for **pattern searching and text manipulation**.  
+It requires no compilation and allows us to use variables, functions, and logical operators.  
+The AWK language has different **interpreters** like awk, nawk, gawk, and mawk on different operating systems.
 
 ## syntax
 
@@ -50,15 +54,15 @@ It searches one or more files to see if they contain lines that matches with the
    For each line, the awk command splits the line **delimited by space character** by default and stores it in the $n variables.  
    If the line has 4 words, it will be stored in $1, $2, $3 and $4 respectively. Also, $0 represents the whole line.  
     `awk '{print $1,$4}' filename`  
-    `ls -l | awk '{print $1,$9}'`  
+    `ls -l | awk '{print $1,$NF}'`  
     `ls -l | awk '{print $1,"filename="$9}'`  
-    `ps | awk {print  $1}`
+    `ps | awk {print $1}`
 
 ## Built-In Variables In Awk
 
 Awk's built-in variables include the field variables $1, $2, $3, and so on ($0 is the entire line), that break a line of text into individual words or pieces called fields.
 
-+ **NR**: NR command keeps a current count of the number of input records. Remember that records are usually lines.  
++ **NR**: NR command keeps a current count of the number of input records. Remember that records are usually **lines**.  
   Awk command performs the pattern/action statements once for each record in a file.  
 + **NF**: NF command keeps a count of the number of fields within the current input record.  
 + **FS**: FS command contains the field separator character which is used to divide fields on the input line.  
@@ -87,3 +91,5 @@ Awk's built-in variables include the field variables $1, $2, $3, and so on ($0 i
     `awk '{ if($3 == "B6") print $0;}' filename`
 + To print the squares of first numbers from 1 to n say 6  
     `awk 'BEGIN { for(i=1;i<=6;i++) print "square of", i, "is",i*i; }'`
++ Print the line if file size > 1M
+    `ls -l | awk '{if ($5 > 1000000) print $NF}'`

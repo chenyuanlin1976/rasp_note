@@ -308,3 +308,15 @@ while IFS=":" read -r f1 f2; do
   echo "val: " $f2
 done < inputFile
 ```
+
+## mass rename
+
+```bash
+count=1
+fns=$( ls | grep -e ".jpg$" )
+for file in $fns; do
+  new_name=$( printf "%03d" "$count" )
+  (( count= count + 1 ))
+  mv "$file" "${new_name}.jpg"
+done
+```

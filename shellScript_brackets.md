@@ -56,6 +56,16 @@ var=$( ls )
 echo $var
 ```
 
+```bash
+fruits=("apple" "lemon" "banana" "cherry" "kiwi")
+echo ${#fruits[@]}
+for i in ${fruits[@]}; do
+  echo "$i"
+done
+array=("123" "456" "789")
+echo ${array[1]}
+```
+
 ### Dollar single parentheses dollar question mark $( command )$?
 
 If you want to interpolate a command, but only the exit code and not the value, this is what you use.
@@ -157,6 +167,7 @@ This is for variable interpolation. You use it when normal string interpolation 
 fruit=banana
 echo $fruitification
 echo ${fruit}ification
+echo {0..10..2}
 ```
 
 The other thing you can use it for is variable manipulation.

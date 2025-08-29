@@ -3,6 +3,12 @@
 ## variable
 
 ```bash
+a=123456789
+echo ${a:1:3}
+echo ${#a}
+```
+
+```bash
 # comments
 VAR="hello world"
 echo $VAR
@@ -14,6 +20,11 @@ echo $VAR
 ```bash
 sum=`expr 10 + 6`
 echo "Sum: $sum"
+```
+
+```bash
+greet="Hello World"
+$ echo ${greet/World/$(whoami)}
 ```
 
 ## operation

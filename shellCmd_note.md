@@ -55,6 +55,14 @@
 `cat filename | grep -B3 pattern`  
 `cat filename | grep -C3 pattern`  
 
+### cmp
+
+`cmp file1 file2`
+
+### diff
+
+`diff -y file1 file2`
+
 ## Search command or file
 
 ### which - locate a command
@@ -122,3 +130,11 @@ echo "$VAR2"
 ### insmod - Simple program to insert a module into the Linux Kernel
 
 ### lsusb - list USB devices
+
+## Network
+
+### ifconfig
+
+### ping
+
+### netstat

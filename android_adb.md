@@ -20,6 +20,10 @@
 `adb shell cat /proc/meminfo`  
 `adb shell dmesg | grep -i "out of memory"`
 
+## adb exec-out
+
+`adb exec-out screencap -p /sdcard/Pictures/01.png`
+
 ## adb common commands
 
 `adb help`          // List all comands  
@@ -142,7 +146,11 @@ adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPa
 `adb shell pm list packages -r`  // list package name + path to apks  
 `adb shell pm list packages -s`  // list only system packages  
 `adb shell pm list packages -u`  // list package names + uninstalled  
+
 `adb shell pm dump packageName`  // list info on one package  
+`adb shell pm dump packageName | grep codePath`  
+`adb shell pm dump packageName | grep versionName`  
+
 `adb shell pm path packageName`  // path to the apk file
 
 `adb shell pm list features`                          // list phone features  
@@ -155,11 +163,17 @@ adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPa
 
 ### settings
 
-`adb shell settings list global`
-`adb shell settings list secure`
+`adb shell settings list global`  
+`adb shell settings list secure`  
 `adb shell settings list system`  
 `adb shell settings get system screen_brightness`  
 `adb shell settings put system screen_brightness 120`
+
+`adb shell settings get global low_power`  
+A value of 0 indicates that Battery Saver (low power mode) is disabled.  
+A value of 1 indicates that Battery Saver (low power mode) is enabled.  
+
+`adb shell settings put global low_power 1` # enter Power Saving Mode (PSM)  
 
 ### dumpsys
 
@@ -167,7 +181,11 @@ dumpsys is an android tool that runs on the device and dumps interesting informa
 `adb shell dumpsys -h`  
 `adb shell dumpsys -l`                  // list services  
 `adb shell dumpsys -l | grep activity`  // here, activity is a service  
-`adb shell dumpsys activity -h`
+`adb shell dumpsys activity -h`  
+
+`adb shell dumpsys battery`  
+`adb shell dumpsys battery unplug`          # a charging device cannot enter PSM  
+`adb shell dumpsys battery reset`  
 
 #### get info
 

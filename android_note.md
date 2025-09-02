@@ -2,18 +2,18 @@
 
 ## how-to-start-a-service-when-apk-is-installed-for-the-first-time
 
-1. All applications, upon installation, are placed in a "stopped" state.  
+1. All applications, upon installation, are placed in a "**stopped**" state.  
    This is the same state that the application winds up in after the user force-stops the app from the Settings application.  
-   While in this "stopped" state, the application will not run for any reason, except by a manual launch of an activity.  
+   While in this "stopped" state, the application will NOT run for any reason, except by a manual launch of an activity.  
    Notably, no BroadcastReceviers will be invoked, regardless of the event for which they have registered, until the user runs the app manually.  
 
    The app won't run any services or broadcast receivers unless it's in started state.  
    It's in started state after it's been run from launcher or via ADB.
 
-2. Applications installed on the /system partition are not subject to being placed into the "stopped" state after installation.  
+2. Applications installed on the /system partition are NOT subject to being placed into the "stopped" state after installation.  
 
-   a. /system/app: For standard system applications.  
-   b. /system/priv-app: For privileged system applications that require special permissions or access to hidden APIs.
+   a. **/system/app**: For standard system applications.  
+   b. **/system/priv-app**: For privileged system applications that require special permissions or access to hidden APIs.
 
 If you have root, you can do,  
 `$adb root`  
@@ -34,6 +34,22 @@ In order to activate your application some other application (or user) needs to 
 The usual workflow is when user clicks on your application's icon.
 
 [Ref](https://stackoverflow.com/questions/8531926/how-to-start-a-service-when-apk-is-installed-for-the-first-time)
+
+## applications: stopped/active states
+
+## launchers apps
+
+## Use wake locks
+
+When it's necessary, you can use wake locks to keep the device from going to sleep.  
+Device battery life will be significantly affected by the use of this API.  
+**Do not acquire PowerManager.WakeLocks unless you really need them**, use the minimum levels possible, and be sure to release them as soon as possible.  
+
+[Ref](https://developer.android.com/develop/background-work/background-tasks/awake/wakelock)
+
+## android:persistent
+
+[Ref](https://developer.android.com/guide/topics/manifest/application-element)
 
 ## factory reset
 

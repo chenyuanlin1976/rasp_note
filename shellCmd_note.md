@@ -133,8 +133,34 @@ echo "$VAR2"
 
 ## Network
 
-### ifconfig
+### ifconfig - Display or configure network interface
 
-### ping
+### iwconfig - configure a wireless network interface
 
-### netstat
+### ping - send ICMP ECHO_REQUEST to network hosts
+
+### arp - Linux ARP kernel module
+
+This  kernel protocol module implements the Address Resolution Protocol defined in RFC 826.  
+`arp -n`
+
+### netstat - Display networking information
+
+`netstat -nltp`
+
++ r: Routing table  
++ a: All sockets (not just connected)  
++ l: Listening server sockets  
++ t: TCP sockets  
++ u: UDP sockets  
++ w: Raw sockets  
++ x: Unix sockets  
++ e: Extended info  
++ n: Don't resolve names  
++ W: Wide display  
++ p: Show PID/program name of sockets  
+
+### ss - another utility to investigate sockets
+
+ss is used to dump socket statistics. It allows showing information similar to netstat.  
+It can display more TCP and state information than other tools.

@@ -1,5 +1,10 @@
 # python update
 
+## VSCode Path
+
+In VS Code settings, search for **python.terminal.executeInFileDir** and enable it.  
+This setting ensures the terminal opens in the directory of the currently active Python file.
+
 ## Ubuntu
 
 `sudo apt install software-properties-common`  

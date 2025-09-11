@@ -96,10 +96,20 @@ find is powerful and flexible but can be slow, especially when searching large d
 
 `find /path/to/search -name "filename.txt"`
 
+## nproc - Print the number of processing units available to the current process
+
 ### chmod - change file mode bits
 
 `find . -type d -exec chmod 755 {} \;`  
 `find . -type f -exec chmod 644 {} \;`
+
+### echo - display a line of text
+
+`echo -n -e '\x74\x24\xca\x38\xa3\xe1' > MACA3E1.bin`
+
+### xxd - make a hex dump or do the reverse
+
+`xxd -g1 MACA3E1.bin`
 
 ### date - print or set the system date and time
 
@@ -124,6 +134,13 @@ echo "$VAR1"
 VAR2=$(date +"%T")
 echo "$VAR2"
 ```
+
+`date +"%Z %z"`
+
+### timedatectl - Control the system time and date
+
+`timedatectl | grep "Time zone"`
+`cat /etc/timezone`
 
 ### lsmod - Show the status of modules in the Linux Kernel
 
@@ -164,3 +181,9 @@ This  kernel protocol module implements the Address Resolution Protocol defined 
 
 ss is used to dump socket statistics. It allows showing information similar to netstat.  
 It can display more TCP and state information than other tools.
+
+### standard input/output and file descriptors
+
++ 0 (Standard Input - stdin) : This is the default channel for a program to receive input.
++ 1 (Standard Output- stdout): This is the default channel for a program to display its normal output.
++ 2 (Standard Error - stderr): This is the default channel for a program to display error messages and diagnostic information.

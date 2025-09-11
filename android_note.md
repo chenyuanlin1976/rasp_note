@@ -35,6 +35,22 @@ The usual workflow is when user clicks on your application's icon.
 
 [Ref](https://stackoverflow.com/questions/8531926/how-to-start-a-service-when-apk-is-installed-for-the-first-time)
 
+## sharedUserId
+
+In Android, **android:sharedUserId** is an attribute in the **AndroidManifest.xml** file that allows multiple applications to share the same Linux user ID (UID).  
+This enables them to run in the same process and access each other's data and code with the same permissions.  
+
+When applications declare the same **android:sharedUserId** in their manifests and are **signed with the same certificate**,  
+they will be assigned the same UID by the Android system.  
+
+| AndroidManifest.xml                       | Android.mk                  |
+|-------------------------------------------|-----------------------------|
+| android:sharedUserId="android.uid.system" | LOCAL_CERTIFICATE:=platform |
+| android:sharedUserId="android.uid.nfc"    | LOCAL_CERTIFICATE:=platform |
+| android:sharedUserId="android.uid.se"     | LOCAL_CERTIFICATE:=platform |
+| android:sharedUserId="android.uid.shared" | LOCAL_CERTIFICATE:=shared   |
+| android:sharedUserId="android.media"      | LOCAL_CERTIFICATE:=media    |
+
 ## applications: stopped/active states
 
 ## launchers apps

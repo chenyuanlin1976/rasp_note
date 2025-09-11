@@ -210,7 +210,9 @@ dumpsys is an android tool that runs on the device and dumps interesting informa
 `adb shell getprop ro.build.version.release`  
 `adb shell getprop ro.build.version.sdk`  
 `adb shell getprop | grep hardware`  
-`adb shell getprop | grep ro.product.cpu`
+`adb shell getprop | grep ro.product.cpu`  
+`adb shell getprop | grep -i mac`  
+`adb shell cat /sys/class/net/eth0/address`
 
 ### wm: window manager
 

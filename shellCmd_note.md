@@ -107,9 +107,38 @@ find is powerful and flexible but can be slow, especially when searching large d
 
 `echo -n -e '\x74\x24\xca\x38\xa3\xe1' > MACA3E1.bin`
 
+option: -n: do not output the trailing newline
+option: -e: enable interpretation of backslash escapes
+
 ### xxd - make a hex dump or do the reverse
 
-`xxd -g1 MACA3E1.bin`
++ view hex: `echo -n "hello" | xxd -g1`  
++ view ascii: `echo -e "\x68\x65\x6c\x6c\x6f"`
+
+`xxd -p MACA3E1.bin`  
+`xxd -g1 MACA3E1.bin`  
+option: -p: plain hex dump style  
+option: -gn: Separate  the output of every n bytes
+
+### hexdump - display file contents in hexadecimal, decimal, octal, or ascii
+
+`hexdump -C MACA3E1.bin`  
+option: -C: Canonical hex+ASCII display
+
+### openssl - OpenSSL command line program
+
+[openssl-dgst](https://docs.openssl.org/3.0/man1/openssl-dgst/)
+
+`echo -n 'hello world' | openssl dgst -sha1 -hmac "key"`  
+`echo -n 'hello world' | openssl dgst -sha1 -hmac "key" -binary > hash-file.bin`  
+
+`xxd -p hash-file.bin`  
+`xxd -g1 hash-file.bin`  
+`hexdump -C hash-file.bin`
+
+There is a difference in how to interpret the endianness.  
+`xxd hash-file.bin`  
+`hexdump hash-file.bin`  
 
 ### date - print or set the system date and time
 

@@ -1,4 +1,4 @@
-# openssl note
+# openssl - OpenSSL command line program
 
 [RefWebsite](https://www.digicert.com/kb/ssl-support/openssl-quick-reference-guide.htm)
 
@@ -48,3 +48,59 @@ OpenSSL is an open-source command line tool that is commonly used to generate pr
    `openssl x509 -modulus -noout -in <certificate file> | openssl md5`
 
 If the two hash strings are the same, it means the key pair matches. Otherwise, it is not a valid key pair.
+
+## openssl: AES encryption and decryption
+
+`openssl version`  
+`openssl help`  
+`openssl enc -help`  
+`openssl enc -ciphers`
+
+[options](https://docs.openssl.org/3.0/man1/openssl-enc/#options)  
+
++ enc    : Encryption, decryption, and encoding.  
++ -pbkdf2: Use PBKDF2 algorithm with a default iteration count of 10000  
++ -in    : input file  
++ -out   : output file  
++ -e     : Encrypt the input data. this is the default  
++ -d     : Decrypt the input data  
++ -a     : Base64 process the data.
++ -base64: Same as -a
+
+### How to encrypt, decrypt a file
+
+**encrypt then decrypt**  
+
++ `openssl enc -aes-256-cbc -pbkdf2 -in plain.txt -out encrypted.txt`  
++ `openssl enc -aes-256-cbc -pbkdf2 -d -in encrypted.txt -out plain.txt`
+
+OR  
+
++ `openssl aes-256-cbc -pbkdf2 -in plain.txt -out encrypted.txt`
++ `openssl aes-256-cbc -pbkdf2 -d -in encrypted.txt -out plain.txt`  
+
+### How to encrypt, decrypt a string
+
++ encrypt: `echo "PLAINTEXT_STRING" | openssl enc -aes256 -pbkdf2 -base64`  
++ decrypt: `echo "ENCRYPTED_STRING" | openssl enc -aes256 -pbkdf2 -base64 -d`
+
+Example:
+
++ encrypt: `echo "Hello World" | openssl aes-256-cbc -pbkdf2 -a`
++ decrypt: `echo "U2FsdGVkX1+VIYNS16za1jP8/V4arrgsxCbk3C19tuU=" | openssl aes-256-cbc -pbkdf2 -a -d`
+
+option -a: Base64 process the data. This means that  
+  if **encryption** is taking place the data is base64 encoded after encryption.  
+  If **decryption** is set then the input data is base64 decoded before being decrypted.
+
+### openssl dgst - perform digest operations
+
+[openssl-dgst](https://docs.openssl.org/3.0/man1/openssl-dgst/#options)
+
+**MAC**: keyed Message Authentication Code
+
+`echo -n 'hello world' | openssl dgst -sha1 -hmac "key"`  
+`echo -n 'hello world' | openssl dgst -sha1 -hmac "key" -binary > hash-file.bin`  
+
++ -hmac key: Create a hashed MAC using "key".
++ -binary: Output the digest or signature in binary form.

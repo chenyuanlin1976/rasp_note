@@ -8,10 +8,12 @@ Install Docker Engine on Ubuntu
 ## check the versions of these Docker CLI binary
 
 `docker compose version`  
-`docker --version`  
 `docker version`  
+`docker --version`  
 `docker --help`  
-`docker container --help`
+`docker container --help`  
+`docker image --help`  
+`docker search --help`  
 
 ## basic command
 
@@ -26,25 +28,24 @@ Install Docker Engine on Ubuntu
 ## stop containers
 
 + List containers: `docker ps -a`
-+ Stop containers: `docker stop [CONTAINER_ID_OR_NAME]`
++ Start one or more stopped containers: `docker start containers`
++ Stop one or more running containers: `docker stop [CONTAINER_ID_OR_NAME]`
 + Remove containers: `docker rm [CONTAINER_ID_OR_NAME]`
 
 ## list, remove images
 
-+ `docker image ls`
-+ `docker rmi <image_id>`
-+ `docker rmi <repository_name>:<tag>`
-+ `docker search ubuntu -f is-official=true`
-
-## compile xpi3566
++ List images: `docker images` or `docker image ls`
++ Removing a specific image by ID or name: `docker rmi <image_id>` or `docker rmi <repository_name>:<tag>`
++ Search Docker Hub for images: `docker search ubuntu -f is-official=true`
 
 ## others
 
-+ The default Docker root directory is /var/lib/docker
++ The default Docker root directory is **/var/lib/docker**
 + Download an image from a registry: `docker pull ubuntu:20.04`
 + see the IP of the container: `cat /etc/hosts`
 
-### copy files to/from container
+### Copy files/folders between a container and the local filesystem
 
++ `docker cp --help`
 + `docker cp <local_path> <container_name_or_id>:<container_path>`
 + `docker cp rk3566-xpi-debian10-avalue ubuntu1804:home`

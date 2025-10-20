@@ -1,8 +1,16 @@
 # linux command note
 
-## man - an interface to the system reference manuals
+## Basic
+
+### man - an interface to the system reference manuals
 
 `man df`
+
+### uname - print system information
+
++ print all information: `uname -a`
++ print the kernel release: `uname -r`
++ print the kernel version: `uname -v`
 
 ## disk
 
@@ -24,6 +32,8 @@
 `ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%cpu | head`  
 `top -b -o +%MEM | head -n 15`  
 `top` and then press Shift + M to sort by memory
+
+### nproc - Print the number of processing units available to the current process
 
 ## memory usage
 
@@ -54,6 +64,28 @@
 `cat filename | grep -A3 pattern`  
 `cat filename | grep -B3 pattern`  
 `cat filename | grep -C3 pattern`  
+
+### echo - display a line of text
+
+`echo -n -e '\x74\x24\xca\x38\xa3\xe1' > MACA3E1.bin`
+
+option: -n: do not output the trailing newline
+option: -e: enable interpretation of backslash escapes
+
+### xxd - make a hex dump or do the reverse
+
++ view hex: `echo -n "hello" | xxd -g1`  
++ view ascii: `echo -e "\x68\x65\x6c\x6c\x6f"`
+
+`xxd -p MACA3E1.bin`  
+`xxd -g1 MACA3E1.bin`  
+option: -p: plain hex dump style  
+option: -gn: Separate  the output of every n bytes
+
+### hexdump - display file contents in hexadecimal, decimal, octal, or ascii
+
+`hexdump -C MACA3E1.bin`  
+option: -C: Canonical hex+ASCII display
 
 ### cmp
 
@@ -96,36 +128,16 @@ find is powerful and flexible but can be slow, especially when searching large d
 
 `find /path/to/search -name "filename.txt"`
 
-## nproc - Print the number of processing units available to the current process
+## File manager
+
+### chown - change file owner and group
 
 ### chmod - change file mode bits
 
 `find . -type d -exec chmod 755 {} \;`  
 `find . -type f -exec chmod 644 {} \;`
 
-### echo - display a line of text
-
-`echo -n -e '\x74\x24\xca\x38\xa3\xe1' > MACA3E1.bin`
-
-option: -n: do not output the trailing newline
-option: -e: enable interpretation of backslash escapes
-
-### xxd - make a hex dump or do the reverse
-
-+ view hex: `echo -n "hello" | xxd -g1`  
-+ view ascii: `echo -e "\x68\x65\x6c\x6c\x6f"`
-
-`xxd -p MACA3E1.bin`  
-`xxd -g1 MACA3E1.bin`  
-option: -p: plain hex dump style  
-option: -gn: Separate  the output of every n bytes
-
-### hexdump - display file contents in hexadecimal, decimal, octal, or ascii
-
-`hexdump -C MACA3E1.bin`  
-option: -C: Canonical hex+ASCII display
-
-### openssl - OpenSSL command line program
+## openssl - OpenSSL command line program
 
 [openssl-dgst](https://docs.openssl.org/3.0/man1/openssl-dgst/)
 
@@ -140,7 +152,7 @@ There is a difference in how to interpret the endianness.
 `xxd hash-file.bin`  
 `hexdump hash-file.bin`  
 
-### date - print or set the system date and time
+## date - print or set the system date and time
 
 VARIABLE_NAME=$(date +FORMAT_STRING)
 
@@ -168,14 +180,14 @@ echo "$VAR2"
 
 ### timedatectl - Control the system time and date
 
-`timedatectl | grep "Time zone"`
+`timedatectl | grep "Time zone"`  
 `cat /etc/timezone`
+
+## module
 
 ### lsmod - Show the status of modules in the Linux Kernel
 
 ### insmod - Simple program to insert a module into the Linux Kernel
-
-### lsusb - list USB devices
 
 ## Network
 
@@ -184,6 +196,10 @@ echo "$VAR2"
 ### iwconfig - configure a wireless network interface
 
 ### ping - send ICMP ECHO_REQUEST to network hosts
+
+### nmcli - command-line tool for controlling NetworkManager
+
+`nmcli device`
 
 ### arp - Linux ARP kernel module
 
@@ -216,3 +232,26 @@ It can display more TCP and state information than other tools.
 + 0 (Standard Input - stdin) : This is the default channel for a program to receive input.
 + 1 (Standard Output- stdout): This is the default channel for a program to display its normal output.
 + 2 (Standard Error - stderr): This is the default channel for a program to display error messages and diagnostic information.
+
+### apt-get - APT package handling utility
+
+`sudo apt-get update`  
+`sudo apt-get upgrade`  
+`sudo apt-get download build-essential`  
+`sudo apt install build-essential_12.10ubuntu1_amd64.deb`  
+
+### dpkg - package manager for Debian
+
+`sudo dpkg -i build-essential_12.10ubuntu1_amd64.deb`  
+
+### dmesg - print or control the kernel ring buffer
+
+### dkms - Dynamic Kernel Module Support
+
+### others
+
++ list USB devices: `lsusb`  
++ list all PCI devices: `lspci -nnk`  
++ list hardware: `lshw -C network`
++ Show information about a Linux Kernel module: `modinfo iwlwifi`
++ Add and remove modules from the Linux Kernel: `sudo modprobe iwlwifi`

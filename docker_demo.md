@@ -5,10 +5,12 @@ Install Docker Engine on Ubuntu
 [docker](https://docs.docker.com/engine/install/ubuntu/)
 [docker_wiki](https://en.wikipedia.org/wiki/Docker_(software))
 
+docker client > docker server > docker hub
+
 ## check the versions of these Docker CLI binary
 
 `docker compose version`  
-`docker version`  
+`docker version`: if docker server is activated, you can see **Server: Docker Engine - Community**  
 `docker --version`  
 `docker --help`  
 `docker container --help`  
@@ -19,7 +21,7 @@ Install Docker Engine on Ubuntu
 
 + List containers: `docker container ls`
 + List containers: `docker ps`
-+ list images: `docker images`
++ List images: `docker images`
 + Download an image from a registry: `docker pull ubuntu:18.04`
 + Create and run a new **container** from an image: `docker run -d --rm -it --name containerName ubuntu:18.04 bash`
 + Execute a command in a running container: `docker exec -it containerName bash`
@@ -42,7 +44,7 @@ Install Docker Engine on Ubuntu
 
 + The default Docker root directory is **/var/lib/docker**
 + Download an image from a registry: `docker pull ubuntu:20.04`
-+ see the IP of the container: `cat /etc/hosts`
++ See the IP of the container: `cat /etc/hosts`
 
 ### Copy files/folders between a container and the local filesystem
 

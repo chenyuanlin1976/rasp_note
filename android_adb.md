@@ -66,35 +66,6 @@
 `adb push src dest`               // Copy files from your computer to your phone.  
 `adb pull remoteFile savedFlie`   // Copy files from your phone to your computer.
 
-### logcat
-
-`adb logcat [options] [filter] [filter]`      // view device log  
-`adb logcat`  
-`adb shell logcat`  
-`adb shell logcat -c`             // The parameter -c will clear the current logs on the device.  
-`adb shell logcat -d > fileName`  // Save the logcat output to a file on the local system.  
-`adb shell bugreport > fileName`  // Will dump the whole device information like dumpstate, dumpsys and logcat output.  
-`adb bugreport`                   // print bug reports
-
-`adb shell pidof packageName`  
-`adb sehll ps | grep pidNumber`
-
-`adb shell logcat -d --pid=xxxPid`
-
-#### priority (lowest to highest)
-
-V: Verbose  
-D: Debug  
-I: Info  
-W: Warning  
-E: Error  
-F: Fatal  
-S: Silent (highest priority, where nothing is ever printed)
-
-`adb logcat ActivityManager:I MyApp:D *:S`
-
-[RefWeb](https://developer.android.com/tools/logcat)
-
 ### install APK
 
 `adb -e install yourApk`  

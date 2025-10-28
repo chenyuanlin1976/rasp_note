@@ -69,7 +69,7 @@ pw for key: android
     `apksigner -sign -ks ks_name -ks-key-alias key_name xxx.apk`
 4. verify signing  
   `keytool -printcert -jarfile myApp.apk`  
-  `apksigner verfy -v --print-cert xxx.apk`
+  `apksigner verify -v --print-certs xxx.apk`
 
 ## what is a keystore, and what is it used for?
 

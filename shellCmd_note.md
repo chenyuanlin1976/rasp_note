@@ -64,6 +64,7 @@
 `cat filename | grep -A3 pattern`  
 `cat filename | grep -B3 pattern`  
 `cat filename | grep -C3 pattern`  
+`cat filename | grep -E '^.{N}F`    // the N+1 character is F
 
 ### echo - display a line of text
 
@@ -187,6 +188,8 @@ echo "$VAR2"
 
 ### lsmod - Show the status of modules in the Linux Kernel
 
+`lsmod | grep iwlwifi`
+
 ### insmod - Simple program to insert a module into the Linux Kernel
 
 ## Network
@@ -246,7 +249,11 @@ It can display more TCP and state information than other tools.
 
 ### dmesg - print or control the kernel ring buffer
 
+`dmesg | grep iwlwifi`
+
 ### dkms - Dynamic Kernel Module Support
+
+### wget - The non-interactive network downloader
 
 ### others
 

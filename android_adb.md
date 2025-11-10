@@ -5,11 +5,11 @@
 `adb usb`  
 `adb connect ip_address_of_device`  
 `adb devices`     // show devices attached  
-`adb devices -l`  // devices (product/model)
+`adb devices -l`  // devices (product/model)  
 
 ## shell terminal
 
-`adb shell`    // Open or run commands in a terminal on the host Android device.  
+`adb shell`       // Open or run commands in a terminal on the host Android device.  
 `exit`
 
 ## memory usage
@@ -18,7 +18,7 @@
 `adb shell procrank`  
 `adb shell dumpsys meminfo`  
 `adb shell cat /proc/meminfo`  
-`adb shell dmesg | grep -i "out of memory"`
+`adb shell dmesg | grep -i "out of memory"`  
 
 ## adb exec-out
 
@@ -75,7 +75,7 @@
   -p product_name_or_path  
   The flag you decide to use has to come before the actual adb command
 
-### Install the given app on all connected devices.
+### Install the given app on all connected devices
 
 adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPackage
 
@@ -95,20 +95,24 @@ adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPa
 ### am: Activity Manager
 
 `adb shell am start|startservice|broadcast <INTENT> <COMPONENT>`  
-  -a ACTION     // e.g. android.intent.action.VIEW  
-  -c CATEGORY   // e.g. android.intent.category.LAUNCHER (start activity intent)
+  -a ACTION       // e.g. android.intent.action.VIEW  
+  -c CATEGORY     // e.g. android.intent.category.LAUNCHER (start activity intent)  
+  -d <DATA_URI>   // e.g. URL http://example.com, a file URI file:///sdcard/Download/my_document.pdf  
+  -t <MIME_TYPE>  // e.g. image/png, video/mp4  
+  -n <COMPONENT>  // e.g. com.example.app/.ExampleActivity  
 
 `adb shell am start -a android.intent.action.CALL -d tel:+972527300294`                 // Make a call  
 `adb shell am start -W -c android.intent.category.HOME -a android.intent.action.MAIN`   // Home button  
 `adb shell am start -a android.intent.action.SENDTO -d sms:+972527300294 --es sms_body "Test --ez exit_on_sent false`   // Open send sms screen with phone number and the message  
 `adb shell am start -a android.intent.action.VIEW`  
 `adb shell am start -a android.intent.action.VIEW -d URL`       // open URL  
-`adb shell am start -t image/* -a android.intent.action.VIEW`   // opens gallery
+`adb shell am start -t image/* -a android.intent.action.VIEW`   // opens gallery  
+`adb shell am start -a android.intent.action.VIEW -d "file:///sdcard/Movies/1717998_25fps.mp4" -t video/mp4 -n "android.rk.RockVideoPlayer/.VideoPlayActivity"`  
 
 `adb shell am stop-service packageName/.ServiceName`  
-`adb shell am start-service packageName/.ServiceName`
+`adb shell am start-service packageName/.ServiceName`  
 
-`adb shell am broadcast -a 'my_action'`
+`adb shell am broadcast -a 'my_action'`  
 
 ### pm: Package Manager
 
@@ -121,16 +125,20 @@ adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPa
 `adb shell pm dump packageName`  // list info on one package  
 `adb shell pm dump packageName | grep codePath`  
 `adb shell pm dump packageName | grep versionName`  
+`adb shell pm dump com.android.webview`  
+`adb shell pm dump com.google.android.webview`  
+`adb shell pm dump android.rk.RockVideoPlayer`  
+`adb shell pm dump acr.browser.barebones`  
 
 `adb shell pm path packageName`  // path to the apk file
 
 `adb shell pm list features`                          // list phone features  
 `adb shell pm reset-permissions -p your.app.package`  // Reset permissions  
 `adb shell pm grant packageName  Permission`          // Grant a permission to an app.  
-`adb shell pm revoke packageName Permission`          // Revoke a permission from an app.
+`adb shell pm revoke packageName Permission`          // Revoke a permission from an app.  
 
 `adb shell pm install xxx.apk`  
-`adb shell pm uninstall xxx.apk`
+`adb shell pm uninstall xxx.apk`  
 
 ### settings
 
@@ -138,7 +146,7 @@ adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPa
 `adb shell settings list secure`  
 `adb shell settings list system`  
 `adb shell settings get system screen_brightness`  
-`adb shell settings put system screen_brightness 120`
+`adb shell settings put system screen_brightness 120`  
 
 `adb shell settings get global low_power`  
 A value of 0 indicates that Battery Saver (low power mode) is disabled.  
@@ -164,7 +172,7 @@ dumpsys is an android tool that runs on the device and dumps interesting informa
 `adb shell dumpsys activity activities | head`    // see which is the top activity  
 `adb shell dumpsys activity <package>/<activity>` // activity info  
 `adb shell dumpsys iphonesybinfo`                 // get the IMEI  
-`adb shell dumpsys window windows | grep -E 'mCurrentFocus|mFocusedApp` // print current app's opened activity
+`adb shell dumpsys window windows | grep -E 'mCurrentFocus|mFocusedApp` // print current app's opened activity  
 
 #### set settings with dumpsys
 
@@ -183,7 +191,7 @@ dumpsys is an android tool that runs on the device and dumps interesting informa
 `adb shell getprop | grep hardware`  
 `adb shell getprop | grep ro.product.cpu`  
 `adb shell getprop | grep -i mac`  
-`adb shell cat /sys/class/net/eth0/address`
+`adb shell cat /sys/class/net/eth0/address`  
 
 ### wm: window manager
 
@@ -210,33 +218,33 @@ dumpsys is an android tool that runs on the device and dumps interesting informa
 `adb shell input keyevent 67`   // Delete (backspace)  
 `adb shell input keyevent 207`  // Contacts  
 `adb shell input keyevent 220`  // 221 // Brightness down/up  
-`adb shell input keyevent 277`  // 278, 279: Cut, Copy, Paste
+`adb shell input keyevent 277`  // 278, 279: Cut, Copy, Paste  
 
 ## Shared Preferences
 
 1. replace org.example.app with your application id  
 
 2. Add a value to default shared preferences.  
-`adb shell 'am broadcast -a org.example.app.sp.PUT --es key key_name --es value "hello world!"'`
+`adb shell 'am broadcast -a org.example.app.sp.PUT --es key key_name --es value "hello world!"'`  
 
 3. Remove a value to default shared preferences.  
-`adb shell 'am broadcast -a org.example.app.sp.REMOVE --es key key_name'`
+`adb shell 'am broadcast -a org.example.app.sp.REMOVE --es key key_name'`  
 
 4. Clear all default shared preferences.  
-`adb shell 'am broadcast -a org.example.app.sp.CLEAR --es key key_name'`
+`adb shell 'am broadcast -a org.example.app.sp.CLEAR --es key key_name'`  
 
 5. It's also possible to specify shared preferences file.  
-`adb shell 'am broadcast -a org.example.app.sp.PUT --es name Game --es key level --ei value 10'`
+`adb shell 'am broadcast -a org.example.app.sp.PUT --es name Game --es key level --ei value 10'`  
 
 6. Data types  
 `adb shell am broadcast -a org.example.app.sp.PUT --es key string --es value "hello world!"`  
 `adb shell am broadcast -a org.example.app.sp.PUT --es key boolean --ez value true`  
 `adb shell am broadcast -a org.example.app.sp.PUT --es key float --ef value 3.14159`  
 `adb shell am broadcast -a org.example.app.sp.PUT --es key int --ei value 2015`  
-`adb shell am broadcast -a org.example.app.sp.PUT --es key long --el value 9223372036854775807`
+`adb shell am broadcast -a org.example.app.sp.PUT --es key long --el value 9223372036854775807`  
 
 7. Restart application process after making changes  
-`adb shell 'am broadcast -a org.example.app.sp.CLEAR --ez restart true'`
+`adb shell 'am broadcast -a org.example.app.sp.CLEAR --ez restart true'`  
 
 ## Monkey
 
@@ -251,46 +259,46 @@ dumpsys is an android tool that runs on the device and dumps interesting informa
 /mmt/asec                             // encrypted apps, App2SD  
 /mmt/emmc                             // internal SD Card  
 /mmt/adcard                           // external/Internal SD Card  
-/mmt/adcard/external_sd               // external SD Card
+/mmt/adcard/external_sd               // external SD Card  
 
 ## Device onformation
 
 `adb get-state`                       // print device state  
 `adb get-serialno`                    // get the serial number  
-`adb shell service list`              // list all services
+`adb shell service list`              // list all services  
 
 ## Device Related Commands
 
 `adb backup -apk -all -f backup.ab`             // backup settings and apps  
 `adb backup -apk -shared -all -f backup.ab`     // backup settings, apps and shared storage  
 `adb backup -apk -nosystem -all -f backup.ab`   // backup only non-system apps  
-`adb restore backup.ab`                         // restore a previous backup
+`adb restore backup.ab`                         // restore a previous backup  
 
 ## Other
 
 `adb backup`      // Create a full backup of your phone and save to the computer.  
 `adb restore`     // Restore a backup to your phone.  
-`adb sideload`    //  Push and flash custom ROMs and zips from your computer.
+`adb sideload`    //  Push and flash custom ROMs and zips from your computer.  
 
 ## Using tail -n
 
 // Use tail to remove the first line. Actually two lines. The first one is just a newline. The second is "List of devices attached."  
-`adb devices | tail -n +2`
+`adb devices | tail -n +2`  
 
 ## Using cut -sf
 
 // Cut the last word and any white space off the end of each line.  
-`adb devices | tail -n +2 | cut -sf -1`
+`adb devices | tail -n +2 | cut -sf -1`  
 
 ## Using xargs -I
 
 // Given the -I option, xargs will perform an action for each line of text that we feed into it.  
 // We can give the line a variable name to use in commands that xargs can execute.  
-`adb devices | tail -n +2 | cut -sf -1 | xargs -I X echo X aw yiss`
+`adb devices | tail -n +2 | cut -sf -1 | xargs -I X echo X aw yiss`  
 
 ## Three options below together will print android version of all connected devices
 
-`adb devices | tail -n +2 | cut -sf -1 | xargs -I X adb -s X shell getprop ro.build.version.release`
+`adb devices | tail -n +2 | cut -sf -1 | xargs -I X adb -s X shell getprop ro.build.version.release`  
 
 ## Using alias
 
@@ -298,27 +306,27 @@ dumpsys is an android tool that runs on the device and dumps interesting informa
 
 `alias tellMeMore=echo`  
 `tellMeMore "hi there"`  
-Output => hi there
+Output => hi there  
 
 ### Example 2
 
 `alias apkinstall="adb devices | tail -n +2 | cut -sf 1 | xargs -I X adb -s X install -r $1"`   // Define alias  
-`apkinstall ~/Downloads/MyAppRelease.apk`  // Install an apk on all devices
+`apkinstall ~/Downloads/MyAppRelease.apk`  // Install an apk on all devices  
 
 ### Example 3
 
 `alias rmapp="adb devices | tail -n +2 | cut -sf 1 | xargs -I X adb -s X uninstall $1"`  
-`rmapp com.example.myapp`                 // Uninstall a package from all devices
+`rmapp com.example.myapp`                 // Uninstall a package from all devices  
 
 ### Example 4
 
 `alias clearapp="adb devices | tail -n +2 | cut -sf 1 | xargs -I X adb -s X shell pm clear $1"`  
-`clearapp com.example.myapp`              // Clear data on all devices (leave installed)
+`clearapp com.example.myapp`              // Clear data on all devices (leave installed)  
 
 ### Example 5
 
 `alias startintent="adb devices | tail -n +2 | cut -sf 1 | xargs -I X adb -s X shell am start $1"`  
-`startintent https://twitter.com/JonFHancock`   // Launch a deep link on all devices
+`startintent https://twitter.com/JonFHancock`   // Launch a deep link on all devices  
 
 ### Setting up your .bash_profile
 

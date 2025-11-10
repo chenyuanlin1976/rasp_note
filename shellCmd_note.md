@@ -70,7 +70,7 @@
 
 `echo -n -e '\x74\x24\xca\x38\xa3\xe1' > MACA3E1.bin`
 
-option: -n: do not output the trailing newline
+option: -n: do not output the trailing newline  
 option: -e: enable interpretation of backslash escapes
 
 ### xxd - make a hex dump or do the reverse
@@ -80,6 +80,7 @@ option: -e: enable interpretation of backslash escapes
 
 `xxd -p MACA3E1.bin`  
 `xxd -g1 MACA3E1.bin`  
+
 option: -p: plain hex dump style  
 option: -gn: Separate  the output of every n bytes
 
@@ -138,6 +139,15 @@ find is powerful and flexible but can be slow, especially when searching large d
 `find . -type d -exec chmod 755 {} \;`  
 `find . -type f -exec chmod 644 {} \;`
 
+### rsync - a fast, versatile, remote (and local) file-copying tool
+
+`rsync -avu --delete "/home/user/SRC/" "/home/user/DEST"`  
+
++ -a Do the sync preserving all filesystem attributes  
++ -v run verbosely  
++ -u only copy files with a newer modification time (or size difference if the times are equal)  
++ --delete delete the files in target folder that do not exist in the source
+
 ## openssl - OpenSSL command line program
 
 [openssl-dgst](https://docs.openssl.org/3.0/man1/openssl-dgst/)
@@ -189,6 +199,14 @@ echo "$VAR2"
 ### lsmod - Show the status of modules in the Linux Kernel
 
 `lsmod | grep iwlwifi`
+
+### modprobe - Add and remove modules from the Linux Kernel
+
+`sudo modprobe iwlwifi`
+
+### modinfo - Show information about a Linux Kernel module
+
+`modinfo iwlwifi`
 
 ### insmod - Simple program to insert a module into the Linux Kernel
 
@@ -255,10 +273,13 @@ It can display more TCP and state information than other tools.
 
 ### wget - The non-interactive network downloader
 
+### lspci - shows detailed information about all PCI buses and devices on the system
+
+`lspci -nnk`
+
+### lsusb - list USB devices
+
 ### others
 
-+ list USB devices: `lsusb`  
-+ list all PCI devices: `lspci -nnk`  
++ shows all device drivers recognized by the kernel: `dmesg`
 + list hardware: `lshw -C network`
-+ Show information about a Linux Kernel module: `modinfo iwlwifi`
-+ Add and remove modules from the Linux Kernel: `sudo modprobe iwlwifi`

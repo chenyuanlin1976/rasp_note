@@ -72,3 +72,14 @@ Device battery life will be significantly affected by the use of this API.
 A factory reset on an Android device erases all user data and settings,  
 but it does not remove pre-installed system apps located in the /system/app or /system/priv-app directories.  
 These system apps, along with the operating system itself, are located on a separate partition that is not affected by the factory reset process.
+
+## this usage
+
+```JAVA
+public class ContextWrapper extends Context {};
+public class ContextThemeWrapper extends ContextWrapper {};
+public class Activity extends ContextThemeWrapper {};
+```
+
+That is the reason when we need an argument **content** in the **activity class**,  
+we can use **this** (this is the object of this activity)

@@ -35,6 +35,39 @@ apk folder: ProjectName/app/build/outputs/apk/debug
 2. generate signed App bundles or APKs  
 apk folder: ProjectName/app/release
 
+## remote repositories
+
+[remote repositories](https://developer.android.com/build/remote-repositories)
+
+When your dependency is something other than a local library or file tree,  
+Gradle looks for the files in whichever online repositories are specified in the  
+**dependencyResolutionManagement { repositories {...} }** block of your settings.gradle file.  
+The order in which you list each repository determines the order in which Gradle searches the repositories for each project dependency.
+
+By default, new Android Studio projects specify Google's Maven repository,  
+and the **Maven central repository** as repository locations in the project's settings.gradle file, as shown below:
+
+```kotlin
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+      google()
+      mavenCentral()
+      mavenLocal()
+  }
+}
+```
+
+Then add the desired library to your module's dependencies block.
+
+## version catalog file
+
+[version catalogs](https://developer.android.com/build/migrate-to-catalogs)
+
+Start by creating a version catalog file.  
+In your root project's gradle folder, create a file called **libs.versions.toml**.  
+Gradle looks for the catalog in the libs.versions.toml file by default, so we recommend using this default name.
+
 ## R8 and Proguard
 
 R8 is the default code shrinking and obfuscation tool integrated into the Android Gradle Plugin (AGP) since version 3.4.  

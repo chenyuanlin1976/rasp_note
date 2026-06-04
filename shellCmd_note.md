@@ -28,61 +28,68 @@
 
 ## ps and top
 
-`ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head`  
-`ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%cpu | head`  
-`top -b -o +%MEM | head -n 15`  
-`top` and then press Shift + M to sort by memory
++ `ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head`
++ `ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%cpu | head`
++ `top -b -o +%MEM | head -n 15`
++ `top` and then press Shift + M to sort by memory
 
 ### nproc - Print the number of processing units available to the current process
 
 ## memory usage
 
-`top -h`  
+`top -h`
 `free -h`
 
 ## text file handle
 
-`head filename`  
-`tail filename`  
-`cat filename | grep -i pattern`  
-`cat filenmae | grep -i "pattern1\|pattern2"`  
-`cat filename | sort | uniq`  
-`cat filename | tr str1 str2`  
-`cut -c20-80 filename`  
-`column -t -s ',' filename`
++ `head filename`
++ `tail filename`
++ `cat filename | grep -i pattern`
++ `cat filenmae | grep -i "pattern1\|pattern2"`
++ `cat filename | sort | uniq`
++ `cat filename | tr str1 str2`
++ `cut -c20-80 filename`
++ `column -t -s ',' filename`
+
+### sort: it treats numbers as text string characters
+
++ to interpret and organize the data based on its true mathematical value.: `sort -n filename`
++ Reverse Numeric Sort (Descending): `sort -nr filename`
++ Sort by a Specific Column: `sort -k2n filename`
++ Sort Human-Readable Numbers (2K, 45M, 2G): `sort -h filename`
++ Sort Decimals or Scientific Notation (1.2e6): `sort -g filename`
 
 ### grep - print lines that match patterns
 
 `grep [OPTION...] PATTERNS [FILE...]`
 
-+ **OPTION**  
-  + -e PATTERNS, --regexp=PATTERNS  
-  + -f, Obtain patterns from FILE, one per line  
-  + -i, Ignore case distinctions in patterns and input data  
++ **OPTION**
+  + -e PATTERNS, --regexp=PATTERNS
+  + -f, Obtain patterns from FILE, one per line
+  + -i, Ignore case distinctions in patterns and input data
   + -v, Invert the sense of matching, to select non-matching lines.
 
-`cat filename | grep -A3 pattern`  
-`cat filename | grep -B3 pattern`  
-`cat filename | grep -C3 pattern`  
-`cat filename | grep -E '^.{N}F`    // the N+1 character is F
++ `cat filename | grep -A3 pattern`
++ `cat filename | grep -B3 pattern`
++ `cat filename | grep -C3 pattern`
++ `cat filename | grep -E '^.{N}F`    // the N+1 character is F
 
 ### echo - display a line of text
 
 `echo -n -e '\x74\x24\xca\x38\xa3\xe1' > MACA3E1.bin`
 
-option: -n: do not output the trailing newline  
-option: -e: enable interpretation of backslash escapes
++ option: -n: do not output the trailing newline
++ option: -e: enable interpretation of backslash escapes
 
 ### xxd - make a hex dump or do the reverse
 
-+ view hex: `echo -n "hello" | xxd -g1`  
++ view hex: `echo -n "hello" | xxd -g1`
 + view ascii: `echo -e "\x68\x65\x6c\x6c\x6f"`
 
-`xxd -p MACA3E1.bin`  
-`xxd -g1 MACA3E1.bin`  
-
-option: -p: plain hex dump style  
-option: -gn: Separate  the output of every n bytes
++ `xxd -p MACA3E1.bin`
++ `xxd -g1 MACA3E1.bin`
+  + option: -p: plain hex dump style
+  + option: -gn: Separate  the output of every n bytes
 
 ### hexdump - display file contents in hexadecimal, decimal, octal, or ascii
 
@@ -118,7 +125,7 @@ whereis is very fast because it only searches a limited set of predefined direct
 locate: This command searches a pre-built database of filenames, typically located at /var/lib/mlocate/mlocate.db (or similar).  
 This database is updated periodically by the updatedb command.  
 locate is extremely fast because it does not search the file system in real-time but rather queries an index.  
-However, it may not find newly created or recently modified files until the database is updated.  
+However, it may not find newly created or recently modified files until the database is updated.
 
 `locate filename`
 
@@ -126,7 +133,7 @@ However, it may not find newly created or recently modified files until the data
 
 find: This command performs a real-time, comprehensive search of the file system based on specified criteria.  
 It can search by name, type, size, modification time, ownership, and more.  
-find is powerful and flexible but can be slow, especially when searching large directories or entire file systems, as it directly traverses the directory structure.  
+find is powerful and flexible but can be slow, especially when searching large directories or entire file systems, as it directly traverses the directory structure.
 
 `find /path/to/search -name "filename.txt"`
 
@@ -136,32 +143,32 @@ find is powerful and flexible but can be slow, especially when searching large d
 
 ### chmod - change file mode bits
 
-`find . -type d -exec chmod 755 {} \;`  
-`find . -type f -exec chmod 644 {} \;`
++ `find . -type d -exec chmod 755 {} \;`
++ `find . -type f -exec chmod 644 {} \;`
 
 ### rsync - a fast, versatile, remote (and local) file-copying tool
 
-`rsync -avu --delete "/home/user/SRC/" "/home/user/DEST"`  
+`rsync -avu --delete "/home/user/SRC/" "/home/user/DEST"`
 
-+ -a Do the sync preserving all filesystem attributes  
-+ -v run verbosely  
-+ -u only copy files with a newer modification time (or size difference if the times are equal)  
++ -a Do the sync preserving all filesystem attributes
++ -v run verbosely
++ -u only copy files with a newer modification time (or size difference if the times are equal)
 + --delete delete the files in target folder that do not exist in the source
 
 ## openssl - OpenSSL command line program
 
 [openssl-dgst](https://docs.openssl.org/3.0/man1/openssl-dgst/)
 
-`echo -n 'hello world' | openssl dgst -sha1 -hmac "key"`  
-`echo -n 'hello world' | openssl dgst -sha1 -hmac "key" -binary > hash-file.bin`  
++ `echo -n 'hello world' | openssl dgst -sha1 -hmac "key"`
++ `echo -n 'hello world' | openssl dgst -sha1 -hmac "key" -binary > hash-file.bin`
++ `xxd -p hash-file.bin`
++ `xxd -g1 hash-file.bin`
++ `hexdump -C hash-file.bin`
 
-`xxd -p hash-file.bin`  
-`xxd -g1 hash-file.bin`  
-`hexdump -C hash-file.bin`
+There is a difference in how to interpret the endianness.
 
-There is a difference in how to interpret the endianness.  
-`xxd hash-file.bin`  
-`hexdump hash-file.bin`  
++ `xxd hash-file.bin`
++ `hexdump hash-file.bin`
 
 ## date - print or set the system date and time
 
@@ -191,8 +198,8 @@ echo "$VAR2"
 
 ### timedatectl - Control the system time and date
 
-`timedatectl | grep "Time zone"`  
-`cat /etc/timezone`
++ `timedatectl | grep "Time zone"`
++ `cat /etc/timezone`
 
 ## module
 
@@ -224,24 +231,25 @@ echo "$VAR2"
 
 ### arp - Linux ARP kernel module
 
-This  kernel protocol module implements the Address Resolution Protocol defined in RFC 826.  
+This  kernel protocol module implements the Address Resolution Protocol defined in RFC 826.
+
 `arp -n`
 
 ### netstat - Display networking information
 
 `netstat -nltp`
 
-+ r: Routing table  
-+ a: All sockets (not just connected)  
-+ l: Listening server sockets  
-+ t: TCP sockets  
-+ u: UDP sockets  
-+ w: Raw sockets  
-+ x: Unix sockets  
-+ e: Extended info  
-+ n: Don't resolve names  
-+ W: Wide display  
-+ p: Show PID/program name of sockets  
++ r: Routing table
++ a: All sockets (not just connected)
++ l: Listening server sockets
++ t: TCP sockets
++ u: UDP sockets
++ w: Raw sockets
++ x: Unix sockets
++ e: Extended info
++ n: Don't resolve names
++ W: Wide display
++ p: Show PID/program name of sockets
 
 ### ss - another utility to investigate sockets
 
@@ -256,14 +264,14 @@ It can display more TCP and state information than other tools.
 
 ### apt-get - APT package handling utility
 
-`sudo apt-get update`  
-`sudo apt-get upgrade`  
-`sudo apt-get download build-essential`  
-`sudo apt install build-essential_12.10ubuntu1_amd64.deb`  
++ `sudo apt-get update`
++ `sudo apt-get upgrade`
++ `sudo apt-get download build-essential`
++ `sudo apt install build-essential_12.10ubuntu1_amd64.deb`
 
 ### dpkg - package manager for Debian
 
-`sudo dpkg -i build-essential_12.10ubuntu1_amd64.deb`  
+`sudo dpkg -i build-essential_12.10ubuntu1_amd64.deb`
 
 ### dmesg - print or control the kernel ring buffer
 

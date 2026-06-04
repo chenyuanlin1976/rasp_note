@@ -27,6 +27,39 @@ greet="Hello World"
 $ echo ${greet/World/$(whoami)}
 ```
 
+## spaces and tab
+
+Spaces are the overwhelming modern standard for indentation in Linux shell scripting,  
+though tabs possess a single specialized syntactic advantage.
+
+Major industry style guides, such as the widely followed **Google Shell Style Guide**, 
+explicitly mandate **using 2 spaces per indentation level** and forbid the use of physical tab characters.
+
+## export variables
+
++ **An exported variable is undefined outside your script**
++ When you run a Linux script normally, **a script executes inside a temporary child shell process**,  
+  and **environment variables can only pass downward to child processes, never upward to the parent shell**  
++ When your script finishes executing, that child subshell dies, along with any variables defined or exported inside it.
+
+## common problems: export variables are not defined
+
+1. You executed the script instead of sourcing it.
+   + Run the script using the `source` command or the `dot operator`.  
+     This forces the script to run inside your current terminal session.
+     + `source ./script.sh`
+     + `. ./script.sh`
+
+2. For security reasons, **sudo strips out most environment variables and runs in a completely separate, clean privilege environment.**
+   + Fix: Use the -E flag to explicitly pass your current environment variables through the sudo barrier.
+     + `sudo -E ./script.sh`
+
+## single or double quotes
+
++ single quotes (') preserve the literal value of all characters,  
+  + `dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n`
++ double quotes (") allow the evaluation of variables, command substitutions, and specific backslash escapes.
+
 ## operation
 
 ### Addition

@@ -69,10 +69,24 @@
   + -i, Ignore case distinctions in patterns and input data
   + -v, Invert the sense of matching, to select non-matching lines.
 
+#### grep examples 1
+
 + `cat filename | grep -A3 pattern`
 + `cat filename | grep -B3 pattern`
 + `cat filename | grep -C3 pattern`
 + `cat filename | grep -E '^.{N}F`    // the N+1 character is F
+
+#### grep examples 2
+
+To search for .c files in a folder that contain the string "malloc",  
+use the grep command on Linux: `grep -rnw --include="*.c" . -e "malloc"`  
+
++ `-r`: Searches recursively through subdirectories.
++ `-n`: Prints the exact line number where the string is found.
++ `-w`: Matches the whole word only (omit this if you want to find partial matches).
++ `--include="*.c"`: Restricts the search exclusively to files ending in **.c**.
++ `.`: Points to the current directory (change this to a specific folder path if needed).
++ `-e "malloc"`: Specifies the string you are looking for.
 
 ### echo - display a line of text
 

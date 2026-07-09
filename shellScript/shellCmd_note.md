@@ -88,6 +88,12 @@ use the grep command on Linux: `grep -rnw --include="*.c" . -e "malloc"`
 + `.`: Points to the current directory (change this to a specific folder path if needed).
 + `-e "malloc"`: Specifies the string you are looking for.
 
+#### Buffered Output
+
+`grep` is a block-buffered command.  
+If you pipe the output of C++'s standard output to it, `grep` will not print anything to the screen  
+until its internal buffer is completely full or the process finishes.  
+
 ### echo - display a line of text
 
 `echo -n -e '\x74\x24\xca\x38\xa3\xe1' > MACA3E1.bin`

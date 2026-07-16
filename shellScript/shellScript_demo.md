@@ -32,7 +32,7 @@ $ echo ${greet/World/$(whoami)}
 Spaces are the overwhelming modern standard for indentation in Linux shell scripting,  
 though tabs possess a single specialized syntactic advantage.
 
-Major industry style guides, such as the widely followed **Google Shell Style Guide**, 
+Major industry style guides, such as the widely followed **Google Shell Style Guide**,  
 explicitly mandate **using 2 spaces per indentation level** and forbid the use of physical tab characters.
 
 ## export variables
@@ -113,13 +113,13 @@ fi
 ### file existence
 
 | options | check point |
-|---|---|
-|-e fileName | if file exists |
-|-f fileName | if filename exists and is file |
-|-d fileName | if filename exists and is directory |
-|-x fileName | if filename exists and is executable |
-|-L fileName | if filename exists and is soft-link |
-|-S fileName | if filename exists and is socket |
+| --- | --- |
+| -e fileName | if file exists |
+| -f fileName | if filename exists and is file |
+| -d fileName | if filename exists and is directory |
+| -x fileName | if filename exists and is executable |
+| -L fileName | if filename exists and is soft-link |
+| -S fileName | if filename exists and is socket |
 
 ```bash
 if [ -f filename ]; then
@@ -130,7 +130,7 @@ fi
 ### two numbers
 
 | condition | description |
-|---|---|
+| --- | --- |
 | "$a" -eq "$b" | if two number equal |
 | "$a" -ne "$b" | if two number not equal |
 | "$a" -gt "$b" | if a is larger than b |
@@ -141,7 +141,7 @@ fi
 ### string comparison
 
 | condition | description |
-|---|---|
+| --- | --- |
 | "$str1" == "$str2" | if two strings equal |
 | "$str1" != "$str2" | if two strings not equal |
 | -n "$str1" | if string length is not 0 |

@@ -5,10 +5,7 @@ mathematically maps data of any arbitrary size to a unique, fixed-size string of
 This output is called a hash value, digest, or checksum.  
 The transformation is strictly one-way (irreversible), meaning you cannot convert the final hash back into the original input.  
 
-[CityHash](https://github.com/google/cityhash)  
-[FarmHash](https://github.com/google/farmhash)  
-[XXHash](https://richardstartin.github.io/posts/xxhash)  
-[xxhash](https://xxhash.com/)  
+[Hash_function](https://en.wikipedia.org/wiki/Hash_function)  
 
 ## Cryptographic Hashes (Focus: Security)
 
@@ -21,12 +18,20 @@ The transformation is strictly one-way (irreversible), meaning you cannot conver
 
 ## Non-Cryptographic Hashes (Focus: Speed)
 
-1. MurmurHash / CityHash: Frequently used in databases and networking to distribute keys rapidly.
-2. **FarmHash**: Google's FarmHash is a family of fast, non-cryptographic hash functions for strings and other data.  
+1. MurmurHash: it created in 2008. Frequently used in databases and networking to distribute keys rapidly.
+2. **CityHash**: it is a family of non-cryptographic hash functions created by Google in 2011.  
+   It was designed with one main goal in mind: extreme speed when hashing strings, especially on modern 64-bit CPUs.
+3. **FarmHash**: Google's FarmHash is a family of fast, non-cryptographic hash functions for strings and other data.  
    As the successor to **CityHash**, it is heavily optimized for speed on modern CPUs.
-3. Purpose: Essential for building Hash Tables, checking simple memory caches, and indexing lookup keys in O(1) constant time.
+4. Purpose: Essential for building Hash Tables, checking simple memory caches, and indexing lookup keys in O(1) constant time.
 
-## The Anatomy of Speed: How MurmurHash Works
+[MurmurHash](https://en.wikipedia.org/wiki/MurmurHash)
+[CityHash](https://github.com/google/cityhash)  
+[FarmHash](https://github.com/google/farmhash)  
+[XXHash](https://richardstartin.github.io/posts/xxhash)  
+[xxhash](https://xxhash.com/)  
+
+### The Anatomy of Speed: How MurmurHash Works
 
 MurmurHash's genius lies in its simplicity and clever bit manipulation.
 
@@ -38,7 +43,34 @@ MurmurHash's genius lies in its simplicity and clever bit manipulation.
   that ensures even tiny input changes create massive output changes (*avalanche effect*).
 + The finalization: The fmix32 function ensures that even if the main loop didn't fully mix the bits, the final hash will be well-distributed.
 
-## XXHash hash algorithm
+### Why Was CityHash Created?
+
+Before **CityHash**, algorithms like *MurmurHash* were the standard choice for hash tables and quick string lookups.  
+Google needed something even faster for heavy, data-intensive internal services like search indexing and large-scale hash tables.  
+**CityHash was optimized to take full advantage of modern CPU architecture features**:  
+
++ 64-bit processing: Works on large word sizes natively.
++ Instruction-level parallelism: Structured so CPUs can execute multiple instructions simultaneously (pipelining).
++ Unaligned memory reads: Quickly loads 64-bit chunks without needing strict memory alignment.
+
+### Why Did Google Create FarmHash?
+
+FarmHash is a family of non-cryptographic hash functions introduced by Google in 2014.  
+It is the direct successor to CityHash, created by the same primary author to fix CityHash's flaws and leverage modern CPU architectures even more efficiently.  
+
+If *CityHash* was built for *general 64-bit speed*,  
+**FarmHash** was built for **hardware versatility**, maximum raw performance, and strict output determinism (via "**Fingerprints**").
+
+While CityHash was fast, it had 2 major limitations:  
+
++ Architecture Sensitivity: CityHash's performance varied significantly when moving between different CPU types (e.g., x86 vs. ARM)  
+  or CPUs with different instruction sets (e.g., SSE4.2 vs. AVX).  
++ Lack of Compile-Time/Runtime Adaptation: CityHash didn't easily adapt to hardware capabilities at runtime to squeeze out optimal instruction-level parallelism.
+
+FarmHash was written to address this by using conditional compilation and architecture detection.  
+It automatically selects the optimal variant for the specific CPU running the code-utilizing specialized vector/SIMD instructions (like SSE4.2 or AES-NI) when available.
+
+### XXHash hash algorithm
 
 XXHash is a fast (the XX stands for extremely) hash algorithm designed by Yann Collet.
 The algorithm is fast (and only faster than alternatives for larger inputs) for 2 reasons:
@@ -47,5 +79,8 @@ The algorithm is fast (and only faster than alternatives for larger inputs) for 
 + Multiplications are slow but can be pipelined to remove data dependencies: replace total order with partial order.
 
 The XXHash algorithms separate the input stream of bytes into 4 independent streams:  
-*each 32 bits wide in XXHash32*; *64 bits wide in XXHash64*.  
+
++ *each 32 bits wide in XXHash32*;  
++ *each 64 bits wide in XXHash64*.  
+
 The same operations are applied to the elements of each stream in sequence.  

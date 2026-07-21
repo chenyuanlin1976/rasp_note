@@ -84,3 +84,41 @@ The XXHash algorithms separate the input stream of bytes into 4 independent stre
 + *each 64 bits wide in XXHash64*.  
 
 The same operations are applied to the elements of each stream in sequence.  
+
+## hash functions use multiplication overflow
+
+In hash functions, *multiplication overflow* is **NOT** an error.  
+it is a deliberate and essential feature used *to achieve pseudo-randomness and scramble data efficiently*.  
+While standard software applications treat arithmetic overflow as a bug,  
+non-cryptographic hash functions rely on it to map unbounded inputs into a fixed-size integer space.
+
++ Natural Modulo: take the advantage of HW register.
++ Efficiency: when an `unsigned int` overflows, the HW ignore the the bits over 32-bits.
++ Avalanche Effect: scramble data
+
+NOTICE: In C, `unsigned int` overflow is defined to wrap around, while `signed int` overflow causes **undefined behavior**.
+
+## common hashing algorithm
+
++ Fibonacci Hashing
++ FNV-1 / FNV-1a Hashing
++ Polynomial Rolling Hash
+
+## prime numbers
+
++ Prime Number Advantage: Using a prime number helps distribute hash values more evenly,  
+  reducing the likelihood of hash collisions (different strings producing the exact same integer).
++ Bitwise Optimization: Using bit shifts to optimize multiplication is more efficient.  
+
+1. Golden ratio = 0.6180339887498949; the followings are the closet prime number to max unsigned value * golden ratio  
+   + 8-bits,  the closest prime number = 157 = 0x9d  
+   + 16-bits, the closest prime number = 40507 = 0x9e3b  
+   + 32-bits, the closest prime number = 2654455771 = 0x9e37c7db  
+2. e = 2.718281828459045; the followings are the closet prime number to max unsigned value / e  
+   + 8-bits,  the closest prime number = 97 = 0x61  
+   + 16-bits, the closest prime number = 24109 = 0x5e2d  
+   + 32-bits, the closest prime number = 1580030171 = 0x5e2d58db  
+3. pi = 3.141592653589793; the followings are the closet prime number to max unsigned value / pi  
+   + 8-bits,  the closest prime number = 83 = 0x53  
+   + 16-bits, the closest prime number = 20857 = 0x5179  
+   + 32-bits, the closest prime number = 1367130559 = 0x517cc1bf  

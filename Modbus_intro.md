@@ -57,7 +57,7 @@ The main variants include:
 
 ## Modbus TCP Frame Structure (MBAP Header + PDU)
 
-A Modbus TCP request consists of a 7-byte MBAP Header followed by the PDU (Protocol Data Unit):
+*A Modbus TCP request consists of a 7-byte MBAP Header followed by the PDU* (Protocol Data Unit):
 
 + **Transaction Identifier** (2 bytes): For pairing request and response.
 + **Protocol Identifier** (2 bytes): 0 for Modbus.

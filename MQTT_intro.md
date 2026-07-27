@@ -9,6 +9,15 @@ It is the de facto standard protocol for the Internet of Things (IoT).
 + HiveMQ: Host broker.hivemq.com, Port 1883 (TCP)
 + Mosquitto: Host test.mosquitto.org, Port 1883 (TCP)
 
+## common Ports
+
++ The standard and most common ports used for MQTT communication are:
+  + 1883 – The default unencrypted port for MQTT (TCP).
+  + 8883 – The default encrypted port for MQTT over SSL/TLS (MQTTS).
++ Additional Common Ports:
+  + 8083 – Default port for MQTT over unencrypted WebSockets.
+  + 8084 – Default port for MQTT over secure WebSockets (WSS)
+
 ## How MQTT Works (Pub/Sub Architecture)
 
 Unlike traditional web communication (like HTTP) which relies on a request-response model,  

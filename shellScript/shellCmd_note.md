@@ -61,20 +61,26 @@
 
 ### grep - print lines that match patterns
 
-`grep [OPTION...] PATTERNS [FILE...]`
+`grep [OPTION...] PATTERNS [FILE...]`  
+Search for PATTERN in each FILE or standard input.  
+PATTERN is, by default, a basic regular expression (BRE).
 
 + **OPTION**
   + -e PATTERNS, --regexp=PATTERNS
   + -f, Obtain patterns from FILE, one per line
   + -i, Ignore case distinctions in patterns and input data
   + -v, Invert the sense of matching, to select non-matching lines.
+  + -L, print only names of FILEs containing no match
+  + -l, print only names of FILEs containing matches
++ `grep --help`  
 
 #### grep examples 1
 
-+ `cat filename | grep -A3 pattern`
-+ `cat filename | grep -B3 pattern`
-+ `cat filename | grep -C3 pattern`
-+ `cat filename | grep -E '^.{N}F`    // the N+1 character is F
++ `-A`: print NUM lines of trailing context, `cat filename | grep -A3 pattern`
++ `-B`: print NUM lines of leading context, `cat filename | grep -B3 pattern`
++ `-C`: print NUM lines of output context, `cat filename | grep -C3 pattern`
++ `-E`: PATTERN is an extended regular expression (ERE), `cat filename | grep -E '^.{N}F`
++ `-G`: PATTERN is a basic regular expression (BRE),
 
 #### grep examples 2
 

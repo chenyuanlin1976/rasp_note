@@ -41,26 +41,26 @@ Instead, it relies on **CMake** to manage projects. CMake acts as a project gene
 
 ### Example CMakeLists.txt Structure
 
-```CMakeLists.txt
+```bash CMakeLists.txt
 cmake_minimum_required(VERSION 3.13)
 
 # Include the Pico SDK configuration
 include(pico_sdk_import.cmake)
 
-project(my_project C CXX ASM)
+project(proj_name C CXX ASM)
 
 # Initialize the SDK
 pico_sdk_init()
 
 # Define your executable project file
-add_executable(my_blink blink.c)
+add_executable(target_name blink.c)
 
 # Link the standard libraries you need
-target_link_libraries(my_blink pico_stdlib)
+target_link_libraries(target_name pico_stdlib)
 
 # Enable USB serial output, disable UART serial output
-pico_enable_stdio_usb(my_blink 1)
-pico_enable_stdio_uart(my_blink 0)
+pico_enable_stdio_usb(target_name 1)
+pico_enable_stdio_uart(target_name 0)
 ```
 
 ### Compilation Output: The .uf2 File

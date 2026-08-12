@@ -81,3 +81,44 @@ there are a few other auxiliary file types and metadata formats closely associat
    + Role: Linux shared libraries often append version numbers to their extensions (e.g., libc.so.6).  
      This allows multiple incompatible versions of the same library to coexist peacefully on the same system,  
      letting programs link specifically to the version they were tested against.
+
+## Compile libraries with gcc
+
+Compiling C source files into libraries allows you to reuse code efficiently.  
+Depending on your needs, you can create  
+
++ a **Static Library (.a)** which is bundled directly into your executable at compile time,  
++ a **Shared/Dynamic Library (.so)** which is loaded at runtime.
+
+### 1. Creating a Static Library (.a)
+
+A static library is essentially *a collection of object files* packed into a single archive.
+
+1. Compile the C file into an Object File (.o): `gcc -c mylib.c -o mylib.o`
+2. Create the Static Library using **ar**: `ar rcs libmylib.a mylib.o`  
+   Use the archiving utility ar to **bundle** the object file into a .a file.  
+   + r: Insert the files into the archive (replacing older files if they exist).
+   + c: Create the archive if it does not already exist.
+   + s: Write an object-file index into the archive (speeds up linking).
+3. Link and Use the Static Library: `gcc main.c -L. -lmylib -o myapp`  
+   + -L.: Tells the compiler to look for libraries in the current directory (.).
+   + -lmylib: Links the library libmylib.a (*drop the lib prefix and the .a extension*).
+
+### 2. Creating a Shared Library (.so)
+
+*A shared library is loaded dynamically by programs at runtime*, saving memory and disk space.
+
+1. Compile with Position Independent Code (**-fPIC**): `gcc -c -fPIC mylib.c -o mylib.o`  
+   Shared libraries must use Position Independent Code (PIC)  
+   so they can be loaded anywhere in memory. Compile your source file with -fPIC and -c:
+2. Create the Shared Library (.so): `gcc -shared -o libmylib.so mylib.o`  
+   Use the **-shared** flag to link the object file into a shared library.
+3. Link and Use the Shared Library: `gcc main.c -L. -lmylib -o myapp`  
+   Compile your main program, pointing it to the shared library just like the static library.
+4. Run the Executable:  
+   Because shared libraries are resolved at runtime,  
+   *the operating system needs to know where to find `libmylib.so` when you run myapp.*  
+   If you run it immediately, you might get a library-not-found error.  
+   To fix this temporarily for your current terminal session, add the current directory to your **library path**:  
+   `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.`
+   `./myapp`

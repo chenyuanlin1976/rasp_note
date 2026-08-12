@@ -19,9 +19,9 @@ Kaleido, Gallery, and ChLCD are distinct reflective display technologies used fo
 + Pros: Rich, full-color saturation and higher color PPI.
 + Cons: Noticeably slower refresh and page-turn speeds compared to Kaleido.
 
-## Cholesteric Liquid Crystal (ChLCD)
+## Cholesteric Liquid Crystal (ChLC)
 
-+ How it works: Uses three stacked layers of helical liquid crystals reflecting red, green, and blue light  
++ How it works: Uses three stacked layers of helical liquid crystals **reflecting** red, green, and blue light  
   without filters or backlights, achieving millions of native colors.
 + Pros: High color saturation, vivid gradients, fast video-capable refresh rates relative to particle-based full color, and low power usage.
 + Cons: Colors can shift slightly depending on the viewing angle compared to particle E Ink; less common in mainstream consumer e-readers.

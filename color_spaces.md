@@ -50,16 +50,17 @@ Because raw RGB is device-dependent, industries created standardized "flavors" o
   + b*: The blue (-) to yellow (+) axis.
 + Best for: Print production, color matching, and scientific color analysis where accurate, uniform perception across different media is crucial.
 
-## CIELUV (Luv)
-
-+ Type: Another **device-independent**, perceptually uniform color space created around the same time as Lab.
-+ How it works: While Lab is great for surface colors (like paint and print), Luv was designed with a focus on uniform chromaticity scales for additive color mixtures.
-+ Best for: Computer graphics, lighting design, and applications involving projected light where color mixture linearity matters.
-
-## Lu'v'
+## CIE 1976 Chromaticity Coordinates: u'v'
 
 The term u'v' (pronounced "u-prime v-prime") refers to the CIE 1976 u'v' Uniform Chromaticity Scale (UCS) diagram.  
 It is the foundation of the CIELUV color space and was designed to fix a major flaw in older color maps
+The u'v' diagram stretches and compresses the 1931 space mathematically  
+so that equal distances on the graph roughly correspond to equal perceived color differences to the human eye.
+
++ What they are: These are pure chromaticity coordinates (color-only, *independent of lightness*).  
+  They are used to plot colors on a 2D uniform chromaticity scale diagram.
++ Range: Typically bounded between 0 and 0.62.
++ Formula connection: They are the raw intermediate values calculated from XYZ before factoring in lightness (L*).
 
 ### The Problem It Solves
 
@@ -68,15 +69,21 @@ Perceptual UniformityThe classic CIE 1931 (x,y) chromaticity diagram is great fo
 + On an (x,y) plot, the human eye is extremely sensitive to changes in certain areas (like blue) and much less sensitive in others (like green).  
 + Equal geometric distances on an (x,y) map do not equal equal visual color differences.  
 
-The u'v' diagram stretches and compresses the 1931 space mathematically  
-so that equal distances on the graph roughly correspond to equal perceived color differences to the human eye.
-
 ### Primary Uses
 
 + Lighting Design & Correlated Color Temperature (CCT): The u'v' diagram is heavily used to evaluate white light sources (like LEDs and bulbs)  
   and plot Planckian (blackbody) radiation curves.
 + Computer Graphics & Additive Displays: Because additive mixtures of light fall on a straight line in the u'v' uniform chromaticity space,  
   it is widely used in rendering, projection, and display calibration where light mixing is key.
+
+## CIELUV Color Space Coordinates
+
++ What they are: These are the scaled, psycho-perceptual Cartesian coordinates that make up the `L*u*v*` (CIELUV) color space.
++ Type: Another **device-independent**, perceptually uniform color space created around the same time as Lab.
++ How it works: While Lab is great for surface colors (like paint and print), Luv was designed with a focus on uniform chromaticity scales for additive color mixtures.
++ Best for: Computer graphics, lighting design, and applications involving projected light where color mixture linearity matters.
++ How they relate: They take u' and v', **subtract the reference white point** (u_n', v_n'),  
+  and scale the result by lightness (L*) so that color differences are more perceptually uniform.
 
 ## YCbCr
 

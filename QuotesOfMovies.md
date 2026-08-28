@@ -134,6 +134,7 @@
 + The first step in solving any problems  is recognizing there is one.
 + The greatest suffering in life is often caused in the name of love.
 + The important thing is not to stop questioning. Curiosity has its own reason for existing.
++ The Law of Surprise: the first thing that comes to greet you at home or that *which you have but do not yet know*.
 + The lone wolf dies, but the pack survives.
 + The man who fears losing has already lost.
 + The more you know, the more you realize how much you don't know — the less you know, the more you think you know.

@@ -90,16 +90,16 @@ adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPa
 ### Update APP
 
 `adb install -r yourApk`          // -r means re-install the app and keep its data on the device.  
-`adb install –k yourApk`
+`adb install -k yourApk`
 
 ### am: Activity Manager
 
 `adb shell am start|startservice|broadcast <INTENT> <COMPONENT>`  
-  -a ACTION       // e.g. android.intent.action.VIEW  
-  -c CATEGORY     // e.g. android.intent.category.LAUNCHER (start activity intent)  
-  -d <DATA_URI>   // e.g. URL http://example.com, a file URI file:///sdcard/Download/my_document.pdf  
-  -t <MIME_TYPE>  // e.g. image/png, video/mp4  
-  -n <COMPONENT>  // e.g. com.example.app/.ExampleActivity  
+  > -a ACTION       // e.g. android.intent.action.VIEW  
+  > -c CATEGORY     // e.g. android.intent.category.LAUNCHER (start activity intent)  
+  > -d <DATA_URI>   // e.g. URL http://example.com, a file URI file:///sdcard/Download/my_document.pdf  
+  > -t <MIME_TYPE>  // e.g. image/png, video/mp4  
+  > -n <COMPONENT>  // e.g. com.example.app/.ExampleActivity  
 
 `adb shell am start -a android.intent.action.CALL -d tel:+972527300294`                 // Make a call  
 `adb shell am start -W -c android.intent.category.HOME -a android.intent.action.MAIN`   // Home button  

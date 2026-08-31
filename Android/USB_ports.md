@@ -25,6 +25,12 @@ Android may NOT support the option `-t`.
 /:  Bus 002.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/9p, 20000M/x2
 ```
 
+### How to interpret the output
+
+Look at the driver column or the `Driver=` tag at the end of the lines.  
+If you see xhci_hcd, the Android device uses an xHCI controller, meaning the physical port supports USB 3.0 speeds.  
+If you only see ehci_hcd, it is an older or budget device limited to USB 2.0.
+
 ## command: `adb shell cat /sys/kernel/debug/usb/devices`
 
 ```bash
@@ -95,7 +101,18 @@ I:* If#= 0 Alt= 0 #EPs= 1 Cls=09(hub  ) Sub=00 Prot=00 Driver=hub
 E:  Ad=81(I) Atr=03(Int.) MxPS=   2 Ivl=255ms
 ```
 
+### How to decode the text output
+
++ Look for lines starting with T: (Topology) and P: (Port).
++ Spd=480: The port/device is operating at High-Speed (USB 2.0).
++ Spd=5000 or 10000: The port/device is operating at SuperSpeed / SuperSpeed+ (USB 3.0 / 3.1).
++ Look for the `Driver=` tag. If it lists xhci_hcd, the hardware controller is xHCI (USB 3.0 capable).
+
 ## `adb shell ls -l /sys/bus/platform/drivers/ | grep hci`
+
++ xhci-hcd or xhci-plat: Confirms the hardware runs an xHCI (USB 3.0) controller.
++ ehci-platform or ehci-hcd: Indicates an older EHCI (USB 2.0) controller.
++ dwc3: The Synopsys DesignWare Cores USB 3.0 controller, used by most modern Snapdragon, MediaTek, and Exynos chips to deliver USB 3.0+ speeds.
 
 ```bash
 drwxr-xr-x 2 root root 0 2025-11-19 04:41 ahci-dwc

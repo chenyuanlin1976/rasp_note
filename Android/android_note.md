@@ -1,5 +1,47 @@
 # android note
 
+## Android studio icons
+
+The type of folders or module
+
+1. Green dot: Application/App module, Executable main program/ App.
+   e.g.: `com.android.application`
+2. Three vertical bars: Android library
+   e.g.: `com.android.library`
+3. Blue square: source root  
+   e.g.: `src/main/java` or `src/main/kotlin`
+4. Coffee Cup: **pure** Java/Kotlin class library. NOT includes Android resource.
+
+## The Build Variants panel
+
+It in Android Studio controls how Gradle builds and packages your application.  
+It is the intersection of Build Types (developer-facing environments like debug or release)  
+and Product Flavors (user-facing versions like free or paid, or staging and production).
+
+### Accessing Build Variants
+
++ Go to View > Tool Windows > Build Variants from the menu bar.  
++ Alternatively, click the Build Variants tab usually pinned to the left edge or bottom-left tool window bar.
+
+### Key Components
+
++ Module Column: Lists the modules in your project (e.g., :app).
++ Active Build Variant Column: A dropdown menu for each module that lets you switch the active variant you want to test, run, or compile.
++ Default Setup: Out of the box, Android Studio creates two build types for every module:
+  + debug: Configured for development, enables debugging tools, and signs the app with a default debug keystore.  
+  + release: Configured for production, typically applies code shrinking, obfuscation (R8/ProGuard), and requires a custom release signing key.  
+
+### Common Use Cases
+
++ Multiple Environments: Setting up staging and production flavors with distinct API endpoints  
+  and separate applicationIdSuffix values so both versions can live on the same device simultaneously.  
++ App Tiers: Creating free and paid variants to gate certain features or resources.
++ Source Sets: Organizing code or resources specific to a variant  
+  (e.g., placing custom assets inside a src/staging/ folder instead of the main source set).
+
+Note: Any changes made to build types or product flavors in your module-level build.gradle or build.gradle.kts files  
+  require you to click Sync Now before they populate correctly in the Build Variants panel.
+
 ## how-to-start-a-service-when-apk-is-installed-for-the-first-time
 
 1. All applications, upon installation, are placed in a "**stopped**" state.  

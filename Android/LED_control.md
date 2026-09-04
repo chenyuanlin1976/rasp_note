@@ -48,7 +48,7 @@ if (targetLights.isNotEmpty()) {
   Normal apps downloaded from the Play Store cannot use it to control internal phone chassis components;  
   it is primarily intended for system apps, device manufacturers, or specialized hardware accessories
 
-## LED, GPIO
+## control GPIO output for Led
 
 Because vanilla Android is designed for consumer smartphones, it does not expect apps to directly toggle CPU pins.  
 To control an RGB LED on a custom Android board (like a Raspberry Pi, Rockchip, or Allwinner embedded board),  
@@ -81,7 +81,7 @@ echo 1 > /sys/class/gpio/gpio103/value  # Blue ON (Results in Purple/Magenta)
 
 #### when an exit code of 1
 
-An exit code of 1 (often accompanied by a "write error: Invalid argument" message) means  
+An **exit code** of 1 (often accompanied by a *write error: Invalid argument* message) means  
 the kernel explicitly rejected the number 80.  
 This happens for a few common reasons on Rockchip systems:  
 
@@ -153,6 +153,64 @@ that allowed userspace applications to control hardware pins using standard file
     meaning your previous command failure was likely due to permissions or missing root access.
   + If it returns nothing (or outputs an error that the file doesn't exist):  
     Your kernel has CONFIG_PROC_FS or IKCONFIG disabled, so you must check via Method 2.
+
+#### if Pin Already Claimed
+
+`adb shell cat /sys/kernel/debug/gpio`
+
+```bash
+gpiochip0: GPIOs 0-31, parent: platform/fdd60000.gpio, gpio0:
+ gpio-0   (                    |watchdog            ) out hi 
+ gpio-5   (                    |vcc5v0-otg-regulator) out lo 
+ gpio-6   (                    |vcc5v0-host-regulato) out hi 
+ gpio-8   (                    |irblaster           ) out lo 
+ gpio-13  (                    |GTP_INT_IRQ         ) in  hi 
+ gpio-14  (                    |GTP_RST_PORT        ) out hi 
+ gpio-16  (                    |bt_default_wake     ) out lo 
+ gpio-18  (                    |gpio-regulator      ) out lo 
+ gpio-21  (                    |vcc3v3-lcd1-n       ) out lo 
+ gpio-23  (                    |vcc3v3-lcd0-n       ) out lo 
+ gpio-28  (                    |wifi-en             ) out hi 
+
+gpiochip1: GPIOs 32-63, parent: platform/fe740000.gpio, gpio1:
+ gpio-37  (                    |work                ) out hi 
+ gpio-38  (                    |i2s-lrck            ) in  hi 
+
+gpiochip2: GPIOs 64-95, parent: platform/fe750000.gpio, gpio2:
+ gpio-77  (                    |bt_default_rts      ) out hi 
+ gpio-79  (                    |bt_default_reset    ) out lo 
+ gpio-80  (                    |bt_default_wake_host) in  lo IRQ 
+
+gpiochip3: GPIOs 96-127, parent: platform/fe760000.gpio, gpio3:
+ gpio-119 (                    |reset               ) out hi ACTIVE LOW
+ gpio-122 (                    |dvb-en              ) out hi 
+ gpio-123 (                    |dvb-rf              ) out hi 
+
+gpiochip4: GPIOs 128-159, parent: platform/fe770000.gpio, gpio4:
+ gpio-146 (                    |sysfs               ) out hi 
+ gpio-148 (                    |ir-blaster-pw       ) out hi
+```
+
+##### check source code: rk3566-evb2-lp4x-v10-390k.dtsi
+
+```bash
+&leds {
+   dvb_rf: dvb-rf {
+      gpios = <&gpio3 RK_PD3 GPIO_ACTIVE_HIGH>;
+      default-state = "on";
+   };
+
+   ir_blaster_pw: ir-blaster-pw {
+      gpios = <&gpio4 RK_PC4 GPIO_ACTIVE_HIGH>;
+      default-state = "on";
+   };
+};
+```
+
++ LED1_G_OSM: `adb shell "echo 0 > /sys/class/leds/dvb-rf/brightness"`
++ LED1_G_OSM: `adb shell "echo 1 > /sys/class/leds/dvb-rf/brightness"`
++ LED1_B_OSM: `adb shell "echo 0 > /sys/class/leds/ir-blaster-pw/brightness"`
++ LED1_B_OSM: `adb shell "echo 1 > /sys/class/leds/ir-blaster-pw/brightness"`
 
 ### The Modern Replacement
 

@@ -1,9 +1,50 @@
 # Quotes of Movies
 
+## Game of Thrones: House Words
+
++ House Arryn: As High as Honor.
++ House Baratheon: Ours is the Fury.
++ House Bolton: Our Blades Are Sharp.
++ House Crakehall: None so Fierce.
++ House Glover: Loyal in Service.
++ House Greyjoy: We Do Not Sow.
++ House Hightower: We Light the Way.
++ House Karstark: The Sun of Winter.
++ House Lannister: Hear Me Roar.
++ House Manderly: True to the Word.
++ House Martell: Unbowed, Unbent, Unbroken.
++ House Mormont: Here We Stand.
++ House Royce: We Remember.
++ House Selmy: Faithful in Service.
++ House Stark: Winter Is Coming.
++ House Targaryen: Fire and Blood.
++ House Tarly: First in Battle.
++ House Tully: Family, Duty, Honor.
++ House Tyrell: Growing Strong.
+
+## Fate: the Full Activation Chant
+
++ Behold my peerless army! Their bodies may return to dust,  
+  but their souls remain as Heroic Spirits who answer my call!  
+  These men are my true treasure, our bond is my path of kingship! ... Ionian Hetairoi!
++ I am the bone of my sword. Steel is my body and fire is my blood.  
+  I have created over a thousand blades. Unknown to Death, nor known to Life.  
+  Have withstood pain to create many weapons.  
+  Yet, those hands will never hold anything.So as I pray... Unlimited Blade Works!
++ I will tell you of the beginning. Heaven and Earth split, nothingness congratulated creation,  
+  my Sword of Rupture cleaved the world! ... Enuma Elish!
++ Let us talk of the King. From the stars, from the abyss, from the utopia of your dreams... Garden of Avalon!
++ Lord, protect us. Devote all my strength to guard my allies from harm... Luminosité Eternelle!
++ Sheathed in the breath of the planet, a torrent of shining life. Feel its wrath... Excalibur!
++ Striking with Death Flight... Gáe Bolg!
++ This is the evil sword that destroyed my father. Clarent Blood Arthur!
++ That which heals all wounds and dissolves all hatred—our home, Camelot! Manifest yourself... Lord Camelot!
+
 ## short quotes
 
 + "One son wanted the throne too much.  One will not take it.  Is that my legacy?" – All leaders will leave a legacy.  What is yours?
-+ "The message being that the divine gift does not come from a higher power, but from our own minds," Ford explains about the painting. - Michelangelo's painting "The Creation of Adam"
++ "The message being that the divine gift does not come from a higher power, but from our own minds,"  
+  Ford explains about the painting. - Michelangelo's painting "The Creation of Adam"
 + A candle loses nothing when it lights another one.
 + A Lannister Always Pays His Debts.
 + A problem well-stated is half-solved.
@@ -43,14 +84,16 @@
 + Every voice matters.
 + Fashion fades, only the style remains the same.
 + Fashion is architecture: it is a matter of proportions.
-+ Fashion is not something that exists in dresses only. Fashion is in the sky, in the street, fashion has to do with ideas, the way we live, what is happening.
++ Fashion is not something that exists in dresses only.  
+  Fashion is in the sky, in the street, fashion has to do with ideas, the way we live, what is happening.
 + For every good reason there is to lie, there is a better reason to tell the truth.
 + Freedom is the right of all sentient beings.
 + Games aren't worth playing if your opponent is programmed to lose.
 + Great men, men who build legacies, they aren't always decent.
 + He who asks a question is a fool for five minutes; he who does not ask a question remains a fool forever.
 + He who thinks, wins.
-+ Here we pass the ball, you understand that? We're a unit, not a one-man show. The name on the front of the shirt is more important than the one on the back.
++ Here we pass the ball, you understand that? We're a unit, not a one-man show.  
+  The name on the front of the shirt is more important than the one on the back.
 + Hope is a good thing, maybe the best of things, and no good thing ever dies.
 + How can you not be romantic about baseball?
 + human see what they want to see.
@@ -84,14 +127,16 @@
 + Just play. Have fun. Enjoy the game.
 + Ken Kesey: You're either on the bus or off the bus.
 + Kissinger: "Control oil and you control nations; control food and you control the people."
-+ Leave Your Audience Wanting More – In addition to previewing Captain America: Winter Soldier, Marvel did a great job setting up their next movies with the introduction of The Collector.
++ Leave Your Audience Wanting More - In addition to previewing Captain America:  
+  Winter Soldier, Marvel did a great job setting up their next movies with the introduction of The Collector.
 + live for nothing or die for something.
 + Love doesn't consist of gazing at each other,but looking outward together in the same direction.
 + Love is a two way street.
 + Lying is a problem. Asthma is not.
 + Malcolm Wallace: Your heart is free. Have the courage to follow it.
 + Masrani: The key to a happy life is to accept you are never actually in control.
-+ Matt King: I don't want my daughters growing up entitled and spoiled. And I agree with my father - you give your children enough money to do something but not enough to do nothing.
++ Matt King: I don't want my daughters growing up entitled and spoiled.  
+  And I agree with my father - you give your children enough money to do something but not enough to do nothing.
 + May the Odds Be Ever In Your Favour.
 + Memories are the first step to consciousness. How can you learn from your mistakes if you can't remember them?
 + Morpheus: I'm trying to free your mind, Neo. But I can only show you the door. You're the one that has to walk through it.
@@ -112,7 +157,8 @@
 + OODA - observation, orientation, decision, action.
 + Our conning days were behind us.
 + Padmé: So this is how liberty dies, with thunderous applause.
-+ People who can see through the essence of things in a second and those who can't see clearly in a lifetime are destined to have completely different fates.
++ People who can see through the essence of things in a second  
+  and those who can't see clearly in a lifetime are destined to have completely different fates.
 + Philosophy begins in wonder.
 + Politics is the process by which groups of people make decisions
 + Put your heart out there. It might get broken, but that's how you know you have one
@@ -120,7 +166,8 @@
 + Reagan: Government is not the solution to our problem; government is the problem.
 + RIFT - Revolutionary Independence from Technology
 + Sean O'Connell: Beautiful things don't ask for attention.
-+ Sean O'Connell: Sometimes I don't. If I like a moment, for me, personally, I don't like to have the distraction of the camera. I just want to stay in it.
++ Sean O'Connell: Sometimes I don't. If I like a moment, for me, personally, I don't like to have the distraction of the camera.  
+  I just want to stay in it.
 + Simplicity is the keynote of all true elegance.
 + Simplicity is the ultimate sophistication. --Leonardo da Vinci
 + Some people want it to happen, some wish it would happen, others make it happen.
@@ -159,10 +206,13 @@
 + Trust must be earned
 + Two wrongs don't make one right.
 + Uncle Ben: great power comes great responsibility
-+ Voltaire: Fools have a habit of believing that everything written by a famous author is admirable. For my part I read only to please myself and like only what suits my taste.
++ Vanity, definitely my favorite sin.
++ Voltaire: Fools have a habit of believing that everything written by a famous author is admirable.  
+  For my part I read only to please myself and like only what suits my taste.
 + Voltaire: Judge a man by his questions rather than by his answers.
 + Voltaire: The more I read, the more I acquire, the more certain I am that I know nothing.
-+ Walter Mitty: To see the world, things dangerous to come to, to see behind walls, draw closer, to find each other, and to feel. That is the purpose of life.
++ Walter Mitty: To see the world, things dangerous to come to, to see behind walls, draw closer, to find each other, and to feel.  
+  That is the purpose of life.
 + We all thought freedom is about doing everything that we wish, but then we learned that freedom is not having to do anything against our will.
 + We cling to memories as if they define us, but what we do defines us.
 + We determine who we are by what we do.
@@ -185,7 +235,8 @@
 + With great power comes great responsibility. This is my gift, my curse.
 + You are destroying your way out if you are afraid of failure.
 + You are stronger than you believe. You have greater powers than you know.
-+ You are too concerned with what was and what will be. There is a saying: yesterday is history, tomorrow is a mystery, but today is a gift. That is why it is called the "present."
++ You are too concerned with what was and what will be. There is a saying: yesterday is history, tomorrow is a mystery, but today is a gift.  
+  That is why it is called the "present."
 + You can fool yourself for just so long, that your next reinvention you better have your damn feet on the ground.
 + You can get more of what you want with a kind word and a gun than you can with just a kind word.
 + you complete me
@@ -487,8 +538,10 @@ People often say that destiny is inevitable. But sometimes destiny needs a littl
 + "I am not a product of my circumstances. I am a product of my decisions." -Stephen Covey
 + "I can't change the direction of the wind, but I can adjust my sails to always reach my destination." -Jimmy Dean
 + "I have been impressed with the urgency of doing. Knowing is not enough; we must apply. Being willing is not enough; we must do." -Leonardo da Vinci
-+ "I've learned that people will forget what you said, people will forget what you did, but people will never forget how you made them feel." -Maya Angelou
-+ "I've missed more than 9000 shots in my career. I've lost almost 300 games. Twenty-six times I've been trusted to take the game winning shot and missed.
++ "I've learned that people will forget what you said, people will forget what you did, but people will never forget how you made them feel."  
+  -Maya Angelou
++ "I've missed more than 9000 shots in my career. I've lost almost 300 games.  
+  Twenty-six times I've been trusted to take the game winning shot and missed.
   I've failed over and over and over again in my life. And that is why I succeed." -Michael Jordan
 + "If you hear a voice within you say, 'You cannot paint,' then by all means paint and that voice will be silenced. -Vincent Van Gogh
 + "If you look at what you have in life, you'll always have more. If you look at what you don't have in life, you'll never have enough." -Oprah Winfrey
@@ -515,7 +568,8 @@ People often say that destiny is inevitable. But sometimes destiny needs a littl
 + "When I was 5 years old, my mother always told me that happiness was the key to life.
   When I went to school, they asked me what I wanted to be when I grew up. I wrote down 'happy.'
   They told me I didn't understand the assignment, and I told them they didn't understand life." -John Lennon
-+ "When one door of happiness closes, another opens, but often we look so long at the closed door that we do not see the one that has been opened for us." -Helen Keller
++ "When one door of happiness closes, another opens, but often we look so long at the closed door  
+  that we do not see the one that has been opened for us." -Helen Keller
 + "Whether you think you can or you think you can't, you're right." -Henry Ford
 
 ## IRONMAN

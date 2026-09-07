@@ -2,23 +2,23 @@
 
 ## Devices
 
-`adb usb`  
-`adb connect ip_address_of_device`  
-`adb devices`     // show devices attached  
-`adb devices -l`  // devices (product/model)  
++ `adb usb`  
++ `adb connect ip_address_of_device`  
++ `adb devices`     // show devices attached  
++ `adb devices -l`  // devices (product/model)  
 
 ## shell terminal
 
-`adb shell`       // Open or run commands in a terminal on the host Android device.  
-`exit`
++ `adb shell`       // Open or run commands in a terminal on the host Android device.  
++ `exit`
 
 ## memory usage
 
-`adb shell free -h`  
-`adb shell procrank`  
-`adb shell dumpsys meminfo`  
-`adb shell cat /proc/meminfo`  
-`adb shell dmesg | grep -i "out of memory"`  
++ `adb shell free -h`  
++ `adb shell procrank`  
++ `adb shell dumpsys meminfo`  
++ `adb shell cat /proc/meminfo`  
++ `adb shell dmesg | grep -i "out of memory"`  
 
 ## adb exec-out
 
@@ -26,26 +26,25 @@
 
 ## adb common commands
 
-`adb help`          // List all comands  
-`adb shell ls`      // list directory contents  
-`adb shell ls -s`   // print size of each file  
-`adb shell ls -R`   // list subdirectories recursively  
-`adb shell ps`      // print process status  
-`adb shell netstat` // list TCP connectivity  
-`adb shell pwd`     // print current working directory
++ `adb help`          // List all comands  
++ `adb shell ls`      // list directory contents  
++ `adb shell ls -s`   // print size of each file  
++ `adb shell ls -R`   // list subdirectories recursively  
++ `adb shell ps`      // print process status  
++ `adb shell netstat` // list TCP connectivity  
++ `adb shell pwd`     // print current working directory
 
 ### server
 
-`adb kill-server`  
-`adb start-server`
++ `adb kill-server`  
++ `adb start-server`; start up adb daemon
 
 ### reboot
 
-`adb reboot`  
-`adb reboot bootloader`  
-`adb reboot fastboot`  
-`adb reboot recovery`     // reboot device into recovery mode  
-`$adb start-server`       // start up adb daemon
++ `adb reboot`  
++ `adb reboot bootloader`  
++ `adb reboot fastboot`  
++ `adb reboot recovery`     // reboot device into recovery mode  
 
 `adb root`                //restarts adb with root permissions
 
@@ -56,15 +55,14 @@
 
 ### take a screenshot
 
-`adb shell screencap -p /sdcard/001.png`  
-`adb pull /sdcard/001.png .`
-
-`adb shell screenrecord /sdcard/001.mp4`
++ `adb shell screencap -p /sdcard/001.png`  
++ `adb pull /sdcard/001.png .`
++ `adb shell screenrecord /sdcard/001.mp4`
 
 ### push, pull
 
-`adb push src dest`               // Copy files from your computer to your phone.  
-`adb pull remoteFile savedFlie`   // Copy files from your phone to your computer.
++ Copy files from your computer to your phone: `adb push src dest`
++ Copy files from your phone to your computer: `adb pull remoteFile savedFlie`
 
 ### install APK
 
@@ -77,15 +75,15 @@
 
 ### Install the given app on all connected devices
 
-adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPackage
+`adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPackage`
 
 ### Uninstall APP
 
-`adb uninstall packageName`  
-`adb uninstall -k packageName`    // Uninstall .apk withour deleting data  
-`adb shell pm uninstall packageName`  
-`adb shell pm clear packageName`  // Deletes all data associated with a package.  
-`adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X uninstall packageName` // Uninstall the given app from all connected devices
++ `adb uninstall packageName`  
++ `adb uninstall -k packageName`    // Uninstall .apk withour deleting data  
++ `adb shell pm uninstall packageName`  
++ `adb shell pm clear packageName`  // Deletes all data associated with a package.  
++ `adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X uninstall packageName` // Uninstall the given app from all connected devices
 
 ### Update APP
 
@@ -116,37 +114,37 @@ adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPa
 
 ### pm: Package Manager
 
-`adb shell pm list packages`     // list package names  
-`adb shell pm list packages -3`  // list third party package names  
-`adb shell pm list packages -r`  // list package name + path to apks  
-`adb shell pm list packages -s`  // list only system packages  
-`adb shell pm list packages -u`  // list package names + uninstalled  
++ `adb shell pm list packages`     // list package names  
++ `adb shell pm list packages -3`  // list third party package names  
++ `adb shell pm list packages -r`  // list package name + path to apks  
++ `adb shell pm list packages -s`  // list only system packages  
++ `adb shell pm list packages -u`  // list package names + uninstalled  
 
-`adb shell pm dump packageName`  // list info on one package  
-`adb shell pm dump packageName | grep codePath`  
-`adb shell pm dump packageName | grep versionName`  
-`adb shell pm dump com.android.webview`  
-`adb shell pm dump com.google.android.webview`  
-`adb shell pm dump android.rk.RockVideoPlayer`  
-`adb shell pm dump acr.browser.barebones`  
++ `adb shell pm dump packageName`  // list info on one package  
++ `adb shell pm dump packageName | grep codePath`  
++ `adb shell pm dump packageName | grep versionName`  
++ `adb shell pm dump com.android.webview`  
++ `adb shell pm dump com.google.android.webview`  
++ `adb shell pm dump android.rk.RockVideoPlayer`  
++ `adb shell pm dump acr.browser.barebones`  
 
 `adb shell pm path packageName`  // path to the apk file
 
-`adb shell pm list features`                          // list phone features  
-`adb shell pm reset-permissions -p your.app.package`  // Reset permissions  
-`adb shell pm grant packageName  Permission`          // Grant a permission to an app.  
-`adb shell pm revoke packageName Permission`          // Revoke a permission from an app.  
++ `adb shell pm list features`                          // list phone features  
++ `adb shell pm reset-permissions -p your.app.package`  // Reset permissions  
++ `adb shell pm grant packageName  Permission`          // Grant a permission to an app.  
++ `adb shell pm revoke packageName Permission`          // Revoke a permission from an app.  
 
-`adb shell pm install xxx.apk`  
-`adb shell pm uninstall xxx.apk`  
++ `adb shell pm install xxx.apk`  
++ `adb shell pm uninstall xxx.apk`  
 
 ### settings
 
-`adb shell settings list global`  
-`adb shell settings list secure`  
-`adb shell settings list system`  
-`adb shell settings get system screen_brightness`  
-`adb shell settings put system screen_brightness 120`  
++ `adb shell settings list global`  
++ `adb shell settings list secure`  
++ `adb shell settings list system`  
++ `adb shell settings get system screen_brightness`  
++ `adb shell settings put system screen_brightness 120`  
 
 `adb shell settings get global low_power`  
 A value of 0 indicates that Battery Saver (low power mode) is disabled.  
@@ -176,22 +174,22 @@ dumpsys is an android tool that runs on the device and dumps interesting informa
 
 #### set settings with dumpsys
 
-`adb shell dumpsys battery`                       // battery status  
-`adb shell dumpsys battery set level <n>` // change the level from 0 to 100  
-`adb shell dumpsys battery set status<n>` // change the level to unknown, charging, discharging, not charging or full  
-`adb shell dumpsys battery reset`         // reset the battery  
-`adb shell dumpsys battery set usb <n>`   // change the status of USB connection. ON or OFF  
-`adb shell dumpsys | grep ntp`
++ `adb shell dumpsys battery`                       // battery status  
++ `adb shell dumpsys battery set level <n>` // change the level from 0 to 100  
++ `adb shell dumpsys battery set status<n>` // change the level to unknown, charging, discharging, not charging or full  
++ `adb shell dumpsys battery reset`         // reset the battery  
++ `adb shell dumpsys battery set usb <n>`   // change the status of USB connection. ON or OFF  
++ `adb shell dumpsys | grep ntp`
 
 ### getprop: get device android version
 
-`adb shell getprop`  
-`adb shell getprop ro.build.version.release`  
-`adb shell getprop ro.build.version.sdk`  
-`adb shell getprop | grep hardware`  
-`adb shell getprop | grep ro.product.cpu`  
-`adb shell getprop | grep -i mac`  
-`adb shell cat /sys/class/net/eth0/address`  
++ `adb shell getprop`  
++ `adb shell getprop ro.build.version.release`  
++ `adb shell getprop ro.build.version.sdk`  
++ `adb shell getprop | grep hardware`  
++ `adb shell getprop | grep ro.product.cpu`  
++ `adb shell getprop | grep -i mac`  
++ `adb shell cat /sys/class/net/eth0/address`  
 
 ### wm: window manager
 
@@ -207,18 +205,18 @@ dumpsys is an android tool that runs on the device and dumps interesting informa
 
 `adb shell input text 'Wow, it so cool feature'`
 
-`adb shell input keyevent 3`    // Home btn  
-`adb shell input keyevent 4`    // Back btn  
-`adb shell input keyevent 5`    // Call  
-`adb shell input keyevent 6`    // End call  
-`adb shell input keyevent 26`   // Turn Android device ON and OFF. It will toggle device to on/off status.  
-`adb shell input keyevent 27`   // Camera  
-`adb shell input keyevent 64`   // Open browser  
-`adb shell input keyevent 66`   // Enter  
-`adb shell input keyevent 67`   // Delete (backspace)  
-`adb shell input keyevent 207`  // Contacts  
-`adb shell input keyevent 220`  // 221 // Brightness down/up  
-`adb shell input keyevent 277`  // 278, 279: Cut, Copy, Paste  
++ `adb shell input keyevent 3`    // Home btn  
++ `adb shell input keyevent 4`    // Back btn  
++ `adb shell input keyevent 5`    // Call  
++ `adb shell input keyevent 6`    // End call  
++ `adb shell input keyevent 26`   // Turn Android device ON and OFF. It will toggle device to on/off status.  
++ `adb shell input keyevent 27`   // Camera  
++ `adb shell input keyevent 64`   // Open browser  
++ `adb shell input keyevent 66`   // Enter  
++ `adb shell input keyevent 67`   // Delete (backspace)  
++ `adb shell input keyevent 207`  // Contacts  
++ `adb shell input keyevent 220`  // 221 // Brightness down/up  
++ `adb shell input keyevent 277`  // 278, 279: Cut, Copy, Paste  
 
 ## Shared Preferences
 

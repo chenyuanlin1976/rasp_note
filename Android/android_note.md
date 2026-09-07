@@ -125,3 +125,39 @@ public class Activity extends ContextThemeWrapper {};
 
 That is the reason when we need an argument **content** in the **activity class**,  
 we can use **this** (this is the object of this activity)
+
+## Android 14: To invoke an Activity from a Service
+
+To invoke an Activity from a Service on Android 14,  
+you must pass an Intent with the `Intent.FLAG_ACTIVITY_NEW_TASK` flag,  
+but your app must also comply with Android 14's strict *Background Activity Launch (BAL) restrictions*.
+
+### How to Start the Activity from a Service
+
+Because a Service does not run inside an Activity context,  
+Android requires a new task stack flag to launch UI elements.
+
+```java
+Intent intent = new Intent(this, TargetActivity.class);
+intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+startActivity(intent);
+```
+
+### Android 14 Background Activity Launch (BAL) Rules
+
+Starting with Android 14, the system blocks background services from abruptly popping an Activity onto the screen unless a specific exception is met.
+
++ Foreground State: Your app must be visible to the user or running an active,  
+  legitimate Foreground Service with the correct `android:foregroundServiceType` declared in your **AndroidManifest.xml**.
++ System-Sent PendingIntent: If your app is in the background, activities can only be reliably launched if triggered by a system interaction,  
+  such as a user tapping a notification.
++ Opt-In Flags: If another app binds to your service, that app must pass the `Context.BIND_ALLOW_ACTIVITY_STARTS` flag to allow your service to launch an activity.
+
+### Best Practice Alternative
+
+Android strongly discourages forcing an Activity to open automatically from a background service.  
+Instead, use a high-priority notification:
+
+1. Create a notification channel and build a notification.
+2. Attach a `PendingIntent` to that notification.
+3. Let the user tap the notification to safely open your Activity.

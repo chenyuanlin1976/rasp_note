@@ -2,11 +2,11 @@
 
 ## build type
 
-| Variant | Description |
-|--|--|
-| user | ro.debuggable=0; adb is disabled by default |
-| user-debug | ro.debuggable=1; adb is enabled by default |
-| eng | ro.debuggable=1; adb is enabled by default; ro.secure=0 |
+| Variant    | Description                                             |
+| ---------- | ------------------------------------------------------- |
+| user       | ro.debuggable=0; adb is disabled by default             |
+| user-debug | ro.debuggable=1; adb is enabled by default              |
+| eng        | ro.debuggable=1; adb is enabled by default; ro.secure=0 |
 
 [Ref](https://source.android.com/docs/setup/create/new-device)
 

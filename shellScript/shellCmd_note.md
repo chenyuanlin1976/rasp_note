@@ -161,7 +161,10 @@ find: This command performs a real-time, comprehensive search of the file system
 It can search by name, type, size, modification time, ownership, and more.  
 find is powerful and flexible but can be slow, especially when searching large directories or entire file systems, as it directly traverses the directory structure.
 
-`find /path/to/search -name "filename.txt"`
++ `find /path/to/search -name "filename"`
++ search in the current directory: `find . -name "filename"`
++ Case-insensitive search: `find . -iname "filename"`
++ Partial Name Match (Wildcards): `find . -name "*.pdf"`
 
 ## File manager
 

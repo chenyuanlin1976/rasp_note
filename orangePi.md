@@ -5,19 +5,19 @@
 
 ## Find the device
 
-`$lsblk`
+`lsblk`
 
 ## Wipe the disk
 
-`$sudo dd bs=1M if=/dev/zero of=/dev/mmcblk0 count=1000 status=progress && sudo sync`
+`sudo dd bs=1M if=/dev/zero of=/dev/mmcblk0 count=1000 status=progress && sudo sync`
 
 ## Copy image to orangepi
 
-`$scp ~/Downloads/Orangepi_ubuntu_.img orangepi@IP_ADDR:~/ubuntu.img`
+`scp ~/Downloads/Orangepi_ubuntu_.img orangepi@IP_ADDR:~/ubuntu.img`
 
 ## Copy it to the emmc drive
 
-`$sudo dd bs=1M if=./ubuntu.img of=/dev/mmcblk0 status=progress`
+`sudo dd bs=1M if=./ubuntu.img of=/dev/mmcblk0 status=progress`
 
 ## Check installation
 
@@ -25,15 +25,15 @@ I checked `fdisk -l` and it only showed a ~3G partition size. I went ahead and r
 
 ## display temperature sensors
 
-`$watch -n1 sensors`
+`watch -n1 sensors`
 
 ## display CPU usage
 
-`$htop`
+`htop`
 
 ## display GPU usage
 
-`$watch -n1 cat /sys/devices/platform/fb000000.gpu/utilisation`
+`watch -n1 cat /sys/devices/platform/fb000000.gpu/utilisation`
 
 ## decoders support
 

@@ -17,6 +17,7 @@
 + `adb shell free -h`  
 + `adb shell procrank`  
 + `adb shell dumpsys meminfo`  
++ `adb shell dumpsys meminfo your.package.name`
 + `adb shell cat /proc/meminfo`  
 + `adb shell dmesg | grep -i "out of memory"`  
 

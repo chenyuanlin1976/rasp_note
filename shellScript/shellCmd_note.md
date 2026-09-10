@@ -310,6 +310,8 @@ It can display more TCP and state information than other tools.
 
 ### wget - The non-interactive network downloader
 
+`wget -c -i urls.txt`
+
 ### lspci - shows detailed information about all PCI buses and devices on the system
 
 `lspci -nnk`

@@ -1,6 +1,7 @@
-# linux boot logs
+# location of boot logs
 
-The location of Linux boot logs and the methods to view them depend on the system's initialization process (SysVinit or systemd) and specific distribution.
+The location of Linux boot logs and the methods to view them  
+depend on the system's initialization process (SysVinit or systemd) and specific distribution.
 
 ## Common Log Locations and Commands
 

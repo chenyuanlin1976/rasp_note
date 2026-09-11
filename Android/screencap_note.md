@@ -2,19 +2,19 @@
 
 <https://developer.android.com/tools/adb>
 
-```md
+```bash
 usage: screencap [-hp] [-d display-id] [FILENAME]  
   -h: this message  
   -p: save the file as a png.  
   -d: specify the display ID to capture (default: 4625716335649126416)  
       see "dumpsys SurfaceFlinger --display-id" for valid display IDs.  
-**If FILENAME ends with .png it will be saved as a png.**  
-**If FILENAME is not given, the results will be printed to stdout.**
+# If FILENAME ends with .png it will be saved as a png.  
+# If FILENAME is not given, the results will be printed to stdout.
 ```
 
 `adb shell screencap /sdcard/screen.png`
 
-| Commands                          |  Result    |  $file xxx       |
+| Commands                          |  Result    |  $`file xxx`     |
 |-----------------------------------|------------|------------------|
 | `adb shell screencap -p 01.jpg`   |  Pass      |  PNG image data  |
 | `adb shell screencap -p 02.png`   |  Pass      |  PNG image data  |

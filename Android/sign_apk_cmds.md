@@ -99,6 +99,7 @@ How can I get it? In android we can generate keystore for debug and release buil
 + -keyalg RSA  
 + -keysize 2048  
 + -validity 10000  
+
 After that you need to add some detail which will ask by terminal, fill it.  
 Now you can use this keystore for creating a debug android build.
 
@@ -110,5 +111,6 @@ Now you can use this keystore for creating a debug android build.
 + -keyalg RSA  
 + -keysize 2048  
 + -validity 10000  
+
 After that you need to add some detail which will ask by terminal, fill it.  
 Now you can use this keystore for creating a release android build.

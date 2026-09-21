@@ -18,7 +18,7 @@ but this coding style narrows the range down to achieve better code readability.
 + Unless a bus defines differently, **unit addresses** shall use lowercase hexadecimal digits, without leading zeros (padding).  
 + **Hex values in properties**, e.g. "reg", shall use lowercase hex. The address part can be padded with leading zeros.  
 
-```C
+```ini
 gpi_dma2: dma-controller@a00000 {
   compatible = "qcom,sm8550-gpi-dma", "qcom,sm6350-gpi-dma";
   reg = <0x0 0x00a00000 0x0 0x60000>;

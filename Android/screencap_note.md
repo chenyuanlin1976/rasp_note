@@ -14,7 +14,7 @@ usage: screencap [-hp] [-d display-id] [FILENAME]
 
 `adb shell screencap /sdcard/screen.png`
 
-| Commands                          |  Result    |  $`file xxx`     |
+| Commands                          |  Result    |  `file xxx`      |
 |-----------------------------------|------------|------------------|
 | `adb shell screencap -p 01.jpg`   |  Pass      |  PNG image data  |
 | `adb shell screencap -p 02.png`   |  Pass      |  PNG image data  |

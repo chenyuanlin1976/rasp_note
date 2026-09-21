@@ -10,7 +10,7 @@ the host controller interface types provide the definitive answer:
 
 Android may NOT support the option `-t`.
 
-```bash
+```ini
 /:  Bus 001.Port 001: Dev 001, Class=root_hub, Driver=xhci_hcd/16p, 480M
     |__ Port 002: Dev 002, If 0, Class=Vendor Specific Class, Driver=[none], 12M
     |__ Port 002: Dev 002, If 2, Class=Human Interface Device, Driver=usbhid, 12M
@@ -33,7 +33,7 @@ If you only see ehci_hcd, it is an older or budget device limited to USB 2.0.
 
 ## command: `adb shell cat /sys/kernel/debug/usb/devices`
 
-```bash
+```ini
 T:  Bus=01 Lev=00 Prnt=00 Port=00 Cnt=00 Dev#=  1 Spd=480  MxCh= 1
 B:  Alloc=  0/800 us ( 0%), #Int=  0, #Iso=  0
 D:  Ver= 2.00 Cls=09(hub  ) Sub=00 Prot=01 MxPS=64 #Cfgs=  1

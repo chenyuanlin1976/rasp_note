@@ -58,9 +58,10 @@ Note: Any changes made to build types or product flavors in your module-level bu
    b. **/system/priv-app**: For privileged system applications that require special permissions or access to hidden APIs.
 
 If you have root, you can do,  
-`$adb root`  
-`$adb remount`  
-`$adb push yourApk /system/app`
+
+`adb root`  
+`adb remount`  
+`adb push yourApk /system/app`
 
 And it can immediately receive broadcast intents.  
 This certainly doesn NOT provide a general purpose solution, but i wanted to mention it for completeness.

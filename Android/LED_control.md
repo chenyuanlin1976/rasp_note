@@ -193,7 +193,7 @@ gpiochip4: GPIOs 128-159, parent: platform/fe770000.gpio, gpio4:
 
 ##### check source code: rk3566-evb2-lp4x-v10-390k.dtsi
 
-```bash
+```ini
 &leds {
    dvb_rf: dvb-rf {
       gpios = <&gpio3 RK_PD3 GPIO_ACTIVE_HIGH>;

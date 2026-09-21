@@ -8,8 +8,8 @@ login command: `ssh login user@hostname`
 
 1. create public key and private key at ~/.ssh
 2. Copy your public key to server; and next time, you can login without typing password.  
-`ssh-keygen`  
-`ssh-copy-id your_key_path user@server_host`
+   `ssh-keygen`  
+   `ssh-copy-id your_key_path user@server_host`
 
 ## copy file between local and  remote server
 

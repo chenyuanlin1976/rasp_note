@@ -52,7 +52,7 @@ and then we can modify it according to the peripherals on the board.
 + **nodes** are defined with a node-name and unit-address with braces marking the start and end of the node definition. They may be preceded by a label.
   Nodes may contain property definitions and/or child node definitions. If both are present, properties shall come before child nodes.
 
-  ```C
+  ```ini
   [label:] node-name@unit-address {
     [properties definitions]
     [child nodes]
@@ -73,7 +73,7 @@ and then we can modify it according to the peripherals on the board.
 
 ## 1st Example of DTS
 
-```C
+```ini
 cpus {
   #address-cells = <1>;
   #size-cells = <0>;
@@ -92,7 +92,7 @@ cpus {
 
 ## 2nd Example of DTS
 
-```C
+```ini
 soc {
   compatible = "simple-bus";
   #address-cells = <1>;             // 1 u32 cell used to encode the address field
@@ -126,7 +126,7 @@ soc {
 + Description: The phandle property specifies a numerical identifier for a node that is unique within the devicetree.  
   The phandle property value is **used by other nodes** that need to refer to the node associated with the property.
 
-```C
+```ini
   pic@10000000 {
     phandle = <1>;          // A phandle value of 1 is defined.
     interrupt-controller;
@@ -136,7 +136,7 @@ soc {
 
 Another device node could reference the pic node with a phandle value of 1:
 
-```C
+```ini
   another-device-node {
     interrupt-parent = <1>;
   };
@@ -170,7 +170,7 @@ and describes how child device nodes should be addressed.
 **Example**: Suppose a device within a system-on-a-chip had 2 blocks of registers,  
 The reg property would be encoded as follows (assuming #address-cells and #size-cells values of 1)
 
-```C
+```ini
   reg = <0x3000 0x20 0xFE00 0x100>;
   // a  32-byte block at offset 0x3000 in the SOC and
   // a 256-byte block at offset 0xFE00.

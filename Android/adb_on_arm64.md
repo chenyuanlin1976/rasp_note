@@ -6,11 +6,11 @@
 
 ## install adb in arm64 platform
 
-`$sudo apt install adb`
+`sudo apt install adb`
 
 ## install Android Studio on arm64 platform (NOT Completed)
 
-1. install JDK: `$sudo apt install openjdk-21-jdk`
+1. install JDK: `sudo apt install openjdk-21-jdk`
 2. download jbr from [aarch64 JBR](https://github.com/JetBrains/JetBrainsRuntime) and replace it  
-3. run command: `$~/Downloads/android-studio/bin/studio.sh`
+3. run command: `~/Downloads/android-studio/bin/studio.sh`
 4. configuration ...

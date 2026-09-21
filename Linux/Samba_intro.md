@@ -72,3 +72,18 @@ A typical share definition inside `/etc/samba/smb.conf` looks like this:
 7. Access the Share from a Client:
    + From Linux: `smb://<Linux_IP_Address>/PublicShare`
    + From Windows: `\\<Linux_IP_Address>\PublicShare`
+
+## Tips
+
+1. check current connection:  
+   + view a active list of connected users, their client IP addresses, and the shares they are using: `smbstatus`
+   + see a summary of active share connections: `smbstatus -S`
+   + see which files are currently locked or open by connected users: `smbstatus -L`
+2. Using `smbget` to Resume Downloads: `sudo apt install smbclient`  
+   + `smbget -r smb://server/share/path/to/file`
+   + `smbget -r -U "username%password" smb://server/share/path/to/file`
+   + Key smbget Options
+     + `-r`, --resume: Automatically resumes aborted or interrupted files.
+     + `-R`, --recursive: Recursively download directories and their contents.
+     + `-a`, --guest: Connect as an anonymous guest user.
+     + `-o`, --outputfile FILE: Specify a custom local output file name

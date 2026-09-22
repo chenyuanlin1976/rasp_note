@@ -7,9 +7,9 @@ Fallbacks are essential for building fault-tolerant, robust, and user-friendly a
 
 ## Common Use Cases & Examples
 
-1. Default Values (Variables and Functions): If a variable or function parameter is not provided or evaluates to null/undefined,  
+1. **Default Values** (Variables and Functions): If a variable or function parameter is not provided or evaluates to null/undefined,  
    a fallback value ensures the program doesn't crash.
-2. Error Handling (Try-Catch / Exceptions): When a primary operation fails (like a database query or network request),  
+2. **Error Handling** (Try-Catch / Exceptions): When a primary operation fails (like a database query or network request),  
    a fallback code block catches the exception and executes a safe alternative.
 3. UI/UX Design (Graceful Degradation): In frontend development, fallbacks ensure that if a browser doesn't support a modern feature,  
    an older or simpler styling/functionality is used instead.
@@ -24,8 +24,9 @@ Fallbacks are essential for building fault-tolerant, robust, and user-friendly a
 
 ## In C language
 
-In the C programming language, because it lacks modern high-level features like built-in exception handling (try-catch) or nullish coalescing operators (??),  
-fallbacks are typically implemented using conditional statements, preprocessor directives, or function pointers.
+In the C programming language, because it lacks modern high-level features like built-in exception handling (try-catch)  
+or nullish coalescing operators (??),  
+fallbacks are typically implemented using *conditional statements, preprocessor directives, or function pointers*.
 
 1. Default Values Using Ternary Operators or if-else:  
    When a function argument or configuration value might be invalid, zero, or uninitialized, a conditional check acts as the fallback.

@@ -37,7 +37,7 @@ Below is a practical guide on how to register, configure, and switch between Pyt
 
 + Note on Modern Development: While update-alternatives is fantastic for setting system-wide defaults  
   (which system tools and scripts might rely on), it is generally not recommended for managing project-specific environments.
-+ Use Virtual Environments (venv): For developing Python applications, always rely on venv or virtualenv to keep dependencies isolated per project.
++ Use Virtual Environments (**venv**): For developing Python applications, always rely on **venv or virtualenv** to keep dependencies isolated per project.
 + Consider pyenv: If you frequently need to switch between many different Python versions for development  
   without messing with system packages, tools like pyenv offer a more flexible, user-space alternative.
 + Avoid Breaking System Python: On many modern Linux distributions,  

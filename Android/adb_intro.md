@@ -273,6 +273,73 @@ dumpsys is an android tool that runs on the device and dumps interesting informa
 `adb backup -apk -nosystem -all -f backup.ab`   // backup only non-system apps  
 `adb restore backup.ab`                         // restore a previous backup  
 
+## svc, simply short for service.
+
+`svc` is a command-line tool used to control various services on an Android device.  
+It acts as a bridge between the command line and Android's system services (like power management, Wi-Fi, data connectivity, etc.),  
+allowing developers, power users, and automation scripts to toggle hardware features and device states without touching the user interface.
+
+### Common Commands and Usages
+
+To use svc, you typically run it through ADB in the following format: `adb shell svc [command] [subcommand] [options]`
+Here are the most frequently used subcommands:
+
++ svc data: Controls mobile cellular data connectivity.
+  + `adb shell svc data enable`
+  + `adb shell svc data disable`
++ svc power: Controls power management and device sleep states.
+  + `adb shell svc power stayon` [true|false|usb|ac|wireless] (Keeps the screen awake)
+  + `adb shell svc power shutdown` (Powers off the device)
++ svc bluetooth: Controls the Bluetooth radio.
+  + `adb shell svc bluetooth enable`
+  + `adb shell svc bluetooth disable`
++ svc wifi: Controls the Wi-Fi radio.
+  + `adb shell svc wifi enable` (Turns Wi-Fi on)
+  + `adb shell svc wifi disable` (Turns Wi-Fi off)
++ svc usb: Controls USB connection modes (like MTP, PTP, or tethering).
+
+### Why Use svc?
+
++ Automation: Great for writing shell scripts or test automation (e.g., toggling network connections on and off during UI testing).
++ Headless/Recovery Operations: Useful when debugging devices where the touch screen or UI settings menu might be unresponsive or inaccessible.
+
+## cmd utility
+
+The command `adb shell cmd` is a powerful interface used to interact with Android's System Services.  
+Here is a breakdown of what each part means and how it works:
+
+### Breaking Down the Command
+
++ adb (Android Debug Bridge): The core command-line tool that lets you communicate with an Android emulator instance  
+  or a connected physical Android device from your computer.
++ shell: Tells ADB to open a Unix command-line shell session on the target device, allowing you to run device-side commands.
++ cmd: Specifically invokes **the cmd service manager daemon** introduced in Android 7.0 (Nougat).  
+  This service acts as the gateway to manage and *communicate directly with various system services running on the device*.
+
+### What Does cmd Actually Do?
+
+Before the `cmd` tool was introduced, developers and administrators interacted with system services using the service call command,  
+which was low-level, difficult to read, and prone to breaking across Android versions.
+
+The `cmd` utility improves upon this by:
+
++ Routing Commands to Services: It talks directly to the Service Manager to find and control system services  
+  (like activity, package, notification, battery, etc.).
++ Providing Clean Interfaces: Many system services implement their own human-readable command-line interfaces accessible via `cmd`.
+
+While `adb shell cmd` acts as a general gateway to manage a wide variety of Android's system services,  
+`adb shell svc` is a specialized, narrower command line tool specifically used to control hardware power and connectivity services  
+(such as Wi-Fi, mobile data, power states, and USB/nfc settings).
+
+### Common Examples & Usage
+
+Instead of typing raw service codes, `cmd` allows you to run intuitive sub-commands for specific system services:
+
++ Package Management (cmd package): `adb shell cmd package list packages -3`
++ Activity Manager (cmd activity): `adb shell cmd activity force-stop com.example.app`
++ Battery Simulation (cmd battery): `adb shell cmd battery set level 15`
++ List All Available Services: `adb shell cmd -l`
+
 ## Other
 
 `adb backup`      // Create a full backup of your phone and save to the computer.  

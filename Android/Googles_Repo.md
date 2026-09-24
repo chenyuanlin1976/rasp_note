@@ -3,7 +3,7 @@
 Google's Repo is a command-line tool built on top of Git.  
 It was developed by Google primarily to manage the Android Open Source Project (AOSP),  
 which consists of hundreds of individual, decoupled Git repositories working together  
-(ranging from the Linux kernel and hardware drivers to application frameworks and user apps).   
+(ranging from the Linux kernel and hardware drivers to application frameworks and user apps).  
 
 ## 1. Why is Repo Needed? (The Problem It Solves)
 
@@ -30,14 +30,14 @@ where they should be located in your local directory, and which branches or comm
 
 Working with Repo usually follows a specific lifecycle. Here are the most frequently used commands:
 
-| Command                          | Description                                                                                             |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| repo init -u <URL> [-b <branch>] | Initializes Repo in the current directory, pointing to a specific manifest URL and branch.              |
-| repo sync                        | Downloads new changes and updates all local Git repositories to match the manifest.                     |
-| repo start <branch-name> --all   | Creates a new local development branch across all repositories simultaneously.                          |
-| repo status                      | Inspects the working tree, showing uncommitted changes or unpushed commits across all repositories.     |
-| repo diff                        | Displays changes made across the repositories.                                                          |
-| repo upload                      | Automates the code review submission process (often tied with Gerrit code-review systems used in AOSP). |
+| Command                            | Description                                                                                             |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `repo init -u <URL> [-b <branch>]` | Initializes Repo in the current directory, pointing to a specific manifest URL and branch.              |
+| `repo sync`                        | Downloads new changes and updates all local Git repositories to match the manifest.                     |
+| `repo start <branch-name> --all`   | Creates a new local development branch across all repositories simultaneously.                          |
+| `repo status`                      | Inspects the working tree, showing uncommitted changes or unpushed commits across all repositories.     |
+| `repo diff`                        | Displays changes made across the repositories.                                                          |
+| `repo upload`                      | Automates the code review submission process (often tied with Gerrit code-review systems used in AOSP). |
 
 ## 4. Key Benefits
 
@@ -45,3 +45,17 @@ Working with Repo usually follows a specific lifecycle. Here are the most freque
 + Atomic-like Syncing: A single repo sync command updates your entire multi-repository workspace to a consistent state.
 + Flexibility: Developers can work on a specific feature branch that spans multiple repositories,  
   and repo start or repo status will track everything cohesively.
+
+## Source control workflow
+
+[Flow](https://source.android.com/docs/setup/create/coding-tasks)
+
+### Flow
+
+Android development involves the following basic workflow:
+
+1. Start a new topic branch using repo start.
+1. Edit the files.
+1. Stage changes using git add.
+1. Commit changes using git commit.
+1. Upload changes to the review server using repo upload.

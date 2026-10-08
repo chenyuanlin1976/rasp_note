@@ -9,7 +9,7 @@ requests must pass through several layers:
 
 Android 14 Context: Android 14 heavily relies on **AIDL (Android Interface Definition Language)** for HALs  
 and enforces strict modularity through Project Treble.  
-Traditional legacy HIDL interfaces are increasingly deprecated or phased out in favor of stable AIDL.
+Traditional legacy HIDL interfaces are increasingly **deprecated** or phased out in favor of stable AIDL.
 
 ## 2. Role of ServiceManager
 
@@ -24,7 +24,7 @@ The **ServiceManager** acts as the central registry for all system-wide Binder s
 
 ### Step 1: Define the AIDL Interface
 
-In Android 14, define your hardware control interface using AIDL (IGpioControl.aidl):
+In Android 14, define your hardware control interface using AIDL (`IGpioControl.aidl`):
 
 ```java
 package android.hardware.gpio;
@@ -52,7 +52,7 @@ class GpioControlService : public android::hardware::gpio::BnGpioControl {
     }
 };
 
-int main() {.te files
+int main() {
     ABinderProcess_setThreadPoolMaxThreadModel(1);
     
     std::shared_ptr<GpioControlService> gpioService = ndk::SharedRefBase::make<GpioControlService>();

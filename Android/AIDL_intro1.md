@@ -84,7 +84,7 @@ On the other side of the contract, the C++ HAL service implements that exact rul
 Because it honors the contract, it receives the request safely from the app.
 
 ```c++
-// C++ code implementing the service
+// implementing the service
 binder::Status WifiPowerControl::setWifiPower(bool enable, bool* _aidl_return) {
     // The contract guaranteed a boolean ('enable') was passed.
     // Now the HAL uses its low-level tools (like libgpiod) to fulfill it:

@@ -17,8 +17,8 @@ or a Direct GPIO Enable property (if the driver natively accepts an enable line)
         regulator-min-microvolt = <3300000>; // Set voltage (e.g., 3.3V)
         regulator-max-microvolt = <3300000>;
         gpio = <&gpio1 10 GPIO_ACTIVE_HIGH>; // Replace with your actual GPIO pin
-		startup-delay-us = <1000>;      /* Delay when turning ON */
-		off-on-delay-us = <2000>;       /* Cooldown / delay required after turning OFF */
+        startup-delay-us = <1000>;      /* Delay when turning ON */
+        off-on-delay-us = <2000>;       /* Cooldown / delay required after turning OFF */
         enable-active-high;
         regulator-boot-on; // Optional: keeps power on during boot
     };

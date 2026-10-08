@@ -15,17 +15,18 @@ Linux subsystems look for specific suffixes attached to property names to identi
 | -gpios/-gpio    | GPIO Pins (enables, resets, chip-selects) | enable-gpios = <&gpio1 12 GPIO_ACTIVE_HIGH>; |
 | -supply         | Regulators (Power Rails / LDOs)           | vmmc-supply = <&ldo3_reg>;                   |
 | -clocks         | Input Clock sources                       | clocks = <&ccu CLK_BUS>;                     |
-| -rests          | Hardware Reset lines                      | resets = <&rst 0>;                           |
+| -resets         | Hardware Reset lines                      | resets = <&rst 0>;                           |
 | -names          | Labels matching multi-resource arrays     | clock-names = "bus", "functional";           |
 
 ## 2. Core Standard Properties
 
 Every device node relies on a few mandatory or universally recognized properties defined by the Device Tree specification.
 
-+ compatible: Links the hardware node to its corresponding Linux device driver using a "vendor,model" format (e.g., `compatible = "ti,am3352-rtc"`).
-+ reg: Defines the physical memory-mapped register address space (address and size).
-+ interrupts/ interrupt-parent: Specifies which hardware interrupt line the device triggers and which interrupt controller manages it.
-+ status: Controls whether the device is active or disabled.  
++ `compatible`: Links the hardware node to its corresponding Linux device driver  
+  using a "vendor,model" format (e.g., `compatible = "ti,am3352-rtc"`).
++ `reg`: Defines the physical memory-mapped register address space (address and size).
++ `interrupts`/ interrupt-parent: Specifies which hardware interrupt line the device triggers and which interrupt controller manages it.
++ `status`: Controls whether the device is active or disabled.  
   Setting `status = "disabled"`; tells the kernel to ignore the node entirely.
 
 ## 3. Pin Control (pinctrl) Convention
@@ -46,14 +47,14 @@ my_device: device@12340000 {
 };
 ```
 
-+ `pinctrl-names`: Usually contains "default" (active operating state) and optionally "sleep" (low-power state).
++ `pinctrl-names`: Usually contains "default" (**active operating state**) and optionally "sleep" (**low-power state**).
 + `pinctrl-0`, `pinctrl-1`, etc.: **Phandles** pointing to the exact electrical configurations (pull-ups, slew rate, drive strength)  
    *managed automatically by the kernel's pinctrl subsystem before the driver's probe() runs*.
 
 ## 4. Power Management & Regulators Convention
 
 Instead of controlling a power rail directly through a GPIO line,  
-modern hardware often routes power through a Power Management IC (PMIC) managed by the Linux Regulator Framework:
+modern hardware often routes power through a Power Management IC (PMIC) managed by the Linux **Regulator Framework**:
 
 + In the DTSI, power inputs use the `-supply` suffix (e.g., `vdd-supply = <&pmic_reg1>;`).
 + In the driver, instead of manually toggling a GPIO, the driver author calls generic kernel functions  

@@ -1,133 +1,100 @@
 # AIDL introduction
 
-To understand the phrase "**AIDL serves as the public contract for a native Hardware Abstraction Layer (HAL) service**",  
-it helps to break down how Android separates different software layers to keep the system secure, modular, and stable.
+AIDL stands for **Android Interface Definition Language**.  
+It is a powerful tool provided by Android to allow communication **between different processes**  
+running on the same device - a concept known as Inter-Process Communication (IPC).
 
-## 1. What is a "Contract"?
+## Why Do We Need AIDL?
 
-+ In software, a contract is a strict agreement on how two separate pieces of software will talk to each other.
-+ It specifies the exact function names, inputs (arguments), and outputs (return values).
-+ Neither side needs to know how the other is written internally; they only need to follow the rules of the contract.
+In Android, every application typically runs in its own isolated process and memory space for security and stability.  
+Process A CANNOT normally access the memory or call methods directly inside Process B.
 
-## 2. What is the HAL (Hardware Abstraction Layer)?
+However, there are times when apps or system services need to share data or trigger actions across processes  
+(e.g., a background music playback service controlled by a UI app, or system-level hardware abstraction layers).  
+AIDL solves this by handling the complex underlying plumbing required to marshal data, send it across process boundaries,  
+and unmarshal it on the other side.
 
-Android devices run on many different chips (Qualcomm, MediaTek, Samsung, etc.).  
-Each chip has different ways of interacting with physical hardware (like how a Wi-Fi chip is powered on).
+## How AIDL Works
 
-+ The HAL is a collection of native (C/C++) services written by chipmakers or device manufacturers  
-  that hide the messy, hardware-specific details from the rest of Android.
-+ Android's core system and apps shouldn't care how a Wi-Fi chip turns on—they just want a simple command to turn it on.
+AIDL uses an interface definition file (with a `.aidl` extension) that looks very similar to a standard Java or Kotlin interface.
 
-## 3. Why AIDL is the Public Contract
+1. Define the Interface (`.aidl`): You write a file outlining the methods and data types available for remote calls.
+2. Code Generation: During the build process, the Android SDK tool uses the `.aidl` file  
+   to automatically generate an interface file in Java/Kotlin.  
+   This generated file includes an inner abstract class called **Stub**, which inherits from Android's **Binder class**.
+3. Implement the Service (**Server Side**): The app hosting the service extends the generated Stub class and implements the remote methods.
+4. Bind and Call (**Client Side**): The client app binds to the service using a `ServiceConnection`  
+   and converts the received `IBinder` object into the interface type, allowing it to invoke remote methods as if they were local.
 
-Android apps and system services run in different processes (sandboxes) for security.  
-A Java-based app cannot directly call a C++ function inside a native HAL service.
+## Basic Code Example
 
-+ AIDL (Android Interface Definition Language) acts as the translator and the official agreement across this process boundary.
-+ By writing an .aidl file (like IWifiPowerControl), you establish a standardized API contract.
-+ The Android build system automatically generates the low-level code needed to pass data safely back  
-  and forth across processes (via Android's Binder IPC driver).
-
-**In short**: AIDL is the standardized rulebook that lets high-level Android software securely tell the low-level C++ hardware driver what to do,  
-without crashing the system if something goes wrong.
-
-## example
-
-Here is a concrete, end-to-end example of how this contract works in practice,  
-showing how a high-level caller uses the AIDL contract to talk to the low-level HAL service.
-
-The Scenario: Turning Wi-Fi Power On: Imagine an Android system app wants to turn on the Wi-Fi hardware.  
-**It cannot talk directly to the Linux kernel or the C++ hardware driver.**  
-Instead, **it relies on the AIDL contract.**
-
-### 1. The Contractual Agreement (.aidl)
-
-Both the app developer and the C++ HAL developer look at the exact same file to agree on the rules:
+### 1. Define the AIDL file (IMyService.aidl)
 
 ```java
-// File: IWifiPowerControl.aidl
-package android.hardware.wifi.power;
+package com.example.myapp;
 
-interface IWifiPowerControl {
-    boolean setWifiPower(boolean enable);
+interface IMyService {
+    int getScore();
+    void updateScore(int newScore);
 }
 ```
 
-+ The Rule: Anyone calling this service must pass a boolean,  
-  and the service must return a boolean indicating success or failure.  
-  No other data formats are allowed.
-
-### 2. The Client Side (The Android App / System Service)
-
-**An Android system service uses the contract to make a request**.  
-It doesn't know (or care) that C++ or libgpiod is running underneath; it only cares about the contract.
+### 2. Implement the Service (Server)
 
 ```java
-// Java / Kotlin code in an Android System Service
-try {
-    // 1. Get the service using the AIDL interface name
-    IBinder binder = ServiceManager.getService("wifi_power_service");
-    IWifiPowerControl wifiService = IWifiPowerControl.Stub.asInterface(binder);
+public class MyService extends Service {
+    private int score = 100;
 
-    // 2. Execute the contract method
-    boolean success = wifiService.setWifiPower(true);
-    if (success) {
-        Log.d("WifiApp", "Wi-Fi power turned on successfully!");
+    // Implement the Stub generated by the build system
+    private final IMyService.Stub binder = new IMyService.Stub() {
+        @Override
+        public int getScore() throws RemoteException {
+            return score;
+        }
+
+        @Override
+        public void updateScore(int newScore) throws RemoteException {
+            score = newScore;
+        }
+    };
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return binder; // Expose the binder to the client
     }
-} catch (RemoteException e) {
-    Log.e("WifiApp", "Failed to communicate with the hardware service", e);
 }
 ```
 
-### 3. The Server Side (The C++ Native HAL)
+### 3. Call from the Client
 
-On the other side of the contract, the C++ HAL service implements that exact rule.  
-Because it honors the contract, it receives the request safely from the app.
+```java
+IMyService myService;
 
-```c++
-// C++ code implementing the service
-binder::Status WifiPowerControl::setWifiPower(bool enable, bool* _aidl_return) {
-    // The contract guaranteed a boolean ('enable') was passed.
-    // Now the HAL uses its low-level tools (like libgpiod) to fulfill it:
-    
-    int value = enable ? 1 : 0;
-    int ret = gpiod_line_set_value(wifi_gpio_line, value);
+private ServiceConnection connection = new ServiceConnection() {
+    @Override
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        // Cast the IBinder to the AIDL-generated interface proxy
+        myService = IMyService.Stub.asInterface(service);
+        try {
+            int currentScore = myService.getScore();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
 
-    // Return the boolean result back across the contract
-    *_aidl_return = (ret == 0);
-    return binder::Status::ok();
-}
+    @Override
+    public void onServiceDisconnected(ComponentName name) {
+        myService = null;
+    }
+};
 ```
 
-### Why this structure matters
+## Key Things to Know
 
-+ Decoupling: If the chip manufacturer updates the C++ code or changes how `libgpiod` talks to the kernel,  
-  they don't have to change anything in the Android app.  
-  As long as the C++ code still fulfills the IWifiPowerControl contract, everything works seamlessly.
-+ Safety: If the C++ hardware driver crashes due to a low-level kernel error,  
-  Android's process isolation prevents it from crashing the entire operating system or the user's app.
-
-## config in the .dtsi
-
-To configure a GPIO pin for a Wi-Fi power enable/disable function in a Device Tree Source Include (.dtsi) file,  
-you need to add a pin definition inside your Wi-Fi device node, referencing the correct SoC GPIO controller bank and line.
-
-### Configuration Steps
-
-1. Locate the GPIO Controller Node:  
-   Find the parent GPIO controller alias or label in your SoC's base .dtsi file (e.g., &gpio1 or &pio). You will need its reference handle.
-2. Add the Pin Property to your Device Node:  
-   Inside your device's node block, define your power pin using the standard `-gpios` suffix convention.  
-   Specify the controller reference, the pin index, and the polarity flag.
-
-   ```ini, DTS
-   wifi_module: wifi@1 {
-       compatible = "vendor,wifi-chip";
-       /* Connects line 12 of gpio1 as an active-high enable pin */
-       wifi-enable-gpios = <&gpio1 12 GPIO_ACTIVE_HIGH>;
-   };
-   ```
-
-3. Compile and Update the DTB:  
-   Recompile your device tree source into a .dtb file and flash/load it onto your target device.  
-   You can verify the configuration applied successfully by checking if the node and property appear under `/proc/device-tree/` on the running system.
++ Thread Safety: Calls made from a remote process are executed on a thread pool managed by the system,  
+  meaning your service implementation must be thread-safe if multiple clients call it simultaneously.
++ Supported Types: By default, AIDL supports primitives, String, CharSequence, List, Map, and custom Parcelable objects.
++ Stable AIDL: Used extensively in modern Android Open Source Project (AOSP) development (such as for HALs and APEX modules),  
+  Stable AIDL allows versioning so that client and server components can be updated independently without breaking compatibility.
++ When to use: You only need AIDL if you are building an app that explicitly exposes services to other applications across different processes.  
+  If your components live inside the same app process, standard bound services or local interfaces are much simpler and faster.

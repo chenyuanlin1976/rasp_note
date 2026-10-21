@@ -20,7 +20,7 @@ choose one of these 2 approaches for the 3rd-party APK:
 
 Your low-level AOSP daemon/service talks to a persistent System App,  
 which in turn exposes a standard Android Bound Service using your AIDL.  
-The 3rd-party APK simply binds to this system app using an explicit Intent.
+The 3rd-party APK simply binds to this system app using an explicit **Intent**.
 
 ### Approach B: Direct Native/System AIDL Service (Advanced)
 

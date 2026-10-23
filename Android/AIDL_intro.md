@@ -8,6 +8,22 @@ an object cannot normally access memory in another process.
 AIDL abstracts away the complex underlying mechanics of **marshalling** objects into primitives,  
 passing them across the kernel via **Android's Binder driver**, and unmarshalling them on the other side.
 
++ **Layer**: Application/ Framework
++ Primary Purpose: Defines the protocol and data structure (methods and types)  
+  that 2 separate processes use to talk to each other.
++ Scope: App-to-app or app-to-system service communication.
+
+## What it is
+
+Because Android processes have their own memory spaces, they cannot directly invoke functions in other processes.  
+AIDL generates the boilerplate code required to marshal objects into primitives that can cross process boundaries via the Binder driver.  
+
+## How it works
+
+1. You create an `.aidl` file defining an interface and its methods.
+2. The Android build tools generate a corresponding Java/Kotlin interface containing an abstract inner class named **Stub**.
+3. The **Service** implements the `Stub`, and the **Client** uses `YourInterface.Stub.asInterface(service)` to communicate with it.
+
 ## How AIDL Works
 
 + The `.aidl` File: You define an **interface** with **method signatures** using a syntax similar to **Java or C++**.  

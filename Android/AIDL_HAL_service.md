@@ -1,11 +1,11 @@
-# AIDL introduction
+# AIDL and HAL service
 
-To understand the phrase "**AIDL serves as the public contract for a native Hardware Abstraction Layer (HAL) service**",  
+To understand the phrase "AIDL serves as the **public contract** for a **native Hardware Abstraction Layer (HAL) service**",  
 it helps to break down how Android separates different software layers to keep the system secure, modular, and stable.
 
 ## 1. What is a "Contract"?
 
-+ In software, a contract is a strict agreement on how two separate pieces of software will talk to each other.
++ In software, a contract is a strict agreement on how 2 separate pieces of software will talk to each other.
 + It specifies the exact function names, inputs (arguments), and outputs (return values).
 + Neither side needs to know how the other is written internally; they only need to follow the rules of the contract.
 
@@ -23,18 +23,19 @@ Each chip has different ways of interacting with physical hardware (like how a W
 **Android apps and system services run in different processes (sandboxes) for security.**  
 A Java-based app cannot directly call a C++ function inside a native HAL service.
 
-+ AIDL (Android Interface Definition Language) acts as the translator and the official agreement across this process boundary.
++ **AIDL acts as the translator and the official agreement across this process boundary.**
 + By writing an `.aidl` file (like IWifiPowerControl), you establish a standardized API contract.
 + The Android build system automatically generates the low-level code needed to pass data safely back  
   and forth across processes (**via Android's Binder IPC driver**).
 
-**In short**: AIDL is the standardized rulebook that **lets high-level Android software securely tell the low-level C++ hardware driver what to do**,  
+**In short**: AIDL is the standardized rulebook that  
+**lets high-level Android software securely tell the low-level C++ hardware driver what to do**,  
 without crashing the system if something goes wrong.
 
 ## example: how AIDL work
 
 Here is a concrete, end-to-end example of how this contract works in practice,  
-showing how a high-level caller uses the AIDL contract to talk to the low-level HAL service.
+showing how a high-level caller uses the **AIDL contract** to talk to the **low-level HAL service**.
 
 The Scenario: Turning Wi-Fi Power On: Imagine an Android system app wants to turn on the Wi-Fi hardware.  
 **It cannot talk directly to the Linux kernel or the C++ hardware driver.**  
@@ -56,10 +57,30 @@ interface IWifiPowerControl {
 + The Rule: Anyone calling this service must pass a `boolean`, and the service must return a `boolean` indicating success or failure.  
   No other data formats are allowed.
 
-### 2. The Client Side (The Android App/ System Service)
+### 2. The Server Side (The C++ Native HAL)
+
+On the server side of the contract, the C++ HAL service implements that exact rule.  
+Because it honors the contract, it receives the request safely from the app.
+
+```c++
+// implementing the service
+binder::Status WifiPowerControl::setWifiPower(bool enable, bool* _aidl_return) {
+    // The contract guaranteed a boolean ('enable') was passed.
+    // Now the HAL uses its low-level tools (like libgpiod) to fulfill it:
+    
+    int value = enable ? 1 : 0;
+    int ret = gpiod_line_set_value(wifi_gpio_line, value);
+
+    // Return the boolean result back across the contract
+    *_aidl_return = (ret == 0);
+    return binder::Status::ok();
+}
+```
+
+### 3. The Client Side (The Android App/ System Service)
 
 **An Android system service uses the contract to make a request**.  
-It doesn't know (or care) that C++ or libgpiod is running underneath; it only cares about the contract.
+It **doesn't** know (or care) that C++ or libgpiod is running underneath; **it only cares about the contract.**
 
 ```java
 // Java / Kotlin code in an Android System Service
@@ -78,29 +99,9 @@ try {
 }
 ```
 
-### 3. The Server Side (The C++ Native HAL)
-
-On the other side of the contract, the C++ HAL service implements that exact rule.  
-Because it honors the contract, it receives the request safely from the app.
-
-```c++
-// implementing the service
-binder::Status WifiPowerControl::setWifiPower(bool enable, bool* _aidl_return) {
-    // The contract guaranteed a boolean ('enable') was passed.
-    // Now the HAL uses its low-level tools (like libgpiod) to fulfill it:
-    
-    int value = enable ? 1 : 0;
-    int ret = gpiod_line_set_value(wifi_gpio_line, value);
-
-    // Return the boolean result back across the contract
-    *_aidl_return = (ret == 0);
-    return binder::Status::ok();
-}
-```
-
 ### Why this structure matters
 
-+ **Decoupling**: If the chip manufacturer updates the C++ code or changes how `libgpiod` talks to the kernel,  
++ **Decoupling**: If the chip manufacturer updates the C++ code or changes how libgpiod talks to the kernel,  
   they don't have to change anything in the Android app.  
   As long as the C++ code still fulfills the IWifiPowerControl contract, everything works seamlessly.
 + **Safety**: If the C++ hardware driver crashes due to a low-level kernel error,  

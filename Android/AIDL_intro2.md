@@ -1,12 +1,12 @@
 # AIDL introduction
 
 AIDL stands for **Android Interface Definition Language**.  
-It is a powerful tool provided by Android to allow communication **between different processes**  
+It is a powerful tool provided by Android **to allow communication between different processes**  
 running on the same device - a concept known as Inter-Process Communication (IPC).
 
 ## Why Do We Need AIDL?
 
-In Android, every application typically runs in its own isolated process and memory space for security and stability.  
+In Android, **every application typically runs in its own isolated process and memory space for security and stability.**  
 Process A CANNOT normally access the memory or call methods directly inside Process B.
 
 However, there are times when apps or system services need to share data or trigger actions across processes  
@@ -16,7 +16,7 @@ and unmarshal it on the other side.
 
 ## How AIDL Works
 
-AIDL uses an interface definition file (with a `.aidl` extension) that looks very similar to a standard Java or Kotlin interface.
+AIDL uses an interface definition file (with a `.aidl` extension) that looks very similar to a standard **Java or Kotlin interface**.
 
 1. Define the Interface (`.aidl`): You write a file outlining the methods and data types available for remote calls.
 2. Code Generation: During the build process, the Android SDK tool uses the `.aidl` file  

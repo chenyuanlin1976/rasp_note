@@ -1,7 +1,9 @@
-# AIDL client side
+# AIDL and C++ native HAL: client side
 
-To connect to your C++ native HAL from the client side (such as an Android application, a Java/Kotlin system service, or even a native C++ client),  
-you need to retrieve the service instance through Android's **ServiceManager** using the exact name you registered in your server implementation.
+To connect to your C++ native HAL from the client side  
+(such as an Android application, a Java/Kotlin system service, or even a native C++ client),  
+you need to retrieve the service instance through Android's **ServiceManager**  
+using the exact name you registered in your server implementation.
 
 Here is how to implement the client side across different environments:
 

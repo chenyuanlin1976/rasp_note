@@ -11,7 +11,7 @@ In modern versions of Android Studio, AIDL compilation is built into the Gradle 
 Open your app-level `build.gradle.kts` (or build.gradle) and make sure aidl is enabled under buildFeatures:  
 **Sync your project with Gradle files after making this change.**
 
-```
+```ini
 android {
     namespace = "com.example.aidldemo"
     compileSdk = 34 // or higher for Android 14+
@@ -171,6 +171,6 @@ class MainActivity : AppCompatActivity() {
 + Background Service Restrictions: Android 14 strictly enforces background execution limits.  
   If your service is starting from the background or performing heavy operations,  
   ensure you manage foreground service types properly if it escalates to a foreground service, or rely purely on bounded request-response lifetimes.
-+ Cross-App Security (exported="true"): If your service communicates across different applications (inter-app IPC),  
++ Cross-App Security (`exported="true"`): If your service communicates across different applications (inter-app IPC),  
   ensure you validate the caller's package name or implement signature-level permissions in your manifest (android:permission)  
   to prevent malicious apps from hijacking your service endpoints.

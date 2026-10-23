@@ -1,8 +1,8 @@
-# native HAL
+# AIDL and c++ native HAL: server side
 
-Writing the server-side implementation for a C++ native HAL in AOSP using AIDL  
+Writing the server-side implementation for a **C++ native HAL** in AOSP using AIDL  
 involves implementing the generated C++ interface class, creating a service context (binder::ProcessState),  
-and registering your service with the ServiceManager so clients can find it.
+and registering your service with the `ServiceManager` so clients can find it.
 
 Here is a step-by-step guide to setting up and writing your C++ native AIDL HAL service.
 
@@ -10,7 +10,7 @@ Here is a step-by-step guide to setting up and writing your C++ native AIDL HAL 
 
 When you define an AIDL file (e.g., `IMyHalService.aidl`) and build it, the build system generates a C++ base class.  
 If your package is `vendor.example.hardware.myhal`,  
-the generated header will typically be located in the intermediate build directory as:
+the generated header will typically be located in the intermediate build directory as:  
 `#include <aidl/vendor/example/hardware/myhal/BnMyHalService.h>`
 
 Your server needs to create a class that **inherits** from this Bnxxx (Binder Native) class and **overrides** your custom methods.

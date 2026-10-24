@@ -102,10 +102,10 @@ They do not directly call each other, but they are frequently used together in t
 ### How They Differ
 
 + **AIDL** (Android Interface Definition Language): Used for IPC (Inter-Process Communication).  
-  It allows code in Process A (e.g., your Kotlin application) to talk to Process B  
+  **It allows code in Process A (e.g., your Kotlin application) to talk to Process B**  
   (e.g., a system service or background daemon) across process boundaries using **Android's Binder driver.**
 + **JNI** (Java Native Interface): Used for language translation/bridging.  
-  It allows managed code (Java/Kotlin) inside the JVM to talk directly to native code (C/C++) running within the exact same process.
+  **It allows managed code (Java/Kotlin) inside the JVM to talk directly to native code (C/C++) running within the exact same process.**
 
 ### How They Work Together (The Blueprint)
 

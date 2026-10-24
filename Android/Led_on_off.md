@@ -25,7 +25,7 @@ interface ILedControl {
 
 Because regular apps do **not** have permission to modify `/sys/class/leds/` directly  
 **due to Android's strict SELinux policies and sandboxing,**  
-this must be handled by a **privileged system service** or **native daemon** running with appropriate permissions  
+this must be handled by a **privileged system service** or **native daemon running with appropriate permissions**  
 (e.g., system or root context, with a custom SELinux policy rule).
 
 Here is how your C++ service writes to the `sysfs` node:
@@ -68,7 +68,7 @@ void setLedState(int controlState, int delayOn, int delayOff) {
 
 ## Step 3: Implement the Service Stub in Java/Kotlin
 
-Your system service implements the **AIDL stub** and calls your native layer (via **JNI**)  
+Your system service implements the **AIDL stub and calls your native layer (via JNI)**  
 or *directly executes the file operations if running with system privileges*.
 
 ```kotlin

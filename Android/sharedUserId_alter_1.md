@@ -1,6 +1,6 @@
 # Content Providers
 
-Let's look at a concrete code example of the most common modern replacement for `sharedUserId`: Content Providers.
+Let's look at a concrete code example of the most common modern replacement for `sharedUserId`: **Content Providers**.
 
 Suppose you have App A (which owns a database of user settings) and App B (which needs to read those settings).  
 Instead of sharing a Linux UID, **App A** exposes its data securely via a **ContentProvider**,  

@@ -110,7 +110,7 @@ int main() {
 To build your native C++ service, write an `Android.bp` in your HAL directory.  
 Ensure you link against the C++ AIDL backend library (-ndk suffix).
 
-```ini
+```json
 cc_binary {
     name: "vendor.example.hardware.myhal-service",
     init_rc: ["vendor.example.hardware.myhal-service.rc"],

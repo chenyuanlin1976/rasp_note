@@ -53,7 +53,7 @@ In C++, you write the function using a **specific naming convention expected by 
 or by registering the native methods dynamically.  
 Using the standard naming convention, the function name looks like this:
 
-`Java_<PackageName>_<ClassName>_<MethodName>`
+> Java_PackageName_ClassName_MethodName
 
 If your Kotlin class is in the package `com.example.app`  
 and named NativeBridge, the C++ function signature looks like this:
@@ -81,13 +81,13 @@ Java_com_example_app_NativeBridge_addNumbers(JNIEnv *env, jobject thiz, jint a, 
 Kotlin and C++ have different data types in memory.  
 JNI provides equivalent mappings so data can be safely passed back and forth:
 
-| Kotlin/ Java Type | JNI Native Type | C++ Type                                  |
-| ----------------- | --------------- | ----------------------------------------- |
-| Int               | jint            | int32_t                                   |
-| Long              | jlong           | int64_t                                   |
-| Boolean           | jboolean        | uint8_t                                   |
-| String            | jstring         | jstring (requires helper methods to read) |
-| ByteArray         | jbyteArray      | jbyteArray (requires pointer pinning)     |
+| Kotlin/ Java Type   | JNI Native Type | C++ Type                                    |
+| ------------------- | --------------- | ------------------------------------------- |
+| `Int`               | jint            | `int32_t`                                   |
+| `Long`              | jlong           | `int64_t`                                   |
+| `Boolean`           | jboolean        | `uint8_t`                                   |
+| `String`            | jstring         | `jstring` (requires helper methods to read) |
+| `ByteArray`         | jbyteArray      | `jbyteArray` (requires pointer pinning)     |
 
 ## 4. Understanding JNIEnv and jobject
 

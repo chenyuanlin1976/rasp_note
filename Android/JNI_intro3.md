@@ -7,10 +7,10 @@ Android Studio fully automates much of the toolchain configuration for modern pr
 
 ### 1. Setup in Android Studio
 
-When you create a project using the "Native C++" template in Android Studio,  
+When you create a project using the **"Native C++"** template in Android Studio,  
 the IDE automatically configures:
 
-+ The NDK & CMake: To compile your C++ files into native shared libraries (.so files).
++ The NDK & CMake: To compile your C++ files into native shared libraries (`.so` files).
 + Project Structure: A cpp/ folder containing your native code alongside your Kotlin source sets.
 
 ### 2. Declare the Native Method in Kotlin

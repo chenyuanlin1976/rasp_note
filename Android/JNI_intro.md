@@ -6,13 +6,13 @@ allows Java or Kotlin code running inside a Java Virtual Machine (JVM) to intera
 **written in native languages like C and C++**.
 
 In the context of Android development (especially low-level features like controlling LEDs via `sysfs`),  
-JNI is the bridge that **lets your high-level Android app or system service talk directly to hardware or operating system drivers.**
+JNI is the bridge that lets your high-level Android app or system service **talk directly to hardware or operating system drivers.**
 
 ## Why Do We Use JNI?
 
 1. Hardware & OS Access: Android apps run inside a secure sandbox (ART/JVM)  
-   and cannot directly access low-level Linux kernel components like `/sys/class/leds/`.  
-   **JNI allows your Java/Kotlin code to call C/C++ code** that has the necessary system privileges.
+   and **cannot** directly access low-level Linux kernel components like `/sys/class/leds/`.  
+   JNI allows your Java/Kotlin code to call C/C++ code **that has the necessary system privileges.**
 2. Performance: For intensive tasks (like image processing, cryptography, or real-time rendering),  
    C/C++ runs significantly faster than managed Java/Kotlin code.
 3. Reusing Existing Libraries: It allows Android to use massive open-source C/C++ libraries  
@@ -26,7 +26,7 @@ JNI is the bridge that **lets your high-level Android app or system service talk
 [ JNI Bridge Layer ] 
        │  (Translates JVM data types to C/C++ types)
        v
-[ C/ C++ Native Code (.so) ] 
+[ C/ C++ Native Code (`.so`) ] 
        │  (Interacts with Kernel, Hardware, Files, etc.)
        v
 [ Linux Kernel/ Hardware ]
@@ -55,7 +55,8 @@ class NativeLedController {
 
 ### 2. The C++ Side
 
-In your C++ code, you write a function with a specific naming convention (**Java_PackageName_ClassName_MethodName**)  
+In your C++ code, you write a function with a **specific naming convention**  
+> Java_PackageName_ClassName_MethodName
 so the JVM knows how to map it:
 
 ```c++
@@ -104,7 +105,7 @@ They do not directly call each other, but they are frequently used together in t
 + **AIDL** (Android Interface Definition Language): Used for IPC (Inter-Process Communication).  
   **It allows code in Process A (e.g., your Kotlin application) to talk to Process B**  
   (e.g., a system service or background daemon) across process boundaries using **Android's Binder driver.**
-+ **JNI** (Java Native Interface): Used for language translation/bridging.  
++ **JNI**: Used for language translation/bridging.  
   **It allows managed code (Java/Kotlin) inside the JVM to talk directly to native code (C/C++) running within the exact same process.**
 
 ### How They Work Together (The Blueprint)
@@ -133,8 +134,6 @@ and JNI handles dropping down into native C/C++ to touch the system files or har
 
 **Modern Android (AOSP) supports a C++ backend for AIDL** (aidl-cpp or the NDK backend).
 
-If your system daemon is written entirely in C++ (rather than Java/Kotlin),  
-it can implement the AIDL server **stub** natively in C++.  
-In this specific architecture, JNI is bypassed entirely  
-because your native daemon receives the Binder/AIDL call directly in C++,  
+If your system daemon is **written entirely in C++** (rather than Java/Kotlin), it can implement the AIDL server **stub** natively in C++.  
+In this specific architecture, *JNI is bypassed entirely* because your native daemon receives the Binder/AIDL call directly in C++,  
 and can write to the sysfs node without ever touching Java or JNI.

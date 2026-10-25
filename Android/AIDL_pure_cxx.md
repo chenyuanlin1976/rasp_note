@@ -5,7 +5,7 @@ There is no Java Virtual Machine, no ART, and zero JNI overhead.
 
 Android supports this natively via the NDK backend (ndk), which generates C++ classes and headers directly from your `.aidl` files.
 
-Here is a complete end-to-end example of implementing a pure C++ AIDL service that controls the LED sysfs nodes.
+Here is a complete end-to-end example of implementing a **pure C++ AIDL service** that controls the LED sysfs nodes.
 
 ## Step 1: The AIDL File (ILedControl.aidl)
 

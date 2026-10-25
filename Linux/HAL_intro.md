@@ -1,18 +1,18 @@
 # HAL in C++
 
-A Hardware Abstraction Layer (HAL) in C++ is a software intermediate layer  
-that ** low-level hardware details (like microcontrollers, registers, memory maps, or peripherals) from high-level application logic.
+A Hardware Abstraction Layer (HAL) in C++ is a software **intermediate** layer  
+that low-level hardware details (like microcontrollers, registers, memory maps, or peripherals) from high-level application logic.
 
-While traditional HALs are often written in C (using function pointer structs and #define macros),  
-a C++ Native HAL leverages modern object-oriented programming (OOP) paradigms  
-- such as abstract interfaces, polymorphism, inheritance, and templates—to achieve clean, reusable, and type-safe hardware abstraction.
+While traditional HALs are often written in C (using **function pointer structs** and `#define` macros),  
+a C++ Native HAL leverages modern object-oriented programming (OOP) paradigms,  
+(such as abstract interfaces, polymorphism, inheritance, and templates) to achieve clean, reusable, and type-safe hardware abstraction.
 
 ## Core Concepts of a C++ Native HAL
 
 ### 1. Abstract Interfaces (Pure Virtual Classes):  
 
 Instead of relying on global functions or raw hardware addresses,  
-a C++ HAL defines hardware behaviors through pure virtual classes (interfaces).  
+**a C++ HAL defines hardware behaviors through pure virtual classes (interfaces)**.  
 This defines what a peripheral does, not how a specific chip does it.
 
 ```c++
@@ -30,7 +30,7 @@ public:
 
 ### 2. Platform-Specific Implementation (Inheritance)
 
-Vendors or developers create concrete subclasses that inherit the interface  
+Vendors or developers create **concrete** subclasses that inherit the interface  
 and implement the target hardware's specific register manipulations (e.g., for STM32, NXP, ESP32, or Linux sysfs).
 
 ```c++
@@ -62,8 +62,8 @@ public:
 
 ### 3. Dependency Injection
 
-High-level application modules or drivers do not initialize or know about physical pins directly.  
-Instead, they accept an IGpioPin reference or pointer via dependency injection (usually through constructors).
+High-level application modules or drivers do **not** initialize or know about physical pins directly.  
+Instead, they accept an IGpioPin **reference or pointer** via dependency injection (usually through *constructors*).
 
 ```c++
 class LedController {
@@ -83,12 +83,12 @@ public:
 
 ## Key Benefits of a C++ Native HAL
 
-+ Portability: Moving your firmware from one microcontroller family to another  
++ **Portability**: Moving your firmware from one microcontroller family to another  
   *only requires writing new derived classes implementing your base interfaces;*  
   your application logic remains entirely untouched.
 + Testability: You can easily pass mock or virtual implementations of hardware interfaces (e.g., a MockGpioPin) into your classes,  
   enabling robust unit testing on a host PC instead of physical hardware.
-+ Encapsulation & Safety: C++ access specifiers (private, protected, public)  
++ **Encapsulation & Safety**: C++ access specifiers (private, protected, public)  
   prevent application code from accidentally altering low-level control registers.
 + Zero-Cost Abstractions: When designed properly using inline functions,  
   virtual tables (vtables) optimized for specific targets, or template metaprogramming,  

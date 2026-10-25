@@ -6,12 +6,12 @@ operate at completely different levels of the software/hardware stack.
 
 ## 1. What is a .dtsi File?
 
-A .dtsi file is part of the Linux Device Tree architecture.
+A .dtsi file is part of the Linux **Device Tree** architecture.
 
-+ Role: It is a text-based hardware description data file (not code).  
++ Role: It is a **text-based hardware description data file** (not code).  
   It tells the Linux kernel what hardware components exist on a System-on-Chip (SoC) or a board,  
   where they are mapped in memory (base addresses), and how they are wired (interrupts, clocks, GPIOs).
-+ Structure: A .dtsi file (like imx6q.dtsi or rk3506.dtsi) defines reusable SoC-level peripherals.  
++ Structure: A .dtsi file (like `imx6q.dtsi` or `rk3506.dtsi`) defines reusable SoC-level peripherals.  
   Specific board files (.dts) include these .dtsi files  
   and override or enable only the hardware features actually wired up on that physical board.
 + Analogy: It is like an architectural blueprint or a parts catalog handed to the OS kernel at boot time  
@@ -22,7 +22,7 @@ A .dtsi file is part of the Linux Device Tree architecture.
 **Unlike** bare-metal environments where a HAL is tightly coupled to drivers,  
 **a Linux HAL typically lives in user space** (such as in Android or specialized embedded middleware).
 
-+ Role: It is a software programming layer (API/libraries) that abstracts low-level kernel interfaces  
++ Role: It is a software programming layer (**API/libraries**) that abstracts low-level kernel interfaces  
   so that high-level applications (like UI frameworks, camera services, or hardware sensors)  
   can interact with hardware uniformly without caring about kernel-specific ioctl calls or driver implementations.
 + Example: Android's Hardware Abstraction Layer (gralloc, camera, sensors HALs)  
@@ -32,16 +32,16 @@ A .dtsi file is part of the Linux Device Tree architecture.
 
 While they don't talk to each other directly, they are connected sequentially in the boot and execution chain:
 
-+ Hardware Description (.dtsi $\rightarrow$ DTB): The .dtsi and .dts files are compiled into a Binary Device Tree (DTB)  
-  passed to the Linux kernel by the bootloader.
-+ Kernel Initialization & Drivers: The Linux kernel parses the DTB, matches nodes to native kernel drivers  
-  (e.g., an I2C or GPIO driver), and initializes them.
-+ Exposing to User Space: The kernel exposes these devices to user space via standard file nodes (e.g., `/dev/ or /sys/class/`).  
-+ The HAL Layer: User-space HAL libraries open those device nodes, read/write data,  
-  and translate them into clean, high-level object-oriented or procedural APIs for application software.
+1. **Hardware Description** (.dtsi -> DTB): The .dtsi and .dts files are compiled into a **Binary Device Tree** (DTB)  
+   passed to the Linux kernel by the *bootloader*.
+2. **Kernel Initialization & Drivers**: The Linux kernel parses the DTB, matches nodes to native kernel drivers  
+   (e.g., an I2C or GPIO driver), and initializes them.
+3. **Exposing to User Space**: The kernel exposes these devices to user space via standard file nodes (e.g., `/dev/ or /sys/class/`).  
+4. **The HAL Layer**: User-space HAL libraries open those device nodes, read/write data,  
+   and translate them into clean, high-level object-oriented or procedural APIs for application software.
 
-In short: .dtsi describes the hardware layout to the kernel,  
-while the HAL abstracts the kernel's interface for user-space applications.
++ In short: .dtsi describes the hardware layout to the kernel,  
+  while the HAL abstracts the kernel's interface for user-space applications.
 
 ## example: control a Led
 
@@ -179,7 +179,7 @@ int main() {
 
 ### Summary of How They Work Together
 
-+ .dtsi / .dts told the Linux kernel: "There is an LED on GPIO1 pin 4."
-+ The Linux Kernel mapped that physical pin to /sys/class/leds/system_status/brightness.
-+ The C++ Native HAL (LinuxSysfsLed) wrapped that file path into a clean, object-oriented API (turnOn(), turnOff()).
-+ The Application used the HAL without knowing anything about **Device Tree syntax** or **Linux file paths**.
+1. .dtsi/ .dts told the Linux kernel: "There is an LED on GPIO1 pin 4."
+2. The Linux Kernel mapped that physical pin to `/sys/class/leds/system_status/brightness`.
+3. The C++ Native HAL (LinuxSysfsLed) wrapped that file path into a clean, object-oriented API (`turnOn()`, `turnOff()`).
+4. The Application used the HAL without knowing anything about **Device Tree syntax** or **Linux file paths**.

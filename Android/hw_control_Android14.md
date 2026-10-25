@@ -124,3 +124,91 @@ you have a few alternatives depending on your deployment scenario:
    though this is insecure for production.
 3. Vendor HAL (AIDL): Exposing the functionality via a proper vendor AIDL interface (android.hardware.*) allows privileged system apps  
    or modules to call it, but the HAL implementation itself still runs with vendor/system privileges requiring correct signing and SELinux policies.
+
+## Overview of `AServiceManager_addService`
+
+`AServiceManager_addService` is a C/C++ API function introduced in Android 10 (API level 29)  
+as part of the Native C++ API for the Android **Service Manager**.  
+It allows native C/C++ daemons, HALs (Hardware Abstraction Layers), and system services  
+to **register a Binder service** with the system-wide **Service Manager**  
+so that other processes can discover and communicate with it.
+
+### Function Signature & Parameters
+
+While the exact headers may vary slightly by NDK/platform version,  
+its standard definition in the Android source tree (typically found in binder/`IServiceManager.h`  
+or via the NDK's `android/service_manager.h`) looks like this:
+
+`binder_status_t AServiceManager_addService(AIBinder* binder, const char* instanceName);`
+
+#### Parameters
+
+1. `AIBinder* binder`:  
+   + A pointer to the local Binder object (the service implementation) that you want to publish.  
+     This object must be created using the NDK Binder API (e.g., via a death recipient or a custom AIBinder_Class implementation).
+2. `const char* instanceName`:
+   + The string identifier of the service (e.g., "media.player" or "android.hardware.sensors.ISensors/default").  
+     This name must match the name that clients will use when calling `AServiceManager_checkService`  
+     or `AServiceManager_getService` to look up the service.
+
+#### Return Value
+
+Returns a `binder_status_t` status code  
+(e.g., `STATUS_OK` on success, or an error code like `STATUS_NAME_NOT_FOUND`, `STATUS_PERMISSION_DENIED`, etc., on failure).
+
+### How It Works Under the Hood
+
++ Native Binder Integration:  
+  Prior to Android's Native Binder NDK support,  
+  registering services required writing C++ code using internal libbinder headers (`android::IServiceManager::addService`).  
+  `AServiceManager_addService` provides a stable, public NDK API that doesn't depend on internal platform headers.
++ IPC Communication with servicemanager:  
+  When you call this function, the NDK sends a transaction over the `/dev/binder` driver to the central servicemanager process,  
+  registering the mapping between the provided instanceName and your AIBinder reference.
++ SELinux Permissions:  
+  The calling process must have the appropriate **SELinux policy permissions** to add a service.  
+  If the domain of your native process is not allowed to register services with the given name,  
+  the Service Manager will reject the request with a permission error.
+
+### Code Example (Native C++ Usage)
+
+Here is a simplified example showing how a native service is created and registered using the NDK Binder API:
+
+```c
+#include <android/binder_interface_utils.h>
+#include <android/binder_servicemanager.h>
+#include <android/binder_ibinder.h>
+
+// Define your binder class (callback/methods implementation)
+static AIBinder_Class* kMyServiceClass = AIBinder_Class_define(
+    "com.example.IMyNativeService",
+    [](AIBinder_Class* clazz) {
+        // Constructor / Destructor / OnTransact handlers go here
+    },
+    [](AIBinder* binder) {}, // onCreat
+    [](AIBinder* binder) {}  // onDestroy
+);
+
+void publishMyService() {
+    // 1. Create an instance of your binder object
+    AIBinder* binder = AIBinder_new(kMyServiceClass, nullptr);
+
+    // 2. Register the service with the Android Service Manager
+    binder_status_t status = AServiceManager_addService(binder, "com.example.IMyNativeService/default");
+
+    if (status == STATUS_OK) {
+        // Service successfully published!
+    } else {
+        // Handle failure (e.g., SELinux denial or service manager not ready)
+    }
+
+    // Drop local reference if ownership is handed over or managed accordingly
+    AIBinder_decStrong(binder);
+}
+```
+
+### Common Use Cases
+
++ Native Daemons: Background system daemons written in C++ that need to expose APIs to Java applications or other native components.
++ HIDL/ AIDL HAL Implementations: Hardware abstraction layer services running in native space  
+  that need to be reachable by Android framework services (like AudioFlinger, SurfaceFlinger, etc.).

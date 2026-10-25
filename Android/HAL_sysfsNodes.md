@@ -32,9 +32,9 @@ How you use it: By calling a structured function interface (e.g., in C++ or via 
 
 + What is it: **A kernel-to-userspace interface** (files and directories).
 + Where does it live: In the Linux kernel space (**exposed to userspace as files**).
-+ Language/Format: Text-based file I/O (open, write, text strings like "255").
++ Language/Format: *Text-based file I/O* (open, write, text strings like "255").
 + Portability: **Low**. Sysfs paths (`/sys/class/leds/...` or naming schemes) change depending on the kernel version, vendor, or device driver.
-+ Access Control: Controlled by standard Linux **file permissions** (e.g., chmod on the file).
++ Access Control: Controlled by standard Linux **file permissions** (e.g., `chmod` on the file).
 
 ### Feature of HAL (Hardware Abstraction Layer)
 
@@ -48,14 +48,14 @@ How you use it: By calling a structured function interface (e.g., in C++ or via 
 
 If you look at the source code of an actual Android HAL implementation  
 (for example, the Android Lights HAL or Backlight HAL),  
-you will often find that the HAL itself is just a wrapper around `/sys/class/...` nodes!
+you will **often** find that the HAL itself is just a wrapper around `sysfs` nodes!
 
 When the Android framework calls the HAL function `setLightState(...)`:
 
 1. The HAL code executes in C++.
 2. The HAL code opens the file descriptor: `open("/sys/class/backlight/panel/brightness", O_WRONLY)`.
 3. The HAL writes the calculated brightness value into that sysfs file.
-4. The Linux kernel driver picks up that write in /sys/class/... and toggles the hardware registers.
+4. The Linux kernel driver picks up that write in `sysfs` node and toggles the hardware registers.
 
 ## Summary Analogy
 

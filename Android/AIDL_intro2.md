@@ -4,7 +4,7 @@ AIDL stands for **Android Interface Definition Language**.
 It is a powerful tool provided by Android **to allow communication between different processes**  
 running on the same device - a concept known as Inter-Process Communication (IPC).
 
-## Why Do We Need AIDL?
+## Why Do We Need AIDL
 
 In Android, **every application typically runs in its own isolated process and memory space for security and stability.**  
 Process A CANNOT normally access the memory or call methods directly inside Process B.

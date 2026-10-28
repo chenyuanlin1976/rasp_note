@@ -1,14 +1,14 @@
 # JNI introduction
 
 **JNI stands for Java Native Interface.**  
-It is a standard programming framework that 
+It is a standard programming framework that  
 allows Java or Kotlin code running inside a Java Virtual Machine (JVM) to interact with applications and libraries  
 **written in native languages like C and C++**.
 
 In the context of Android development (especially low-level features like controlling LEDs via `sysfs`),  
 JNI is the bridge that lets your high-level Android app or system service **talk directly to hardware or operating system drivers.**
 
-## Why Do We Use JNI?
+## Why Do We Use JNI
 
 1. Hardware & OS Access: Android apps run inside a secure sandbox (ART/JVM)  
    and **cannot** directly access low-level Linux kernel components like `/sys/class/leds/`.  
@@ -120,15 +120,13 @@ and JNI handles dropping down into native C/C++ to touch the system files or har
        v
 [ System Service/ Daemon Process ]
        │  (Implements the AIDL Stub)
-       │
        │  2. Calls a native method via JNI
        v
 [ C/C++ Native Layer ]
        │  (Implements the JNI function)
-       │
        │  3. Writes to Linux sysfs
        v
-[ Linux Kernel / Hardware (/sys/class/leds/) ]
+[ Linux Kernel / Hardware (`/sys/class/leds/`) ]
 
 ### Alternative: Pure C++ AIDL (Without JNI)
 

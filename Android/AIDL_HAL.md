@@ -3,13 +3,28 @@
 To understand the phrase "AIDL serves as the **public contract** for a **native Hardware Abstraction Layer (HAL) service**",  
 it helps to break down how Android separates different software layers to keep the system secure, modular, and stable.
 
-## 1. What is a "Contract"?
+In modern Android, **AIDL is the standard tool used to implement the HAL.**
+
+Think of it this way:  
+
++ **HAL is the concept and layer (the system layer being built.)**,  
++ while **AIDL is the technology/language used to build it** (how it works today).
+
+## How AIDL Creates the HAL
+
++ **The Contract (`.aidl` file)**: You write an interface definition file (e.g., `IMyCustomHardware.aidl`)  
+  that specifies what functions your hardware supports (like `open()`, `read()`, or `write()`).
++ The Implementation: You write C++ (or Java) code that implements that AIDL interface. This implementation is your HAL.
++ The IPC Process: Because it's an AIDL service, your HAL runs as an independent, isolated process.  
+  When the Android framework wants to talk to your hardware, it sends a message across this AIDL/Binder boundary.
+
+## 1. What is a "Contract"
 
 + In software, a contract is a strict agreement on how 2 separate pieces of software will talk to each other.
 + It specifies the exact function names, inputs (arguments), and outputs (return values).
 + Neither side needs to know how the other is written internally; they only need to follow the rules of the contract.
 
-## 2. What is the HAL (Hardware Abstraction Layer)?
+## 2. What is the HAL (Hardware Abstraction Layer)
 
 Android devices run on many different chips (Qualcomm, MediaTek, Samsung, etc.).  
 Each chip has different ways of interacting with physical hardware (like how a Wi-Fi chip is powered on).

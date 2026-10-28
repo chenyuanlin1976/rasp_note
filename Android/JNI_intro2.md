@@ -3,7 +3,7 @@
 Here is a clear, structured guide to understanding JNI (Java Native Interface)  
 and how it enables Kotlin (or Java) to communicate with C++ code.
 
-## 1. What is JNI?
+## 1. What is JNI
 
 JNI is a standard programming framework that  
 **allows Java/Kotlin code running inside a JVM to interact with applications and libraries written in native languages like C, C++, or assembly**.
@@ -12,7 +12,7 @@ Since Kotlin runs on the Java Virtual Machine (JVM),
 it shares the same underlying interoperability mechanism as Java.  
 **JNI acts as a bridge**, translating data types and method calls between the managed JVM world and the unmanaged native world.
 
-## 2. Why Use JNI with Kotlin/C++?
+## 2. Why Use JNI with Kotlin/C++
 
 + Performance: Running heavy computations, image/video processing, physics engines, or cryptographic algorithms in C/C++ is much faster.
 + Code Reuse: Integrating existing C/C++ libraries (like OpenCV, SQLite, or custom SDKs) without rewriting them in Kotlin.

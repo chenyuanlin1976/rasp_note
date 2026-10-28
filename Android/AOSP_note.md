@@ -52,13 +52,13 @@ Parallel compilation jobs run multiple compiler tasks at the same time to reduce
   to maximize speed without overloading system memory.
 + Memory Limits: Running too many parallel jobs can consume all available RAM, causing the system to slow down or crash due to swapping.
 
-## Soong and Ninja 
+## Soong and Ninja
 
 In the Android Open Source Project (AOSP), building a massive operating system requires tools  
 that can handle tens of millions of lines of code efficiently.  
 **Soong and Ninja** are 2 core parts of the modern AOSP build architecture that replaced the old, slow GNU Make system.
 
-### What is Soong?
+### What is Soong
 
 + The Role: **Soong** is Google's primary modern build system for Android, written in **Go**.  
 + How it works: It reads declarative build configuration files named **Android.bp** (which replaced the old Android.mk makefiles).
@@ -66,7 +66,7 @@ that can handle tens of millions of lines of code efficiently.
   Instead, **it parses the Android.bp tree**, resolves module dependencies, and generates low-level instructions for **Ninja**  
   (specifically a massive file named build.ninja).
 
-### What is Ninja?
+### What is Ninja
 
 + The Role: Ninja is a small, hyper-fast, low-level execution engine.
 + How it works: **Think of Ninja as an "assembler" for build graphs.**  

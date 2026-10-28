@@ -18,7 +18,7 @@ that C function executes inside the process and user ID (UID) of your Android ap
   your C code will **also** be denied access when it tries to call `open()`.  
   The system will return a permission denied error (EACCES), regardless of whether the call came from Java or C.
 
-## 2. When Does C Code Get Special Privileges?
+## 2. When Does C Code Get Special Privileges
 
 C code only gains special privileges **under the exact same conditions where a standard app or binary would get them**:
 

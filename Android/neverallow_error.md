@@ -7,7 +7,7 @@ you are hitting an **SELinux build-time security violation**.
 Android’s build system uses neverallow assertions as strict compilation guards.  
 If your code or SELinux policy (.te files) tries to grant a process permission  
 to do something deemed insecure by the platform,  
-the compiler immediately halts and refuses to generate the policy.   
+the compiler immediately halts and refuses to generate the policy.
 
 ## Why Controlling LEDs Triggers a "Never Allow" Error
 

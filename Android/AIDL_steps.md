@@ -90,7 +90,7 @@ class MyAidlService : Service() {
 
 ## Step 5: Declare the Service in AndroidManifest.xml
 
-Ensure your service is declared inside the <application> block
+Ensure your service is declared inside the `<application>` block
 
 **Android 14+ Note**: If your service is meant to be explicitly called by your own app, keep exported="false".  
 If another separate application needs to bind to this service across app boundaries, set exported="true",  

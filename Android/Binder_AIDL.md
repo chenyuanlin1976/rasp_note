@@ -28,7 +28,7 @@ issuing specific `ioctl()` system calls to the kernel driver, and handling error
 
 **AIDL completely automates this workflow**:
 
-### 1. You Write an Interface (.aidl):
+### 1. You Write an Interface (.aidl)
 
 You define a simple interface listing the methods and parameters you want to share, similar to a standard Java/Kotlin interface:
 
@@ -40,7 +40,7 @@ interface IPlayMusic {
 }
 ```
 
-### 2. The Build System Generates Code:
+### 2. The Build System Generates Code
 
 During compilation, the AIDL compiler (aidl executable) reads your `.aidl` file  
 and automatically generates a concrete Java or Kotlin implementation class containing 2 main inner components:
@@ -52,7 +52,7 @@ and automatically generates a concrete Java or Kotlin implementation class conta
   When the Binder driver delivers the raw transaction to the target process,  
   the **Stub** receives the Parcel, unpacks (unmarshals) the arguments, and calls the actual method implementation you wrote on your service.
 
-### 3. Binder Executes the Transport:
+### 3. Binder Executes the Transport
 
 The generated code acts as the bridge.  
 It translates your high-level method calls into low-level Binder transactions,  

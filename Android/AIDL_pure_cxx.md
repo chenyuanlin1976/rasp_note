@@ -144,7 +144,7 @@ void triggerBlinkFromNativeCode() {
 }
 ```
 
-## Why Choose Pure C++ AIDL?
+## Why Choose Pure C++ AIDL
 
 + Zero Overhead: No JVM translation, no JNI type conversion (jstring, jint, etc.), and minimal memory footprint.
 + Ideal for System Daemons: Perfect for low-level AOSP native services, hardware abstraction layers (HALs),  

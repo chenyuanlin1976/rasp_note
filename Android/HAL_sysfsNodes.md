@@ -8,7 +8,7 @@ In short:
 Reading/writing to sysfs nodes is a technique that a HAL implementation often uses under the hood.  
 They are not mutually exclusive, but **they serve different layers of architecture**.
 
-## 1. What is  sysfs node?
+## 1. What is  sysfs node
 
 **Sysfs node** is a virtual filesystem provided by the Linux kernel.  
 **It exposes kernel objects, device drivers, and their hardware parameters as ordinary text files.**

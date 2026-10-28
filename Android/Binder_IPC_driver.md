@@ -5,7 +5,7 @@ Unlike traditional Linux systems that rely heavily on `sockets`, `pipes`,
 or `System V IPC` (like message queues and shared memory) for communication between processes,  
 Android utilizes **Binder** to handle almost all communication between *apps, system services, and the hardware abstraction layer (HAL)*.
 
-## 1. Why a Custom IPC Driver?
+## 1. Why a Custom IPC Driver
 
 Traditional Linux IPC mechanisms presented several challenges for mobile devices when Android was designed:
 

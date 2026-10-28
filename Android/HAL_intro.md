@@ -1,6 +1,6 @@
 # HAL introduction
 
-## What is a HAL?
+## What is a HAL
 
 **HAL stands for Hardware Abstraction Layer.**  
 In computer science and operating systems, it is *a specialized layer of software*  
@@ -9,7 +9,7 @@ that acts as a **bridge** between the physical hardware of a device and the oper
 Its primary goal is portability:  
 **it hides the complex, manufacturer-specific details of hardware components behind a standardized, clean software interface.**
 
-## Why Do We Need a HAL?
+## Why Do We Need a HAL
 
 Without a HAL, every time an operating system or application needed to interact with hardware  
 (like reading a sensor, writing to flash storage, or turning on Wi-Fi),  
@@ -23,7 +23,7 @@ developers would have to write custom code for every single unique computer chip
 
 ## Classic Examples of HAL in Action
 
-### 1. Android HAL (AOSP):  
+### 1. Android HAL (AOSP)
 
 Android is a great example because it runs on thousands of different phone models  
 with completely different camera sensors, GPS chips, and audio processors.
@@ -71,16 +71,21 @@ Here is the step-by-step journey of how a single line of app code turns on a phy
 
 ## The Journey: From App to Hardware
 
-[Kotlin App] 
-     ↓ 
-[Android Framework] 
-     ↓ 
-[JNI (Java Native Interface)] 
-     ↓ 
-[C/C++ Native Service] 
-     ↓ 
-[HAL (Hardware Abstraction Layer)] 
-     ↓ 
+[Kotlin App]
+     |
+     v
+[Android Framework]
+     |
+     v
+[JNI (Java Native Interface)]
+     |
+     v
+[C/C++ Native Service]
+     |
+     v
+[HAL (Hardware Abstraction Layer)]
+     |
+     v
 [Physical Hardware (LED)]
 
 ### Step 1: The App Layer (Kotlin)
@@ -95,7 +100,7 @@ cameraManager.setTorchMode("0", true) // Turn on camera flash
 
 ### Step 2: The Framework & JNI Boundary
 
-Android’s `CameraManager` isn't written entirely in Java.  
+Android's `CameraManager` isn't written entirely in Java.  
 Under the hood, it crosses the JNI boundary to talk to native C/C++ system services running in the background.
 
 + The Java framework invokes a native method (e.g., `nativeSetTorchMode()`).

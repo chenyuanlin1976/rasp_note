@@ -5,7 +5,7 @@ It was introduced by Google in Android 8 (Oreo) as part of Project Treble
 *to decouple the Android OS framework from the low-level vendor hardware implementations*  
 (HAL - Hardware Abstraction Layer).
 
-## Why Was HIDL Created?
+## Why Was HIDL Created
 
 Before Project Treble and HIDL,  
 the Android framework and vendor-specific HAL code were tightly coupled inside the same system image (system.img).  
@@ -49,7 +49,7 @@ While HIDL was a major architectural milestone for Android, it has been deprecat
   Modern Android versions use AIDL not just for App-to-Service communication,  
   but also for low-level native HAL implementations.
 
-## Why did Google move away from HIDL?
+## Why did Google move away from HIDL
 
 + Tooling Fragmentation: Maintaining a separate language (.hal) and a separate compiler (hidl-gen) alongside AIDL created unnecessary duplication.
 + Feature Limitations: HIDL lacked robust support for advanced features like native asynchronous callbacks, complex data structuring,  

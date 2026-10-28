@@ -2,7 +2,7 @@
 
 ## Part 1: Understanding Bazel and BUILD.bazel
 
-### What is Bazel?
+### What is Bazel
 
 Bazel is an open-source, fast, scalable build and test system created by Google (derived from its internal tool, Blaze).  
 It is designed to handle massive codebases with complex dependency graphs efficiently.  
@@ -13,7 +13,7 @@ Key design philosophies of Bazel include:
 + Incremental Caching: It tracks inputs and outputs meticulously, only recompiling what has actually changed.
 + Multi-Language Support: It natively builds C++, Java, Python, Go, Rust, and more.
 
-### What is a BUILD.bazel file?
+### What is a BUILD.bazel file
 
 A BUILD.bazel (or simply BUILD) file is a plain text script placed inside project directories  
 to tell Bazel **how to build software components within that directory**.  

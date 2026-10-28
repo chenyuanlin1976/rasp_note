@@ -12,7 +12,7 @@ JNI is the bridge that lets your high-level Android app or system service **talk
 
 1. Hardware & OS Access: Android apps run inside a secure sandbox (ART/JVM)  
    and **cannot** directly access low-level Linux kernel components like `/sys/class/leds/`.  
-   JNI allows your Java/Kotlin code to call C/C++ code **that has the necessary system privileges.**
+   JNI allows your Java/Kotlin code to call C/C++ code that has **the necessary system privileges.**
 2. Performance: For intensive tasks (like image processing, cryptography, or real-time rendering),  
    C/C++ runs significantly faster than managed Java/Kotlin code.
 3. Reusing Existing Libraries: It allows Android to use massive open-source C/C++ libraries  
@@ -20,13 +20,13 @@ JNI is the bridge that lets your high-level Android app or system service **talk
 
 ## How JNI Works (The Architecture Flow)
 
-[ Kotlin/ Java Code ] 
+[ Kotlin/ Java Code ]
        │  (Calls an `external` function)
        v
-[ JNI Bridge Layer ] 
+[ JNI Bridge Layer ]
        │  (Translates JVM data types to C/C++ types)
        v
-[ C/ C++ Native Code (`.so`) ] 
+[ C/ C++ Native Code (`.so`) ]
        │  (Interacts with Kernel, Hardware, Files, etc.)
        v
 [ Linux Kernel/ Hardware ]
@@ -118,7 +118,7 @@ and JNI handles dropping down into native C/C++ to touch the system files or har
        │
        │  1. Calls AIDL interface method over Binder IPC
        v
-[ System Service/ Daemon Process ] 
+[ System Service/ Daemon Process ]
        │  (Implements the AIDL Stub)
        │
        │  2. Calls a native method via JNI

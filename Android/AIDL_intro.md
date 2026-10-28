@@ -112,7 +112,7 @@ AIDL does not allow arbitrary classes or language features.
 The following are never allowed:
 
 + The short Primitive Type: While int, long, char, boolean, double, and float are fully supported,  
-  **short is not allowed as a primitive type in AIDL.**
+  **`short` is not allowed as a primitive type in AIDL.**
 + Arbitrary Objects/ Custom Classes: You cannot pass just any Java or C++ class.  
   Objects must either be primitive types, String, CharSequence, an IBinder object, an AIDL-generated interface,  
   or explicitly defined as a Parcelable (or structured AIDL parcelable).

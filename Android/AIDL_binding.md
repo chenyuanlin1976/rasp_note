@@ -8,7 +8,7 @@ Here is a step-by-step guide and code example on how to bind and connect to an A
 
 ## Step 1: Define the AIDL Interface
 
-First, create an `.aidl` file (e.g., IMyService.aidl) in your project under src/main/aidl/com/example/myapp/.
+First, create an `.aidl` file (e.g., IMyService.aidl) in your project under `src/main/aidl/com/example/myapp/`.
 
 ```java
 // IMyService.aidl
@@ -154,7 +154,7 @@ class MainActivity : AppCompatActivity() {
 ## Key Best Practices & Tips
 
 + Cross-App Communication (Android 11+/ API 30+):  
-  If your client app and service app are separate, remember to declare <queries> tags in the client's `AndroidManifest.xml`  
+  If your client app and service app are separate, remember to declare `<queries>` tags in the client's `AndroidManifest.xml`  
   to satisfy package visibility rules.
 + Thread Safety: AIDL method calls made from the client block the calling thread until a response is received  
   (if called from the main thread, it can cause an ANR if the remote service takes too long).  

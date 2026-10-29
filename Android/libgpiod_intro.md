@@ -1,151 +1,62 @@
-# libgpiod
+# libgpiod introduction
 
-## control gpio pin standalone
+## What is libgpiod
 
-To control your Wi-Fi power enable/disable pin standalone, you can use the modern `libgpiod` command-line tools.  
-This bypasses the old sysfs interface and safely interacts with the GPIO chip directly.
+`libgpiod` is a C library and set of command-line tools used to interact with the GPIO  
+(General-Purpose Input/Output) **character devices** on Linux systems.
 
-1. Identify the Wi-Fi GPIO Chip and Line:  
-   Run `gpiodetect` to list all available GPIO controllers on your system,  
-   then use `gpiofind "enable"` (substituting your actual Wi-Fi enable label or pin name from your device tree) to find the exact chip and line offset.
-2. Power Off the Wi-Fi Module:  
-   Drive the enable pin low to cut power or disable the module using `gpioset`:  
-   `gpioset <chip_name> <line_offset>=0`  
-   Verification: Run `gpioget <chip_name> <line_offset>` to confirm the line reads 0.
-3. Power On the Wi-Fi Module:  
-   Drive the enable pin high to power it back on:  
-   `gpioset <chip_name> <line_offset>=1`
-   Verification: Run `gpioget <chip_name> <line_offset>` to confirm the line reads 1,  
-   and check `dmesg` or `ip link` to see if the Wi-Fi interface re-initializes.
+It was created to replace the older, now-deprecated **sysfs** GPIO interface (`/sys/class/gpio`),  
+which had performance bottlenecks, race conditions, and was eventually removed from the Linux kernel.  
 
-## AIDL with libgpiod
+`libgpiod` interfaces directly with the modern GPIO character device ABI (`/dev/gpiochipN`),  
+making it cleaner, faster, and more robust.
 
-AIDL (Android Interface Definition Language) can work with this configuration, but indirectly.  
-AIDL is strictly an Inter-Process Communication (IPC) mechanism used in Android to define interfaces between client applications and system services.  
-**It does not communicate directly with the Linux kernel or Device Tree.**
+## Key Components of libgpiod
 
-Instead, **AIDL serves as the public contract for a native Hardware Abstraction Layer (HAL) service.**  
-The architecture follows a layered path:
+1. The Library (`libgpiod`):  
+   A C library that developers can use in their own applications to control GPIO lines programmatically.  
+   There are also bindings available for other languages, most notably Python (gpiod).
+2. Command-Line Tools:  
+   A set of handy utilities included in the package for scripting and debugging directly from the terminal:
 
-+ Android App or System Service calls the AIDL Interface.
-+ The Native HAL Service (written in C++) processes the call.
-+ The HAL code uses libgpiod to control the GPIO pin defined in your Device Tree (.dtsi).
+   + `gpiodetect`: Lists all available GPIO chips on the system along with their labels and number of lines.
+   + `gpioinfo`: Shows detailed information about all lines on a specific GPIO chip (their names, consumers, direction, active state, etc.).
+   + `gpioget`: Reads the current value(s) of specified GPIO line(s).
+   + `gpioset`: Sets the output value of specified GPIO line(s).
+   + `gpiomon`: Monitors GPIO lines for specific events (like rising or falling edges, indicating a button press or sensor trigger).
 
-### How to Connect Them
+## Why Use libgpiod
 
-To control your GPIO configuration via AIDL:
++ Modern Standard: It is the official, future-proof way to handle GPIOs on Linux  
+  (heavily used on single-board computers like the Raspberry Pi, BeagleBone, and various embedded ARM boards).
++ Better Performance: Direct kernel interaction via `ioctl` calls is much faster than reading and writing text files in **sysfs**.
++ Safety & Reliability: It supports proper handle management and prevents race conditions when multiple programs try to access the same pin.
 
-+ Define the Interface: Create an .aidl file (e.g., IWifiControl.aidl) defining methods like enableWifi(boolean enable).
-+ Implement the HAL: Create a C++ vendor service that inherits from the generated AIDL binder class.
-+ Control the GPIO: Inside your C++ service implementation, use `libgpiod` functions (`gpiod_line_set_value`)  
-  to drive the power enable pin high or low based on the AIDL request.
-+ Verification: You can verify the HAL is communicating with the kernel by checking `dmesg` logs or running `gpioget`  
-  while triggering the AIDL service call from an app shell command (`cmd <service_name>`).
+## Example: Using Python (gpiod)
 
-## examples: AIDL service
+If you are working with a Raspberry Pi running a modern OS (like Raspberry Pi OS Bookworm or later),  
+you will typically use the Python bindings for `libgpiod` to control pins:
 
-Here is a complete, simplified example of how to implement an **AIDL service**  
-that bridges an Android application down to the C++ HAL layer to control the Wi-Fi power GPIO pin.
+```python
+import gpiod
 
-### Step 1: Define the AIDL Interface
+# Find the chip (e.g., gpiochip4 on newer Raspberry Pi models)
+chip = gpiod.Chip("gpiochip4")
 
-First, create an **.aidl file**.  
-This defines the contract between Android apps/system services and your native hardware service.
+# Get a specific line (e.g., line 17)
+line = chip.get_line(17)
 
-```java, File: IWifiPowerControl.aidl
-package android.hardware.wifi.power;
+# Request the line as an output
+line.request(consumer="my_script", type=gpiod.LINE_REQ_DIR_OUT)
 
-interface IWifiPowerControl {
-    /**
-     * Enables or disables Wi-Fi hardware power via GPIO.
-     */
-    boolean setWifiPower(boolean enable);
+# Set the pin high (3.3V)
+line.set_value(1)
 
-    /**
-     * Gets the current power status of the Wi-Fi hardware.
-     */
-    boolean getWifiPowerStatus();
-}
+# Set the pin low (0V)
+line.set_value(0)
 ```
 
-### Step 2: Implement the Native C++ HAL Service
+## Note
 
-The C++ service implements the generated **binder** interface and uses `libgpiod` to actually toggle the GPIO line defined in your Device Tree (.dtsi).
-
-```c, WifiPowerControl.cpp
-#include "android/hardware/wifi/power/BnWifiPowerControl.h"
-#include <gpiod.h>
-#include <android-base/logging.h>
-
-namespace android {
-namespace hardware {
-namespace wifi {
-namespace power {
-
-class WifiPowerControl : public BnWifiPowerControl {
-private:
-    struct gpiod_chip *chip;
-    struct gpiod_line *line;
-
-public:
-    WifiPowerControl() {
-        // 1. Open the GPIO chip (e.g., gpiochip1)
-        chip = gpiod_chip_open_by_name("gpiochip1");
-        if (!chip) {
-            LOG(ERROR) << "Failed to open GPIO chip";
-            return;
-        }
-        
-        // 2. Get the specific line offset for Wi-Fi power enable (e.g., line 12)
-        line = gpiod_chip_get_line(chip, 12);
-        if (!line) {
-            LOG(ERROR) << "Failed to get GPIO line";
-            return;
-        }
-
-        // 3. Request line as output, default low
-        gpiod_line_request_output(line, "wifi-power", 0);
-    }
-
-    ~WifiPowerControl() {
-        if (line) gpiod_line_release(line);
-        if (chip) gpiod_chip_close(chip);
-    }
-
-    binder::Status setWifiPower(bool enable, bool* _aidl_return) override {
-        if (!line) {
-            *_aidl_return = false;
-            return binder::Status::fromServiceSpecificError(-1);
-        }
-
-        // Drive the GPIO pin high (1) or low (0)
-        int ret = gpiod_line_set_value(line, enable ? 1 : 0);
-        *_aidl_return = (ret == 0);
-        return binder::Status::ok();
-    }
-
-    binder::Status getWifiPowerStatus(bool* _aidl_return) override {
-        if (!line) {
-            *_aidl_return = false;
-            return binder::Status::fromServiceSpecificError(-1);
-        }
-
-        // Read the current state of the pin
-        int val = gpiod_line_get_value(line);
-        *_aidl_return = (val == 1);
-        return binder::Status::ok();
-    }
-};
-
-} // namespace power
-} // namespace wifi
-} // namespace hardware
-} // namespace android
-```
-
-### How It All Connects
-
-+ The App/Framework calls `wifiPowerService.setWifiPower(true);`.
-+ AIDL marshals this call across process boundaries using Android's binder driver.
-+ The C++ Service receives the boolean, translates it via `libgpiod`, and toggles the physical GPIO line.
-+ The Device Tree (.dtsi) configuration ensures the kernel allocated that exact line to the GPIO block during boot.
+Depending on the specific version of `libgpiod` and Python bindings installed on your system,  
+the API might use object-oriented line requests, but the underlying concept remains the same.

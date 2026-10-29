@@ -2,33 +2,30 @@
 
 ## command examples
 
-`adb logcat [options] [filter] [filter]`      // view device log  
-`adb logcat`  
-`adb shell logcat`  
-`adb shell logcat -c`             // The parameter -c will clear the current logs on the device.  
-`adb shell logcat -d > fileName`  // Save the logcat output to a file on the local system.  
-`adb shell bugreport > fileName`  // Will dump the whole device information like dumpstate, dumpsys and logcat output.  
-`adb bugreport`                   // print bug reports
-
-`adb shell pidof packageName`  
-`adb sehll ps | grep pidNumber`
-
-`adb shell logcat -d --pid=xxxPid`
-`adb shell logcast | grep -E '^.{N}F'`     // the N+1 character is F
++ `adb logcat [options] [filter] [filter]`, view device log  
++ `adb logcat`
++ `adb logcat -s <tag_name>:<min_priority_level>`, except the specified tag_name, others are silent.
++ `adb shell logcat`
++ `adb shell logcat -c`, The parameter -c will clear the current logs on the device.  
++ `adb shell logcat -d > fileName`, Save the logcat output to a file on the local system.  
++ `adb shell bugreport > fileName`, Will dump the whole device information like dumpstate, dumpsys and logcat output.  
++ `adb bugreport`, print bug reports
++ `adb shell pidof packageName`  
++ `adb sehll ps | grep pidNumber`
++ `adb shell logcat -d --pid=xxxPid`
++ `adb shell logcast | grep -E '^.{N}F'`, the N+1 character is F
 
 ## priority (lowest to highest)
 
-V: Verbose  
-D: Debug  
-I: Info  
-W: Warning  
-E: Error  
-F: **Fatal**  
-S: Silent (highest priority, where nothing is ever printed)
-
-`adb logcat ActivityManager:I MyApp:D *:S`
-
-[RefWeb](https://developer.android.com/tools/logcat)
++ V: Verbose  
++ D: Debug  
++ I: Info  
++ W: Warning  
++ E: Error  
++ F: **Fatal**  
++ S: Silent (highest priority, where nothing is ever printed)
++ example: `adb logcat ActivityManager:I MyApp:D *:S`
++ [RefWeb](https://developer.android.com/tools/logcat)
 
 ## distinct sections
 

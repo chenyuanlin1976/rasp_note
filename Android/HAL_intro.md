@@ -137,5 +137,5 @@ sending current to the physical LED flash, and the light turns on.
   and as long as they write a HAL implementation that matches Android's standard interface,  
   the Android OS and apps will continue to work seamlessly without changing a single line of Java code.
 + Security & Performance:  
-  The heavy lifting—communicating with low-level drivers and hardware registers—is  
-  **handled by fast, unmanaged C/C++ code via JNI and the HAL**, away from the JVM's garbage collector.
+  The heavy lifting—communicating with low-level drivers and hardware registers -  
+  is **handled by fast, unmanaged C/C++ code via JNI and the HAL**, away from the JVM's garbage collector.

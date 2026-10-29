@@ -40,7 +40,7 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
 }
 ```
 
-## 3. Decoding What’s Happening Under the Hood
+## 3. Decoding What's Happening Under the Hood
 
 To understand how this C code actually touches the physical silicon, let's break down its key mechanics:
 

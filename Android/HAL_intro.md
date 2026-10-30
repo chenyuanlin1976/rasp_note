@@ -91,7 +91,7 @@ Here is the step-by-step journey of how a single line of app code turns on a phy
 ### Step 1: The App Layer (Kotlin)
 
 A user taps a button in your app to turn on the flashlight.  
-Your Kotlin code calls Android’s built-in manager:
+Your Kotlin code calls Android's built-in manager:
 
 ```kotlin
 val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
@@ -113,7 +113,7 @@ The native C++ code receives the request.
 However, it still doesn't know what kind of phone it is running on  
 (whether it's a Google Pixel, a Samsung Galaxy, or a Xiaomi device). This is where the HAL steps in.
 
-### Step 4: The Hardware Abstraction Layer (HAL)
+### Step 4: The HAL
 
 Android defines a strict, standardized Camera/Lights HAL interface  
 (historically written in C/C++ using HIDL or AIDL).

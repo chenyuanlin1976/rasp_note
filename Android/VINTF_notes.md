@@ -49,12 +49,12 @@ the old `/sys/class/gpio` sysfs interface is deprecated in favor of the GPIO cha
 + Recommended Approach: Must use a **Stable AIDL HAL** properly registered with `VINTF`.
 + Do you need VINTF: Yes
 
-### Use Case: A vendor background daemon/ native service needs to control a GPIO.
+### Use Case: A vendor background daemon/ native service needs to control a GPIO
 
 + Recommended Approach: Use local vendor AIDL or a C++ daemon using `libgpiod`.
 + Do you need VINTF: No
 
-### Use Case: You just want to test/debug a GPIO manually on the board.
+### Use Case: You just want to test/debug a GPIO manually on the board
 
 + Recommended Approach: Use shell commands/ `gpiod` tools directly via adb shell.
 + Do you need VINTF: No

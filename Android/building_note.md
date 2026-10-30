@@ -22,18 +22,18 @@
 You can execute all the build tasks available to your Android project using the Gradle wrapper command line tool.
 
 1. `./gradlew assembleDebug`  
-apk folder: ProjectName/app/build/outputs/apk/debug
+apk folder: `ProjectName/app/build/outputs/apk/debug`
 
 2. `./gradlew assembleRelease`  
-apk folder: ProjectName/app/build/outputs/apk/release
+apk folder: `ProjectName/app/build/outputs/apk/release`
 
 ## build with android studio
 
 1. generate App bundles or APKs  
-apk folder: ProjectName/app/build/outputs/apk/debug
+apk folder: `ProjectName/app/build/outputs/apk/debug`
 
 2. generate signed App bundles or APKs  
-apk folder: ProjectName/app/release
+apk folder: `ProjectName/app/release`
 
 ## remote repositories
 
@@ -94,4 +94,5 @@ Even though R8 is the primary tool, you still define rules in proguard-rules.pro
 ### Mapping File
 
 When obfuscation is enabled, R8 generates a mapping.txt file.  
-This file maps the original class and member names to their bfuscated equivalents, which is vital for deobfuscating crash reports and stack traces from production builds.
+This file maps the original class and member names to their bfuscated equivalents,  
+which is vital for deobfuscating crash reports and stack traces from production builds.

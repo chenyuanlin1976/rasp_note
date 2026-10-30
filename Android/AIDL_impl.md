@@ -1,4 +1,4 @@
-# AIDL implement
+# AIDL implement languages
 
 The Android Interface Definition Language (AIDL) is a tool used in Android  
 to define the programming interface that  
@@ -41,9 +41,9 @@ Android supports 4 primary backend languages to implement and consume AIDL inter
 
 ## Summary Table
 
-| Backend/ Language | Typical Use Case                                                  | Target Developer           |
-| ----------------- | ----------------------------------------------------------------- | -------------------------- |
-| Java              | Standard Android Apps & Framework                                 | App & Framework Developers |
-| Kotlin            | Modern Android Apps                                               | App Developers             |
-| C++ (NDK/CPP)     | Hardware Abstraction Layers (HALs), Performance-critical NDK apps | System & NDK Developers    |
-| Rust              | Memory-safe system services & daemons                             | Platform Developers        |
+| Backend/ Language | Typical Use Case                      | Target Developer           |
+| ----------------- | ------------------------------------- | -------------------------- |
+| Java              | Standard Android Apps & Framework     | App & Framework Developers |
+| Kotlin            | Modern Android Apps                   | App Developers             |
+| C++ (NDK/CPP)     | HALs, Performance-critical NDK apps   | System & NDK Developers    |
+| Rust              | Memory-safe system services & daemons | Platform Developers        |

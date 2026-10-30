@@ -34,7 +34,7 @@ It looks like a ZIP file and is essentially the Android equivalent of a JAR file
 | Android Resources (XML, images) | No                     | Yes                   |
 | AndroidManifest.xml             | No                     | Yes                   |
 | Native Libraries (.so)          | No                     | Yes                   |
-| Best for your GPIO project	    | note1                  | note2                 |
+| Best for your GPIO project      | note1                  | note2                 |
 
 note1: Raw AIDL stubs + basic helper logic
 note2: A full SDK wrapper with custom logic, context handling, or resources

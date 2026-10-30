@@ -1,6 +1,6 @@
 # the explanation of Domain Transition
 
-## What is a Domain Transition?
+## What is a Domain Transition
 
 A Domain Transition is a core security mechanism in SELinux  
 where a running process switches from one security domain to an entirely different security domain during execution.
@@ -14,12 +14,12 @@ In traditional Linux, permissions are tied to User IDs (UIDs) -
 for example, everything run by root has full, unrestricted power.  
 SELinux breaks this limitation to enforce **the Principle of Least Privilege**.
 
-### Without a domain transition:
+### Without a domain transition
 
 + If you run a program as root, that program inherits full root privileges.
 + If that program (like a web server) has a security vulnerability and gets hacked, the attacker gains control over the entire system.
 
-### With a domain transition:
+### With a domain transition
 
 + When systemd or an init script starts a specific service (like Nginx or MySQL),  
   the process immediately breaks away from the parent process's domain (leaving behind broad permissions like init_t).

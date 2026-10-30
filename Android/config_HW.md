@@ -54,5 +54,5 @@ source build/envsetup.sh
 lunch <your_device_target>-userdebug
 ```
 
-2. Build the Kernel and Android Image:  
+1. Build the Kernel and Android Image:  
    Compile the complete Android image, including the customized boot/kernel image containing your updated device tree.

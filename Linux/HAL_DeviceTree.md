@@ -25,7 +25,7 @@ A .dtsi file is part of the Linux **Device Tree** architecture.
 + Role: It is a software programming layer (**API/libraries**) that abstracts low-level kernel interfaces  
   so that high-level applications (like UI frameworks, camera services, or hardware sensors)  
   can interact with hardware uniformly without caring about kernel-specific ioctl calls or driver implementations.
-+ Example: Android's Hardware Abstraction Layer (gralloc, camera, sensors HALs)  
++ Example: Android's HAL (gralloc, camera, sensors HALs)  
   sits between the Android runtime/framework and the Linux kernel drivers.
 
 ## How .dtsi and HAL Interact
@@ -45,7 +45,7 @@ While they don't talk to each other directly, they are connected sequentially in
 
 ## example: control a Led
 
-To bring this together, let’s walk through a concrete, end-to-end example:  
+To bring this together, let's walk through a concrete, end-to-end example:  
 controlling a system status LED on an embedded Linux board.
 
 We will track how this hardware is defined in the Device Tree (.dtsi / .dts),  

@@ -1,7 +1,7 @@
 # HIDL and Binder
 
 HIDL (HAL Interface Definition Language) and Binder share a direct, foundational relationship:  
-HIDL was created specifically to bring the power of Binder IPC down into Android’s Hardware Abstraction Layer (HAL).
+HIDL was created specifically to bring the power of Binder IPC down into Android's Hardware Abstraction Layer (HAL).
 
 To understand how they work together, it helps to look at why HIDL was introduced and how it leverages the Binder driver.
 

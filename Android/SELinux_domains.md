@@ -38,7 +38,7 @@ These are foundational OS processes managed by init or zygote that power Android
 
 ## 3. Hardware Abstraction Layer (HAL) Domains
 
-Under Android’s Treble architecture,  
+Under Android's Treble architecture,  
 hardware drivers run in isolated vendor domains rather than inside the main system server:
 
 + `hal_audio_default`/ `hal_audio`: Manages audio hardware playback and recording.

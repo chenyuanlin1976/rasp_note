@@ -4,7 +4,7 @@ When you see a **never allow** (or neverallow) error during an Android platform 
 while trying to implement hardware control like LEDs,  
 you are hitting an **SELinux build-time security violation**.
 
-Android’s build system uses neverallow assertions as strict compilation guards.  
+Android's build system uses neverallow assertions as strict compilation guards.  
 If your code or SELinux policy (.te files) tries to grant a process permission  
 to do something deemed insecure by the platform,  
 the compiler immediately halts and refuses to generate the policy.
@@ -68,7 +68,7 @@ the build will break with a neverallow violation:
 
 + The Rule: Vendor-specific code (like something running under /vendor or /odm)  
   is never allowed to directly read or write arbitrary system properties or private system files  
-  that aren’t explicitly exposed as public APIs.
+  that aren't explicitly exposed as public APIs.
 + Why it fails: Android enforces Project Treble to separate core OS updates (/system) from hardware implementation (/vendor).  
   Allowing a vendor component to grab private system properties breaks this boundary.
 + How to fix it: Define custom vendor properties with a designated prefix (e.g., vendor_myfeature_prop)  

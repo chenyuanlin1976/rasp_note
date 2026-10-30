@@ -44,7 +44,7 @@ To control your GPIO configuration via AIDL:
 
 ## examples: AIDL service
 
-Here is a complete, simplified example of how to implement an **AIDL (Android Interface Definition Language) service**  
+Here is a complete, simplified example of how to implement an **AIDL service**  
 that bridges an Android application down to the C++ HAL layer to control the Wi-Fi power GPIO pin.
 
 ### Step 1: Define the AIDL Interface

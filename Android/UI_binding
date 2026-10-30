@@ -1,6 +1,6 @@
 # UI binding
 
-In Android development, **UI Binding** refers to 
+In Android development, **UI Binding** refers to  
 how your app's code (Activities, Fragments, or ViewModels) **communicates with and controls its user interface layouts** (written in XML).
 
 Historically, Android developers relied heavily on `findViewById()`, which was notoriously slow, verbose, and prone to runtime crashes  
@@ -16,7 +16,7 @@ When enabled, it automatically generates a binding class for every XML layout fi
   This class contains direct, type-safe references to every view inside that layout that has an ID.
 + Key Benefits:
   + Null Safety: Because View Binding generates direct references to views,  
-    there’s no risk of a NullPointerException due to an invalid view ID.
+    there's no risk of a NullPointerException due to an invalid view ID.
   + Type Safety: You never need to cast your views manually (e.g., no more `(Button) findViewById(...)`).  
     A TextView is generated as a TextView, a Button as a Button, etc.
   + No Overhead: Unlike older methods, it is lightweight and compile-time safe.
@@ -60,7 +60,7 @@ Data Binding is a more powerful, feature-rich library.
 It is a superset of View Binding -  
 meaning it does everything View Binding does, plus it allows you to bind data sources directly to XML layout files using declarative formats.
 
-+ How it works: Layout files start with a **root <layout> tag**, allowing you to pass variables  
++ How it works: Layout files start with a **root `<layout>` tag**, allowing you to pass variables  
   (like a ViewModel or a data model object) straight into your XML.  
   UI elements can then dynamically display data and react to changes automatically  
   without writing extra boilerplate code in your Activity or Fragment.
@@ -72,7 +72,7 @@ meaning it does everything View Binding does, plus it allows you to bind data so
 
 ### Quick Example (Data Binding)
 
-1. Wrap your XML layout in <layout>:
+1. Wrap your XML layout in `<layout>`:
 
 ```xml
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
@@ -102,7 +102,7 @@ meaning it does everything View Binding does, plus it allows you to bind data so
 | Feature        | View Binding                                              | Data Binding                                                       |
 | -------------- | --------------------------------------------------------- | ------------------------------------------------------------------ |
 | Primary Goal   | Replaces findViewById() safely                            | Binds data variables directly to XML layouts                       |
-| XML Structure  | Regular XML layout                                        | filesRequires a root <layout> wrapper tag                          |
+| XML Structure  | Regular XML layout                                        | filesRequires a root `<layout>` wrapper tag                        |
 | Two-Way Binding| No                                                        | Yes                                                                |
 | Build Speed    | Fast                                                      | Slower (due to annotation processing overhead)                     |
 | When to Use    | When you just need to reference views cleanly and safely. | When building complex MVVM architectures with reactive UI updates. |

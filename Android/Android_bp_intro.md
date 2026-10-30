@@ -2,7 +2,7 @@
 
 An `Android.bp` file (short for Android **Blueprint**) is a configuration file  
 used in the Android Open Source Project (AOSP) to build software components.
-It serves as the core input format for Soong, Android’s modern, high-performance build system.  
+It serves as the core input format for Soong, Android's modern, high-performance build system.  
 Google introduced Android.bp files to completely replace the legacy, slow GNU Makefiles (`Android.mk`).
 
 ## 1. Key Characteristics of Android.bp Files
@@ -37,7 +37,7 @@ cc_binary {
 }
 ```
 
-## Common Module Types:
+## Common Module Types
 
 + `cc_binary`/ `cc_library`: For compiling C/C++ executables and shared/static libraries.
 + `android_app`: For building APKs.

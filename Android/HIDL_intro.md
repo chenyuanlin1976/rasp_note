@@ -23,7 +23,7 @@ and vendors could update their hardware drivers separately without breaking comp
 2. Code Generation (hidl-gen): The build system runs the hidl-gen tool to generate C++  
    (and sometimes Java) boilerplate files (proxies and stubs).
 3. Communication Modes: HIDL supports 2 modes of communication between the Android framework and the hardware:
-   + Binderized Mode: Uses Android’s standard **Binder IPC driver** to pass data across separate processes  
+   + Binderized Mode: Uses Android's standard **Binder IPC driver** to pass data across separate processes  
      (client and server run in different processes).
    + Passthrough Mode: The HAL is compiled into a shared library and loaded directly into the client process  
      (acting essentially as a direct function call, used primarily during early transition phases for older devices).

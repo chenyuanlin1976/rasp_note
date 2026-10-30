@@ -3,10 +3,10 @@
 [coding style](https://docs.kernel.org/process/coding-style.html)
 
 This is a short document describing the preferred coding style for the linux kernel.  
-Coding style is very personal, and I won’t force my views on anybody, but this is what goes for anything that I have to be able to maintain,  
-and I’d prefer it for most other things too. Please at least consider the points made here.  
+Coding style is very personal, and I won't force my views on anybody, but this is what goes for anything that I have to be able to maintain,  
+and I'd prefer it for most other things too. Please at least consider the points made here.  
 
-First off, I’d suggest printing out a copy of the GNU coding standards, and NOT read it. Burn them, it’s a great symbolic gesture.  
+First off, I'd suggest printing out a copy of the GNU coding standards, and NOT read it. Burn them, it's a great symbolic gesture.  
 Anyway, here goes:
 
 ## Indentation
@@ -15,13 +15,13 @@ Tabs are 8 characters, and thus indentations are also 8 characters.
 There are heretic movements that try to make indentations 4 (or even 2!) characters deep, and that is akin to trying to define the value of PI to be 3.
 
 Rationale: The whole idea behind indentation is to clearly define where a block of control starts and ends.  
-Especially when you’ve been looking at your screen for 20 straight hours,  
-you’ll find it a lot easier to see how the indentation works if you have large indentations.
+Especially when you've been looking at your screen for 20 straight hours,  
+you'll find it a lot easier to see how the indentation works if you have large indentations.
 
 Now, some people will claim that having 8-character indentations makes the code move too far to the right, 
 and makes it hard to read on a 80-character terminal screen.  
-The answer to that is that **if you need more than 3 levels of indentation, you’re screwed anyway, and should fix your program.**  
-In short, 8-char indents make things easier to read, and have the added benefit of warning you when you’re nesting your functions too deep. Heed that warning.
+The answer to that is that **if you need more than 3 levels of indentation, you're screwed anyway, and should fix your program.**  
+In short, 8-char indents make things easier to read, and have the added benefit of warning you when you're nesting your functions too deep. Heed that warning.
 
 The preferred way to ease multiple indentation levels in a switch statement is to align the switch and its subordinate case labels in the same column instead of double-indenting the case labels. E.g.:
 
@@ -44,14 +44,14 @@ switch (suffix) {
 }
 ```
 
-+ Don’t put multiple statements on a single line unless you have something to hide:
++ Don't put multiple statements on a single line unless you have something to hide:
 
 ```C
 if (condition) do_this;
   do_something_everytime;
 ```
 
-+ Don’t use commas to avoid using braces:
++ Don't use commas to avoid using braces:
 
 ```C
 if (condition)
@@ -67,9 +67,9 @@ if (condition) {
 }
 ```
 
-**Don’t put multiple assignments on a single line either. Kernel coding style is super simple. Avoid tricky expressions.**  
+**Don't put multiple assignments on a single line either. Kernel coding style is super simple. Avoid tricky expressions.**  
 Outside of comments, documentation and except in Kconfig, spaces are never used for indentation, and the above example is deliberately broken.  
-Get a decent editor and don’t leave whitespace at the end of lines.
+Get a decent editor and don't leave whitespace at the end of lines.
 
 ## Breaking long lines and strings
 
@@ -121,7 +121,7 @@ int function(int x)
 ```
 
 Heretic people all over the world have claimed that this inconsistency is ... well ... inconsistent,  
-but all right-thinking people know that (a) K&R are right and (b) K&R are right. Besides, functions are special anyway (you can’t nest them in C).
+but all right-thinking people know that (a) K&R are right and (b) K&R are right. Besides, functions are special anyway (you can't nest them in C).
 
 Note that the closing brace is empty on a line of its own, except in the cases where it is followed by a continuation of the same statement,  
 ie a while in a do-statement or an else in an if-statement, like this:
@@ -257,20 +257,20 @@ Encoding the type of a function into the name (so-called Hungarian notation) is 
 
 If you are afraid to mix up your local variable names, you have another problem, which is called the function-growth-hormone-imbalance syndrome. See chapter 6 (Functions).
 
-For symbol names and documentation, avoid introducing new usage of ‘master / slave’ (or ‘slave’ independent of ‘master’) and ‘blacklist / whitelist’.
+For symbol names and documentation, avoid introducing new usage of ‘master / slave' (or ‘slave' independent of ‘master') and ‘blacklist / whitelist'.
 
-Recommended replacements for ‘master / slave’ are:
+Recommended replacements for ‘master / slave' are:
 
-+ ‘{primary,main} / {secondary,replica,subordinate}’ ‘{initiator,requester} / {target,responder}’ ‘{controller,host} / {device,worker,proxy}’ ‘leader / follower’ ‘director / performer’
++ ‘{primary,main} / {secondary,replica,subordinate}' ‘{initiator,requester} / {target,responder}' ‘{controller,host} / {device,worker,proxy}' ‘leader / follower' ‘director / performer'
 
-+ Recommended replacements for ‘blacklist/whitelist’ are: ‘denylist / allowlist’ ‘blocklist / passlist’
++ Recommended replacements for ‘blacklist/whitelist' are: ‘denylist / allowlist' ‘blocklist / passlist'
 
 Exceptions for introducing new usage is to maintain a userspace ABI/API, or when updating code for an existing (as of 2020) hardware or protocol specification that mandates those terms.  
 For new specifications translate specification usage of the terminology to the kernel coding standard where possible.
 
 ## Typedefs
 
-Please don’t use things like vps_t. It’s a mistake to use typedef for structures and pointers. When you see a
+Please don't use things like vps_t. It's a mistake to use typedef for structures and pointers. When you see a
 
 `vps_t a;`
 
@@ -291,7 +291,7 @@ Lots of people think that typedefs help readability. Not so. They are useful onl
 + Clear integer types, where the abstraction helps avoid confusion whether it is int or long.  
   u8/u16/u32 are perfectly fine typedefs, although they fit into category (d) better than here.
 
-  Note: Again - there needs to be a reason for this. If something is unsigned long, then there’s no reason to do
+  Note: Again - there needs to be a reason for this. If something is unsigned long, then there's no reason to do
 
   typedef unsigned long myflags_t;  
   but if there is a clear reason for why it under certain circumstances might be an unsigned int and under other configurations might be unsigned long,  
@@ -305,7 +305,7 @@ Lots of people think that typedefs help readability. Not so. They are useful onl
   When editing existing code which already uses one or the other set of types, you should conform to the existing choices in that code.
 
 + Types safe for use in userspace.
-  In certain structures which are visible to userspace, we cannot require C99 types and cannot use the u32 form above. 
+  In certain structures which are visible to userspace, we cannot require C99 types and cannot use the u32 form above.  
   Thus, we use __u32 and similar types in all structures which are shared with userspace.
 
 Maybe there are other cases too, but the rule should basically be to **NEVER EVER use a typedef unless you can clearly match one of those rules.**  
@@ -314,19 +314,19 @@ In general, a pointer, or a struct that has elements that can reasonably be dire
 ## Functions
 
 **Functions should be short and sweet, and do just one thing.**  
-They should fit on one or two screenfuls of text (the ISO/ANSI screen size is 80x24, as we all know), and do one thing and do that well.
+They should fit on one or 2 screenfuls of text (the ISO/ANSI screen size is 80x24, as we all know), and do one thing and do that well.
 
 The maximum length of a function is inversely proportional to the complexity and indentation level of that function.  
-So, if you have a conceptually simple function that is just one long (but simple) case-statement, where you have to do lots of small things for a lot of different cases, it’s OK to have a longer function.
+So, if you have a conceptually simple function that is just one long (but simple) case-statement, where you have to do lots of small things for a lot of different cases, it's OK to have a longer function.
 
 However, if you have a complex function, and you suspect that a less-than-gifted first-year high-school student might not even understand what the function is all about,  
 you should adhere to the maximum limits all the more closely.  
-Use helper functions with descriptive names (you can ask the compiler to in-line them if you think it’s performance-critical, and it will probably do a better job of it than you would have done).
+Use helper functions with descriptive names (you can ask the compiler to in-line them if you think it's performance-critical, and it will probably do a better job of it than you would have done).
 
-Another measure of the function is the number of local variables. They shouldn’t exceed 5-10, or you’re doing something wrong.  
+Another measure of the function is the number of local variables. They shouldn't exceed 5-10, or you're doing something wrong.  
 Re-think the function, and split it into smaller pieces.  
 **A human brain can generally easily keep track of about 7 different things, anything more and it gets confused.**  
-You know you’re brilliant, but maybe you’d like to understand what you did 2 weeks from now.
+You know you're brilliant, but maybe you'd like to understand what you did 2 weeks from now.
 
 In source files, separate functions with one blank line. If the function is exported, the EXPORT macro for it should follow immediately after the closing function brace line. E.g.:
 
@@ -343,7 +343,7 @@ EXPORT_SYMBOL(system_is_up);
 In function prototypes, include parameter names with their data types.  
 Although this is not required by the C language, it is preferred in Linux because it is a simple way to add valuable information for the reader.
 
-Do not use the extern keyword with function declarations as this makes lines longer and isn’t strictly necessary.
+Do not use the extern keyword with function declarations as this makes lines longer and isn't strictly necessary.
 
 When writing function prototypes, please keep the order of elements regular. For example, using this function declaration example:
 
@@ -424,7 +424,7 @@ err:
 ```
 
 The bug in this code is that on some exit paths foo is NULL.  
-Normally the fix for this is to split it up into two error labels err_free_bar: and err_free_foo::
+Normally the fix for this is to split it up into 2 error labels err_free_bar: and err_free_foo::
 
 ```C
 err_free_bar:
@@ -439,7 +439,7 @@ Ideally you should simulate errors to test all exit paths.
 ## Commenting
 
 Comments are good, but there is also a danger of over-commenting.  
-NEVER try to explain HOW your code works in a comment: it’s much better to write the code so that the working is obvious, and it’s a waste of time to explain badly written code.
+NEVER try to explain HOW your code works in a comment: it's much better to write the code so that the working is obvious, and it's a waste of time to explain badly written code.
 
 **Generally, you want your comments to tell WHAT your code does, not HOW.**  
 Also, try to avoid putting comments inside a function body: if the function is so complex that you need to separately comment parts of it, you should probably go back to chapter 6 for a while.  
@@ -449,7 +449,7 @@ Instead, put the comments at the head of the function, telling people what it do
 When commenting the kernel API functions, please use the kernel-doc format.  
 See the files at **Documentation/doc-guide/ and tools/docs/kernel-doc** for details.  
 Note that the danger of over-commenting applies to kernel-doc comments all the same.  
-Do not add boilerplate kernel-doc which simply reiterates what’s obvious from the signature of the function.
+Do not add boilerplate kernel-doc which simply reiterates what's obvious from the signature of the function.
 
 The preferred style for long (multi-line) comments is:
 
@@ -464,14 +464,14 @@ The preferred style for long (multi-line) comments is:
  */
 ```
 
-It’s also important to comment data, whether they are basic types or derived types.  
+It's also important to comment data, whether they are basic types or derived types.  
 To this end, use just one data declaration per line (no commas for multiple data declarations).  
 This leaves you room for a small comment on each item, explaining its use.
 
-## You’ve made a mess of it
+## You've made a mess of it
 
-That’s OK, we all do. You’ve probably been told by your long-time Unix user helper that GNU **emacs** automatically formats the C sources for you,  
-and you’ve noticed that yes, it does do that, but the defaults it uses are less than desirable  
+That's OK, we all do. You've probably been told by your long-time Unix user helper that GNU **emacs** automatically formats the C sources for you,  
+and you've noticed that yes, it does do that, but the defaults it uses are less than desirable  
 (in fact, they are worse than random typing - an infinite number of monkeys typing into GNU emacs would never make a good program).
 
 So, you can either get rid of GNU emacs, or change it to use saner values. To do the latter, you can stick the following in your .emacs file:
@@ -529,7 +529,7 @@ This will make emacs go better with the kernel coding style for C files below `~
 But even if you fail in getting emacs to do sane formatting, not everything is lost: use indent.
 
 Now, again, GNU indent has the same brain-dead settings that GNU emacs has, which is why you need to give it a few command line options.  
-However, that’s not too bad, because even the makers of GNU indent recognize the authority of K&R (the GNU people aren’t evil, they are just severely misguided in this matter),  
+However, that's not too bad, because even the makers of GNU indent recognize the authority of K&R (the GNU people aren't evil, they are just severely misguided in this matter),  
 so you just give indent the options -kr -i8 (stands for K&R, 8 character indents), or use scripts/Lindent, which indents in the latest style.
 
 indent has a lot of options, and especially when it comes to comment re-formatting you may want to take a look at the man page.  
@@ -546,7 +546,7 @@ See the official EditorConfig website for more information: [https://editorconfi
 ## Kconfig configuration files
 
 For all of the Kconfig* configuration files throughout the source tree, the indentation is somewhat different.  
-Lines under a config definition are indented with **one tab**, while help text is indented an additional two spaces. Example:
+Lines under a config definition are indented with **one tab**, while help text is indented an additional 2 spaces. Example:
 
 ```bash
 config AUDIT
@@ -573,7 +573,7 @@ For full documentation on the configuration files, see the file Kconfig Language
 ## Data structures
 
 Data structures that have visibility outside the single-threaded environment they are created and destroyed in should always have reference counts.  
-In the kernel, garbage collection doesn’t exist (and outside the kernel garbage collection is slow and inefficient), which means that you absolutely have to reference count all your uses.
+In the kernel, garbage collection doesn't exist (and outside the kernel garbage collection is slow and inefficient), which means that you absolutely have to reference count all your uses.
 
 Reference counting means that you can avoid locking, and allows multiple users to have access to the data structure in parallel -  
 and not having to worry about the structure suddenly going away from under them just because they slept or did something else for a while.
@@ -582,12 +582,12 @@ Note that locking is not a replacement for reference counting.
 Locking is used to keep data structures coherent, while reference counting is a memory management technique.  
 Usually both are needed, and they are not to be confused with each other.
 
-Many data structures can indeed have two levels of reference counting, when there are users of different classes.  
+Many data structures can indeed have 2 levels of reference counting, when there are users of different classes.  
 The subclass count counts the number of subclass users, and decrements the global count just once when the subclass count goes to zero.
 
 Examples of this kind of multi-level-reference-counting can be found in memory management (struct mm_struct: mm_users and mm_count), and in filesystem code (struct super_block: s_count and s_active).
 
-Remember: if another thread can find your data structure, and you don’t have a reference count on it, you almost certainly have a bug.
+Remember: if another thread can find your data structure, and you don't have a reference count on it, you almost certainly have a bug.
 
 ## Macros, Enums and RTL
 
@@ -641,13 +641,13 @@ Things to avoid when using macros:
   } while (0)
 ```
 
-is a very bad idea. It looks like a function call but exits the calling function; don’t break the internal parsers of those who will read the code.
+is a very bad idea. It looks like a function call but exits the calling function; don't break the internal parsers of those who will read the code.
 
 + macros that depend on having a local variable with a magic name:
 
 `#define FOO(val) bar(index, val)`
 
-might look like a good thing, but it’s confusing as hell when one reads the code and it’s prone to breakage from seemingly innocent changes.
+might look like a good thing, but it's confusing as hell when one reads the code and it's prone to breakage from seemingly innocent changes.
 
 + macros with arguments that are used as l-values: FOO(x) = y; will bite you if somebody e.g. turns FOO into an inline function.
 + forgetting about precedence: macros defining constants using expressions must enclose the expression in parentheses. Beware of similar issues with macros using parameters.
@@ -684,7 +684,7 @@ Printing numbers in parentheses (%d) adds no value and should be avoided.
 
 There are a number of driver model diagnostic macros in <linux/dev_printk.h> which you should use to make sure messages are matched to the right device and driver,  
 and are tagged with the right level: `dev_err(), dev_warn(), dev_info()`, and so forth.  
-For messages that aren’t associated with a particular device, <linux/printk.h> defines `pr_notice(), pr_info(), pr_warn(), pr_err()`, etc.  
+For messages that aren't associated with a particular device, <linux/printk.h> defines `pr_notice(), pr_info(), pr_warn(), pr_err()`, etc.  
 When drivers are working properly they are quiet, so prefer to use dev_dbg/pr_debug unless something is wrong.
 
 Coming up with good debugging messages can be quite a challenge; and once you have them, they can be a huge help for remote troubleshooting.  
@@ -743,15 +743,15 @@ when a second user appears outweighs the potential value of the hint that tells 
 Functions can return values of many different kinds, and one of the most common is a value indicating whether the function succeeded or failed.  
 Such a value can be represented as an error-code integer (-Exxx = failure, 0 = success) or a succeeded boolean (0 = failure, non-zero = success).
 
-Mixing up these two sorts of representations is a fertile source of difficult-to-find bugs.  
-If the C language included a strong distinction between integers and booleans then the compiler would find these mistakes for us... but it doesn’t.  
+Mixing up these 2 sorts of representations is a fertile source of difficult-to-find bugs.  
+If the C language included a strong distinction between integers and booleans then the compiler would find these mistakes for us... but it doesn't.  
 To help prevent such bugs, always follow this convention:
 
 > If the name of a function is an action or an imperative command, the function should return an error-code integer.
 > If the name is a predicate, the function should return a "succeeded" boolean.
 
 For example, add work is a command, and the add_work() function returns 0 for success or -EBUSY for failure.  
-In the same way, PCI device present is a predicate, and the pci_dev_present() function returns 1 if it succeeds in finding a matching device or 0 if it doesn’t.
+In the same way, PCI device present is a predicate, and the pci_dev_present() function returns 1 if it succeeds in finding a matching device or 0 if it doesn't.
 
 All EXPORTed functions must respect this convention, and so should all public functions. Private (static) functions need not, but it is recommended that they do.
 
@@ -768,19 +768,19 @@ When using bool types the !! construction is not needed, which eliminates a clas
 When working with bool values the true and false definitions should be used instead of 1 and 0.
 
 bool function return types and stack variables are always fine to use whenever appropriate.  
-Use of bool is encouraged to improve readability and is often a better option than ‘int’ for storing boolean values.
+Use of bool is encouraged to improve readability and is often a better option than ‘int' for storing boolean values.
 
 Do not use bool if cache line layout or size of the value matters, as its size and alignment varies based on the compiled architecture.  
 Structures that are optimized for alignment and size should not use bool.
 
 If a structure has many true/false values, consider consolidating them into a bitfield with 1 bit members, or using an appropriate fixed width type, such as u8.
 
-Similarly for function arguments, many true/false values can be consolidated into a single bitwise ‘flags’ argument  
-and ‘flags’ can often be a more readable alternative if the call-sites have naked true/false constants.
+Similarly for function arguments, many true/false values can be consolidated into a single bitwise ‘flags' argument  
+and ‘flags' can often be a more readable alternative if the call-sites have naked true/false constants.
 
 Otherwise limited use of bool in structures and arguments can improve readability.
 
-## Don’t re-invent the kernel macros
+## Don't re-invent the kernel macros
 
 There are many header files in include/linux/ that contain a number of macros that you should use, rather than explicitly coding some variant of them yourself.  
 For example, if you need to calculate the length of an array, take advantage of the macro
@@ -796,7 +796,7 @@ Similarly, if you need to calculate the size of some structure member, use
 which is defined in stddef.h.
 
 There are also min() and max() macros defined in minmax.h that do strict type checking if you need them.  
-Feel free to peruse the header files to see what else is already defined that you shouldn’t reproduce in your code.
+Feel free to peruse the header files to see what else is already defined that you shouldn't reproduce in your code.
 
 ## Editor modelines and other cruft
 
@@ -824,14 +824,14 @@ This includes markers for indentation and mode configuration. People may use the
 ## Inline assembly
 
 In architecture-specific code, you may need to use inline assembly to interface with CPU or platform functionality.  
-Don’t hesitate to do so when necessary. However, don’t use inline assembly gratuitously when C can do the job. You can and should poke hardware from C when possible.
+Don't hesitate to do so when necessary. However, don't use inline assembly gratuitously when C can do the job. You can and should poke hardware from C when possible.
 
 Consider writing simple helper functions that wrap common bits of inline assembly, rather than repeatedly writing them with slight variations. Remember that inline assembly can use C parameters.
 
 Large, non-trivial assembly functions should go in .S files, with corresponding C prototypes defined in C header files. The C prototypes for assembly functions should use asmlinkage.
 
-You may need to mark your asm statement as volatile, to prevent GCC from removing it if GCC doesn’t notice any side effects.  
-You don’t always need to do so, though, and doing so unnecessarily can limit optimization.
+You may need to mark your asm statement as volatile, to prevent GCC from removing it if GCC doesn't notice any side effects.  
+You don't always need to do so, though, and doing so unnecessarily can limit optimization.
 
 When writing a single inline assembly statement containing multiple instructions, put each instruction on a separate line in a separate quoted string,  
 and end each string except the last with \n\t to properly indent the next instruction in the assembly output:
@@ -844,7 +844,7 @@ asm ("magic %reg1, #42\n\t"
 
 ## Conditional Compilation
 
-Wherever possible, don’t use preprocessor conditionals (#if, #ifdef) in .c files;  
+Wherever possible, don't use preprocessor conditionals (#if, #ifdef) in .c files;  
 doing so makes code harder to read and logic harder to follow.  
 Instead, use such conditionals in a header file defining functions for use in those .c files, providing no-op stub versions in the #else case, and then call those functions unconditionally from .c files.  
 The compiler will avoid generating any code for the stub calls, producing identical results, but the logic will remain easy to follow.
@@ -889,7 +889,7 @@ panic() should be used with care and primarily only during system boot. panic() 
 Do not add new code that uses any of the BUG() variants, such as BUG(), BUG_ON(), or VM_BUG_ON().  
 Instead, use a WARN*() variant, preferably WARN_ON_ONCE(), and possibly with recovery code. Recovery code is not required if there is no reasonable way to at least partially recover.
 
-“I’m too lazy to do error handling” is not an excuse for using BUG().  
+“I'm too lazy to do error handling” is not an excuse for using BUG().  
 Major internal corruptions with no way of continuing may still use BUG(), but need good justification.
 
 + Use WARN_ON_ONCE() rather than WARN() or WARN_ON()

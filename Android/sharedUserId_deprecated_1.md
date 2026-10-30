@@ -13,7 +13,7 @@ The 2 primary methods are
 A Content Provider manages access to a structured set of data and shares it securely using `content://` URIs.  
 By default, other apps cannot access your provider unless you explicitly grant them temporary permissions.
 
-### 1. How it works (The Workflow):
+### 1. How it works (The Workflow)
 
 1. The Provider App defines a **Content Provider** in its manifest with `android:exported="true"` and `android:grantUriPermissions="true"`.
 2. The Client App queries the provider or requests a specific file/data URI.
@@ -21,7 +21,7 @@ By default, other apps cannot access your provider unless you explicitly grant t
    (`FLAG_GRANT_READ_URI_PERMISSION`) or programmatic calls (`context.grantUriPermission()`).
 4. The Client App reads the data using **ContentResolver** and loses access once the task is done (or when the grant expires).
 
-### 2. Code Example:
+### 2. Code Example
 
 + In the Provider App's `AndroidManifest.xml`:
 
@@ -70,7 +70,7 @@ cursor?.use {
 If you need to perform actions, run complex business logic, or stream data streams across processes rather than just querying flat records,  
 AIDL is the standard solution. It acts like a remote procedure call (RPC).
 
-### 1. How it works (The Workflow):
+### a. How it works (The Workflow)
 
 1. Define an Interface (.aidl): Both apps agree on an interface file defining what functions can be called (e.g., `getData()`, `performAction()`).
 2. Implement the Service: The providing app creates a Service that implements this AIDL stub and exports it,  
@@ -78,7 +78,7 @@ AIDL is the standard solution. It acts like a remote procedure call (RPC).
 3. Bind from Client: The client app binds to the service using `bindService()`, receives the IBinder interface object,  
    and calls methods directly as if they were local functions.
 
-### 2. Code Example:
+### b. Code Example
 
 + Step 1: Create IMyService.aidl (placed in both apps under the same package structure):
 
@@ -160,7 +160,7 @@ the landscape has become extremely tight due to aggressive privacy and security 
 
 Depending on whether you mean as an app developer or as a user/power user, here is how data access is handled on Android 14:
 
-### 1. From a Developer’s Perspective (Building Apps)
+### 1. From a Developer's Perspective (Building Apps)
 
 If you are writing code and want to access or share system-level/other app data,  
 you cannot bypass the application sandbox. Android 14 completely enforces process isolation:
@@ -168,9 +168,9 @@ you cannot bypass the application sandbox. Android 14 completely enforces proces
 + No `sharedUserId`: As discussed, trying to use sharedUserId on Android 14 is heavily deprecated or ignored  
   (sharedUserMaxSdkVersion forces apps into individual sandboxes).
 + Target SDK 34 Restrictions: If your app targets Android 14 (API 34), restrictions on implicit intents, stricter package visibility  
-  (<queries> element in the manifest), and blocked file path sharing make it impossible to casually read other apps' directories.
+  (`<queries>` element in the manifest), and blocked file path sharing make it impossible to casually read other apps' directories.
 + The Correct Approach: If you need data from another app or system component,  
-  you must use **Content Providers** with explicit URI permissions (`FLAG_GRANT_READ_URI_PERMISSION`) or   
+  you must use **Content Providers** with explicit URI permissions (`FLAG_GRANT_READ_URI_PERMISSION`) or  
   **AIDL/Bound Services** where the owner explicitly hands over data via an API call.
 
 ### 2. From a Power User/ File Manager Perspective (Accessing Android/data)

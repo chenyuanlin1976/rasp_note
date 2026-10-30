@@ -13,12 +13,12 @@ The standard way to change default hardware states in AOSP is by overriding fram
    `device/<vendor>/<board>/overlay/frameworks/base/core/res/res/values/config.xml`
 2. Add or modify the boolean resource for default Wi-Fi state:
 
-```xml
-<resources>
-    <!-- True to make Wi-Fi default on -->
-    <bool name="config_default_wifi_enabled">true</bool>
-</resources>
-```
+   ```xml
+   <resources>
+       <!-- True to make Wi-Fi default on -->
+       <bool name="config_default_wifi_enabled">true</bool>
+   </resources>
+   ```
 
 3. Verification: After compiling and flashing the build, check if Wi-Fi is enabled upon first boot by running:  
    `adb shell settings get global wifi_on` (it should return 1).
@@ -32,12 +32,12 @@ you can change the default global setting value in the source code.
    `frameworks/base/packages/SettingsProvider/res/values/defaults.xml`
 2. Find or add the def_wifi_on integer configuration:  
 
-```xml
-<resources>
-    <!-- Set default Wi-Fi state: 1 for on, 0 for off -->
-    <integer name="def_wifi_on">1</integer>
-</resources>
-```
+   ```xml
+   <resources>
+       <!-- Set default Wi-Fi state: 1 for on, 0 for off -->
+       <integer name="def_wifi_on">1</integer>
+   </resources>
+   ```
 
 3. Rebuild the SettingsProvider module or perform a clean build:  
    `make SettingsProvider`

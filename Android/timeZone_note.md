@@ -1,6 +1,7 @@
 # android time zone
 
-By default in Android 12 or higher, the framework prioritizes **NTP as the time source over NITZ** because NTP is more accurate and reliable than NITZ.
+By default in Android 12 or higher, the framework prioritizes **NTP as the time source over NITZ**  
+because NTP is more accurate and reliable than NITZ.
 
 There are two main time detection origins configured for use by default in AOSP:
 
@@ -15,11 +16,11 @@ Starting with Android 12, Android also supports the following origins, which are
 
 ## refered website
 
-| Time                                 | [time](https://source.android.com/docs/core/connect/time)                                           |
-|--------------------------------------|-----------------------------------------------------------------------------------------------------|
-| Location Time Zone Provider (LTZP)   | [location-tz-detection](https://source.android.com/docs/core/connect/time/location-tz-detection)    |
-| Network Identity and Time Zone (NITZ)| [telephony-tz-detection](https://source.android.com/docs/core/connect/time/telephony-tz-detection)  |
-| Simple Network Time Protocol (SNTP): | [network-time-detection](https://source.android.com/docs/core/connect/time/network-time-detection)  |
+| Time                                 | [time](https://source.android.com/docs/core/connect/time)                                          |
+|--------------------------------------|----------------------------------------------------------------------------------------------------|
+| Location Time Zone Provider (LTZP)   | [location-tz-detection](https://source.android.com/docs/core/connect/time/location-tz-detection)   |
+| Network Identity and Time Zone (NITZ)| [telephony-tz-detection](https://source.android.com/docs/core/connect/time/telephony-tz-detection) |
+| Simple Network Time Protocol (SNTP): | [network-time-detection](https://source.android.com/docs/core/connect/time/network-time-detection) |
 
 ## NTP - Network Time Protocol
 

@@ -2,7 +2,7 @@
 
 Implementing a Native C++ AIDL Service allows you to talk to `libgpiod` in pure C/C++  
 while making your hardware functions safely callable across process boundaries  
-(like from system apps or other daemons) via Android’s Binder driver.
+(like from system apps or other daemons) via Android's Binder driver.
 
 ## Step-by-Step Implementation Guide
 

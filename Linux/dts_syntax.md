@@ -227,7 +227,7 @@ and describes how child device nodes should be addressed.
 
 + Property name: reg
 + Property value: `<prop-encoded-array>` encoded as an arbitrary number of (address, length) pairs.
-+ Description: The reg property describes the address of the device’s resources within the address space defined by its parent bus.  
++ Description: The reg property describes the address of the device's resources within the address space defined by its parent bus.  
   Most commonly this means the offsets and lengths of memory-mapped IO register blocks, but may have a different meaning on some bus types.  
   Addresses in the address space defined by the root node are CPU real addresses.  
 + The value is a `<prop-encoded-array>`, composed of an arbitrary number of pairs of address and length, `<address length>`.  

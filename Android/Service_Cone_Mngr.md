@@ -5,7 +5,7 @@ operate at different layers of the OS, and target entirely different types of de
 
 ## 1. ServiceConnection (For Regular App Developers)
 
-ServiceConnection is a public, standard SDK interface used to monitor the state of a bound service  
+`ServiceConnection` is a public, **standard SDK interface** used to monitor the state of a bound service  
 (such as a custom AIDL service or a local app service).
 
 + When to use:
@@ -18,8 +18,8 @@ ServiceConnection is a public, standard SDK interface used to monitor the state 
 
 ## 2. ServiceManager (android.os.ServiceManager) (For System / AOSP Developers)
 
-`ServiceManager` is a low-level, hidden framework class  
-that interacts directly with Android’s **native Service Manager daemon**  
+`ServiceManager` is a low-level, hidden framework **class**  
+that interacts directly with Android's **native Service Manager daemon**  
 to register and fetch core system-level services (e.g., `ActivityManagerService`, `WindowManagerService`).
 
 + When to use:
@@ -34,14 +34,14 @@ to register and fetch core system-level services (e.g., `ActivityManagerService`
 
 ## Comparison Summary
 
-### ServiceConnection
+### 1. ServiceConnection
 
 + Scope: App-level (inter-process or intra-process binding to a specific Service)
 + Target Audience: Regular Android App Developers
 + Access Level: Public SDK (`android.content.ServiceConnection`)
 + How you use it: Passed into `bindService()`
 
-### ServiceManager (android.os.ServiceManager)
+### 2. ServiceManager (android.os.ServiceManager)
 
 + Scope: System-wide (global registry for core Android OS system services)
 + Target Audience: AOSP / OEM / System Firmware Developers
@@ -51,7 +51,7 @@ to register and fetch core system-level services (e.g., `ActivityManagerService`
 ## other aspect
 
 The **ServiceConnection**, and **ServiceManager** are foundational pillars  
-of Android’s Inter-Process Communication (IPC) and Binder architecture.  
+of Android's Inter-Process Communication (IPC) and Binder architecture.  
 While they all deal with communicating across different processes or components,  
 *they operate at different layers of the Android ecosystem.*
 
@@ -73,7 +73,7 @@ While they all deal with communicating across different processes or components,
 
 ## Deep Dive into Each Component
 
-### 1. ServiceConnection
+### the ServiceConnection
 
 + What it is: A bridge interface provided by the Android SDK (`android.content.ServiceConnection`) for application developers.
 + How it works: When your app wants to connect to a Bound Service (whether standard or AIDL-based),  
@@ -82,7 +82,7 @@ While they all deal with communicating across different processes or components,
     This is where you receive the raw IBinder object and convert it into your AIDL interface proxy.
   + `onServiceDisconnected(ComponentName name)`: Triggered if the remote service crashes or gets unexpectedly killed.
 
-### 2. ServiceManager
+### the ServiceManager
 
 + What it is: A core native daemon process (/system/bin/servicemanager) in Android's C++ layer.  
   It acts like a "phone book" or DNS for system-level Binder services.

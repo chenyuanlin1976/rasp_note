@@ -24,7 +24,7 @@ Think of it this way:
 + It specifies the exact function names, inputs (arguments), and outputs (return values).
 + Neither side needs to know how the other is written internally; they only need to follow the rules of the contract.
 
-## 2. What is the HAL (Hardware Abstraction Layer)
+## 2. What is the HAL
 
 Android devices run on many different chips (Qualcomm, MediaTek, Samsung, etc.).  
 Each chip has different ways of interacting with physical hardware (like how a Wi-Fi chip is powered on).

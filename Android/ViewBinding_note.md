@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
 }
 ```
 
-## Key Changes Summary:
+## Key Changes Summary
 
 + Enabled View Binding: Added `buildFeatures { viewBinding = true }` in Gradle.
 + Generated Binding Class: Imported com.auo.demousingaidl.databinding.ActivityMainBinding.

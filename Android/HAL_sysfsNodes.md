@@ -36,7 +36,7 @@ How you use it: By calling a structured function interface (e.g., in C++ or via 
 + Portability: **Low**. Sysfs paths (`/sys/class/leds/...` or naming schemes) change depending on the kernel version, vendor, or device driver.
 + Access Control: Controlled by standard Linux **file permissions** (e.g., `chmod` on the file).
 
-### Feature of HAL (Hardware Abstraction Layer)
+### Feature of HAL
 
 + What is it: A software API interface (functions, classes, contracts).
 + Where does it live: In userspace, acting as middleware between apps and the kernel.

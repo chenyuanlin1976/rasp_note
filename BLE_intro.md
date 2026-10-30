@@ -38,5 +38,5 @@ Understanding how BLE controls IoT devices requires looking at its connection ro
 
 1. Advertising: Your IoT device (e.g., a smart plug) continuously broadcasts data packets letting nearby devices know it is available.
 2. Scanning & Connecting: Your smartphone app scans for the smart plug's unique identifier and establishes a secure, encrypted BLE link.
-3. Command Execution: The app writes a command (e.g., changing a characteristic value from 0 to 1) to the plug’s GATT server.
+3. Command Execution: The app writes a command (e.g., changing a characteristic value from 0 to 1) to the plug's GATT server.
 4. Disconnect/Sleep: The smart plug executes the command (turns on the relay), and the connection drops immediately to conserve battery.

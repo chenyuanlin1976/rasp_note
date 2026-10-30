@@ -7,7 +7,7 @@ They are classic examples of how SELinux isolates traditional server application
 
 ## 1. What are they?
 
-### `httpd_t` (The Apache / Web Server Domain):
+### `httpd_t` (The Apache / Web Server Domain)
 
 + What it is: The security domain assigned to the Apache HTTP Server  
   (and sometimes other web services like Nginx in certain policies) when it runs on a Linux server.
@@ -16,14 +16,14 @@ They are classic examples of how SELinux isolates traditional server application
   (like read files inside /var/www/html/ and write to specific log folders).  
   It blocks the hacker from stealing user passwords from /etc/shadow or modifying system binaries.
 
-### mysqld_t (The MySQL / MariaDB Database Domain):
+### mysqld_t (The MySQL / MariaDB Database Domain)
 
 + What it is: The security domain assigned to the MySQL or MariaDB database daemon process.
 + What it does: It isolates the database engine.  
   It allows mysqld_t to read and write database files located in /var/lib/mysql/,  
   but blocks it from accessing general user home directories, web roots, or unrelated system configuration files.
 
-## 2. How do they compare to Android domains?
+## 2. How do they compare to Android domains
 
 Just like Android 14 separates apps into `untrusted_app` and system services into `system_server`,  
 traditional Linux server distributions use specialized domains to isolate every common server daemon:

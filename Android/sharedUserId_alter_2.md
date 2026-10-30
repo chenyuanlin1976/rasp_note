@@ -76,22 +76,21 @@ Protect the service with a signature-level permission so only apps signed with y
 1. Request the Permission in App B's `AndroidManifest.xml`,  
    App B must ask for the signature-level permission to bind to App A's service:
 
-```xml
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.appb">
-
-    <!-- Request App A's signature permission -->
-    <uses-permission android:name="com.example.appa.PERMISSION_BIND_SERVICE" />
-
-    <application>
-        <!-- ... -->
-    </application>
-</manifest>
-```
+   ```xml
+   <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+       package="com.example.appb">
+   
+       <!-- Request App A's signature permission -->
+       <uses-permission android:name="com.example.appa.PERMISSION_BIND_SERVICE" />
+   
+       <application>
+           <!-- ... -->
+       </application>
+   </manifest>
+   ```
 
 2. Bind to App A and Call the Method from App B,  
    In your Activity or component in App B, create an explicit Intent targeting App A's service, bind to it, and use the interface:
-
 
 ```kotlin
 package com.example.appb

@@ -66,11 +66,11 @@ If you have a Kotlin app and a separate C++ native daemon controlling your LEDs,
 [ Linux Kernel /sys/class/leds/ ]
 
 1. The App sends a request to the native daemon using **AIDL** (Android Interface Definition Language).  
-   Android’s Binder driver handles passing the data safely across the process boundary.
+   Android's Binder driver handles passing the data safely across the process boundary.
 2. The native daemon receives the request directly in C++.  
    Since the daemon is already 100% C/C++, it executes its logic and writes to the sysfs node without using JNI at all.
 
-### When Does JNI Involve Native Code and System Services?
+### When Does JNI Involve Native Code and System Services
 
 You might be thinking of Android's legacy or framework architecture where Java system services talk to native code.  
 That happens in a different scenario:

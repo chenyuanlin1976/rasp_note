@@ -106,7 +106,7 @@ This can be a tricky comparison to understand so let's lay it out like this:
 ### What is a URL syntax with examples
 
 URL (Uniform Resource Locator) syntax refers to the structure and components that make up a URL.  
-A URL typically consists of several parts, each serving a specific purpose. Here’s a breakdown of the syntax and components of a URL, along with examples:
+A URL typically consists of several parts, each serving a specific purpose. Here's a breakdown of the syntax and components of a URL, along with examples:
 
 + Scheme: Indicates the protocol used to access the resource. Common schemes include `http`, `https`, `ftp`, etc.
 + Username:Password (optional): Authentication credentials for accessing secure resources. But this isnot commonly used in modern URLs due to security concerns.

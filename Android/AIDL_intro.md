@@ -91,7 +91,7 @@ comes down to process boundaries and how they handle communication.
 ### Features of Remote Service
 
 + Process Location: **Runs in a separate, isolated process** (often belonging to a completely different application or system package).
-+ Communication Mechanism: Requires Inter-Process Communication (IPC) utilizing **AIDL**,  
++ Communication Mechanism: Requires IPC utilizing **AIDL**,  
   Messenger, or explicit intents.
 + Performance Overhead: Higher.  
   Data must undergo marshalling (packing into a Parcel), *traveling across the Linux kernel via the Binder driver*,  
@@ -103,7 +103,7 @@ comes down to process boundaries and how they handle communication.
 ## strict constraints
 
 AIDL is used to **define the programming interface**  
-that both **clients** and **service** processes agree upon to communicate via Inter-Process Communication (IPC).  
+that both **clients** and **service** processes agree upon to communicate via IPC.  
 Because data must be marshalled, packed into parcels, and sent across process boundaries, **AIDL has strict constraints**.
 
 ### constraints 1: Unsupported Data Types
@@ -144,7 +144,7 @@ Android's core architecture guidelines explicitly flag several practices as disc
 ### constraints 3. Threading and Concurrency Violations
 
 + Direct UI-Thread Access from Remote Calls:Calls from a remote process arrive via a binder thread pool managed by the system.  
-  You are never allowed to assume that incoming remote calls execute on your app’s main (UI) thread,  
+  You are never allowed to assume that incoming remote calls execute on your app's main (UI) thread,  
   nor should you perform heavy blocking operations synchronously on the UI thread without proper asynchronous handling.
 + Non-Thread-Safe Implementations: Because a service can receive concurrent calls from multiple remote threads simultaneously,  
   writing thread-unsafe code inside your AIDL service implementation will lead to race conditions and crashes.

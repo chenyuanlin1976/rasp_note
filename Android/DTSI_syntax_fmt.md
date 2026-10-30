@@ -42,7 +42,7 @@ Here is what a typical .dtsi snippet looks like:
 };
 ```
 
-## 3. What Happens to a DTSI File?
+## 3. What Happens to a DTSI File
 
 Just like source code, a DTSI file isn't read directly by the Linux kernel at runtime.
 

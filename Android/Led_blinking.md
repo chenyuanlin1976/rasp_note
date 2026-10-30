@@ -29,7 +29,7 @@ Using a Kotlin-level timer to continuously toggle LEDs is heavily discouraged fo
   Android 14 aggressively manages background tasks to preserve battery life.  
   If your Kotlin code runs a timer from an app or a non-exempted background service,  
   the OS will likely freeze or terminate it when the device enters Doze mode.  
-  **Kernel triggers operate independently of Android’s power management states.**
+  **Kernel triggers operate independently of Android's power management states.**
 + The "Duty Cycle" Offloading:  
   The Linux LED subsystem (`/sys/class/leds/`) has built-in triggers like timer that  
   let you configure `delay_on` and `delay_off` milliseconds directly.  

@@ -20,7 +20,7 @@ For example, a pixel with values (255, 0, 0, 128) represents a semi-transparent 
 ## How Does RGBA Differ from Other Image Formats?
 
 RGBA differs significantly from standard image file formats based on how color and transparency are handled.  
-Let’s compare RGBA with some common image format approaches:
+Let's compare RGBA with some common image format approaches:
 
 + RGB vs. RGBA: The primary difference between RGB and RGBA images lies in the alpha channel:
 

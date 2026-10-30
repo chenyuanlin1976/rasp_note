@@ -39,13 +39,13 @@ It is a mechanism Android uses to check compatibility between the **system image
 
 ## End-to-End Architecture Flow
 
-[ App (Java/Kotlin) ] 
+[ App (Java/Kotlin) ]
          │ (Binds via Intent / AIDL Proxy)
          v
   [ ServiceManager ]  <--- (Managed & Validated by VINTF Manifest)
          │
          v
- [ HAL Service (C++) ] 
+ [ HAL Service (C++) ]
          │ (Sysfs / Kernel IOCTL)
          v
   [ Hardware (LED / Wi-Fi / Power) ]
@@ -72,6 +72,6 @@ In your device's `manifest.xml`, a Stable AIDL HAL is typically declared like th
 
 1. Define AIDL: Create the .aidl interface files in a shared shared-library repository.
 2. Implement HAL: Write the C++ service that inherits from `BnAuoCtrlSvc`, reads/writes hardware nodes, and publishes itself to `servicemanager`.
-3. Add VINTF Declaration: Add the <hal format="aidl"> block to your device's manifest.xml.
+3. Add VINTF Declaration: Add the `<hal format="aidl">` block to your device's manifest.xml.
 4. App Integration: Use `bindService()` in your app (as shown in your MainActivity)  
    to connect to this native HAL service seamlessly.

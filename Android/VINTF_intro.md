@@ -11,7 +11,7 @@ and the underlying **hardware/vendor software**.
 
 ## 1. Why was VINTF needed?
 
-Before Project Treble and VINTF, Android’s core OS and chipmaker/OEM-specific drivers were tightly coupled.  
+Before Project Treble and VINTF, Android's core OS and chipmaker/OEM-specific drivers were tightly coupled.  
 Upgrading an Android version meant rewriting and rebuidling massive portions of the kernel and hardware abstraction layers (HALs).
 
 VINTF solves this by **introducing a standardized "contract" language using XML files**.  

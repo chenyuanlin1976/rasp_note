@@ -79,7 +79,7 @@ chmod a+rx ~/.bin/repo
 ### Step 3: Download the AOSP Source Tree
 
 1. Create a working directory: `mkdir aosp && cd aosp`
-2. Initialize the repository (replace <branch-name> with your desired branch,  
+2. Initialize the repository (replace `<branch-name>` with your desired branch,  
    e.g., main or a specific release tag like android-14.0.0_r20):  
    `repo init -u https://android.googlesource.com/platform/manifest -b <branch-name>`
 3. Sync the source code (this will download tens of gigabytes and may take hours depending on your internet connection):

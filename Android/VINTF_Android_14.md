@@ -22,7 +22,7 @@ VINTF operates by comparing 2 main types of **XML-based descriptions**:
 + **Framework Manifest** (`/system/etc/vintf/manifest.xml`):  
   Declares the services and components **provided by the system framework**.
 
-### Compatibility Matrices ("What I need"):
+### Compatibility Matrices ("What I need")
 
 + **Framework Compatibility Matrix (FCM)**:  
   Declares what Android framework version expects from the vendor (including required HAL versions and kernel configurations).

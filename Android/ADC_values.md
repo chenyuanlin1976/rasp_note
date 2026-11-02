@@ -1,47 +1,76 @@
-# ADC values
+# Reading SAR-ADC values on RK3566 (Android)
 
-On Rockchip RK3566 running Android,  
-the SAR-ADC (Successive Approximation Register Analog-to-Digital Converter) is handled  
-via the **Linux Industrial I/O (IIO)** subsystem.  
-You can easily read raw ADC values directly from user space using ADB shell commands without writing any custom applications.
+The RK3566 SAR-ADC is exposed through the Linux **Industrial I/O (IIO)** subsystem,
+so raw values can be read from sysfs with `adb shell`, with no custom app needed.
 
-1. Open an ADB Shell:  
-   Connect your device and open a terminal window on your computer: `adb shell`
-2. Locate the IIO Device Directory:  
-   Rockchip's SAR-ADC registers as an IIO device under `/sys/bus/iio/devices/`.  
-   Navigate to the device folder to check available channels:  
-   `cd /sys/bus/iio/devices/iio:device0; ls`
-3. Read Specific ADC Channels:  
-   The RK3566 SAR-ADC typically supports up to 6 single-ended channels (in_voltage0 through in_voltage5).  
-   You can read the raw digital value of a specific channel using cat:  
-   To read Channel 0: `cat in_voltage0_raw`
-4. Convert Raw Values to Voltage:  
-   The RK3566 SAR-ADC has a 10-bit resolution 2**10 - 1 = **1023**  
-   and standard reference voltage V_ref of typically 1.8V (though some boards or channels may vary).  
-   Calculate the real-world voltage using this formula:  
-   **Voltage (mV) = V_ref x Raw_Value / 1023**
+| Item | Typical value | Notes |
+| --- | --- | --- |
+| Resolution | 10-bit | 1024 codes, raw range 0-1023 |
+| Channels | 6 single-ended | `in_voltage0_raw` ... `in_voltage5_raw` |
+| Input range | 0-1.8 V | V_ref comes from `vref-supply` in the device tree, so it is board-dependent |
+| Driver name | `ff3c0000.saradc` | Check `name`, not the device index |
 
-## The Industrial I/O (IIO) subsystem
+> Reading sysfs from `adb shell` may need root (`adb root` or `su`),
+> depending on the build and SELinux policy.
 
-`/sys/bus/iio/devices/iio:device0` is a virtual directory representing a specific hardware sensor  
-managed by the Industrial I/O (IIO) subsystem.
+## 1. Quick start
 
-The IIO subsystem is designed to handle devices that **output analog-to-digital**  
-or **digital-to-analog measurements** - typically sensors  
-like accelerometers, gyroscopes, magnetometers, light sensors, pressure sensors, and humidity sensors.
+```sh
+adb shell
+cd /sys/bus/iio/devices
 
-### Key Components of the Directory
+# 1) find the SAR-ADC (index depends on probe order)
+for d in iio:device*; do echo "$d: $(cat $d/name)"; done
 
-When you inspect `/sys/bus/iio/devices/iio:device0` using the `ls` command,  
-you will typically find a set of files and subdirectories. Here is what they generally mean:
+# 2) read channel 0 and the driver-provided scale
+cd iio:device0                      # use the one whose name is *saradc*
+cat in_voltage0_raw
+cat in_voltage_scale
+```
 
-+ **name**: A file containing the actual name of the driver or chip (e.g., *mpu6050*, *bme280*).  
-  Reading this file tells you what physical hardware device0 corresponds to.  
-  Example: `cat /sys/bus/iio/devices/iio:device0/name`
-+ `in_accel_x_raw` or `in_temp_raw`: Data files representing specific sensor channels.  
-  Reading these files triggers a raw measurement read from the hardware.
-+ **scale / offset**: Files used to convert raw sensor readings into standard engineering units  
-  (like meters per second squared, degrees Celsius, or Pascals).
-+ **sampling_frequency**: Allows you to view or configure how many samples per second the sensor takes.
-+ `buffer/`: A subdirectory used if you are streaming data continuously from the sensor  
-  (often tied to a hardware FIFO buffer or kernel ring buffer).
+## 2. Convert raw value to voltage
+
+Preferred: use the scale exposed by the driver (mV per count), so V_ref is not hardcoded.
+
+```
+Voltage (mV) = raw x in_voltage_scale
+```
+
+Manual fallback, if no scale file exists:
+
+```
+Voltage (mV) = V_ref (mV) x raw / 1024
+```
+
+Example: V_ref = 1800 mV, raw = 512 gives 1800 x 512 / 1024 = 900 mV.
+
+One-liner (the shell has no floating point, so use `awk`):
+
+```sh
+awk -v r="$(cat in_voltage0_raw)" -v s="$(cat in_voltage_scale)" 'BEGIN{printf "%.1f mV\n", r*s}'
+```
+
+## 3. Troubleshooting
+
+| Symptom | Likely cause |
+| --- | --- |
+| `Permission denied` | Need `adb root` / `su`, or SELinux blocks sysfs reads |
+| No `/sys/bus/iio/devices/iio:device*` | SAR-ADC node disabled in the device tree, or the driver is not built |
+| `in_voltage_scale` missing | Older kernel or driver; use the manual formula |
+| Readings do not match a multimeter | Wrong V_ref assumption, input above 1.8 V, or source impedance too high |
+
+## 4. Background: the IIO subsystem
+
+`/sys/bus/iio/devices/iio:deviceN` is the sysfs directory of one device managed by IIO.
+IIO covers ADCs, DACs and many sensors (accelerometers, gyroscopes, magnetometers,
+light, pressure, humidity).
+
+Which files appear depends on the driver. Common ones:
+
+| Entry | Meaning |
+| --- | --- |
+| `name` | Driver or chip name (e.g. `mpu6050`, `bme280`, `ff3c0000.saradc`); tells you what the device is |
+| `in_voltage0_raw`, `in_accel_x_raw`, `in_temp_raw` | Raw data per channel; reading one triggers a measurement |
+| `in_*_scale`, `in_*_offset` | Convert raw to standard units: value = (raw + offset) x scale |
+| `sampling_frequency` | Sample rate, only on drivers that support it (the Rockchip SAR-ADC may not) |
+| `buffer/` | Continuous streaming (triggered buffer or FIFO), only on drivers that support it |

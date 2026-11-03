@@ -1,409 +1,192 @@
-# using adb command
+# adb (Android Debug Bridge)
 
-## Devices
+`adb` is a client/server tool for talking to Android devices from a host computer:
 
-+ `adb usb`  
-+ `adb connect ip_address_of_device`  
-+ `adb devices`     // show devices attached  
-+ `adb devices -l`  // devices (product/model)  
+```text
+host                                         device
+adb client  --->  adb server (port 5037)  --USB/TCP-->  adbd (daemon)
+(each command)    (started on first use)
+```
+
+This note covers the host side: installing adb, connecting, files, apps, and reboot modes.
+Commands that run **on** the device (`am`, `pm`, `cmd`, `settings`, `dumpsys`, ...) are in [adb_shell_cmds.md](adb_shell_cmds.md).
+Logs are in [logcat_intro.md](logcat_intro.md).
+
+## 1. Install adb on the host
+
+| Host | How |
+| --- | --- |
+| Linux / macOS / Windows x86-64 | Google's **SDK Platform-Tools** (`adb`, `fastboot`), from the Android Studio SDK Manager or as a standalone zip |
+| Debian / Ubuntu (any arch) | `sudo apt install adb fastboot` (distribution build, often older than Platform-Tools) |
+| Linux arm64 (Raspberry Pi, Orange Pi, Jetson) | Google ships no Linux arm64 Platform-Tools, so use the distribution package. Unofficial builds exist, for example [lzhiyong/android-sdk-tools](https://github.com/lzhiyong/android-sdk-tools/releases) |
+
++ On Linux, a non-root user needs a udev rule for the device's USB vendor ID.
+  The `android-sdk-platform-tools-common` package on Debian/Ubuntu installs common rules. Also add the user to the `plugdev` group.
++ Android Studio itself is not officially supported on Linux arm64.
+
+## 2. Connect a device
+
+### 2.1 USB
+
+Enable **Developer options → USB debugging** on the device, plug it in, and accept the RSA key prompt.
+
+```shell
+adb devices          # "unauthorized": accept the prompt on the device; "no permissions": udev rule missing
+adb devices -l       # also show product, model, transport_id
+```
+
+### 2.2 Over the network
+
+```shell
+# Android 11+: Developer options -> Wireless debugging -> Pair device with pairing code
+adb pair 192.168.1.50:37123          # port and code shown on the device
+adb connect 192.168.1.50:41235       # the "IP address & Port" shown on the Wireless debugging screen
+
+# Any version: switch adbd to TCP while connected over USB
+adb tcpip 5555
+adb connect 192.168.1.50:5555
+adb disconnect 192.168.1.50:5555
+adb usb                              # back to USB mode
+```
 
-## shell terminal
+On a development board (userdebug, no USB OTG), adbd can be put on TCP from a serial console:
 
-+ `adb shell`       // Open or run commands in a terminal on the host Android device.  
-+ `exit`
+```shell
+setprop service.adb.tcp.port 5555
+stop adbd && start adbd
+```
 
-## memory usage
+### 2.3 Choose a device
 
-+ `adb shell free -h`  
-+ `adb shell procrank`  
-+ `adb shell dumpsys meminfo`  
-+ `adb shell dumpsys meminfo your.package.name`
-+ `adb shell cat /proc/meminfo`  
-+ `adb shell dmesg | grep -i "out of memory"`  
+When more than one device is connected, every command needs a target:
 
-## adb exec-out
+| Option | Target |
+| --- | --- |
+| `-d` | The only USB device |
+| `-e` | The only emulator |
+| `-s <serial>` | A specific device, as listed by `adb devices`. You can also set it with `export ANDROID_SERIAL=<serial>` |
+| `-t <transport_id>` | A specific transport, as listed by `adb devices -l` |
 
-`adb exec-out screencap -p /sdcard/Pictures/01.png`
+Global options go **before** the command: `adb -s 1234abcd install app.apk`.
 
-## adb common commands
+### 2.4 Server and state
 
-+ `adb help`          // List all comands  
-+ `adb shell ls`      // list directory contents  
-+ `adb shell ls -s`   // print size of each file  
-+ `adb shell ls -R`   // list subdirectories recursively  
-+ `adb shell ps`      // print process status  
-+ `adb shell netstat` // list TCP connectivity  
-+ `adb shell pwd`     // print current working directory
+```shell
+adb kill-server && adb start-server  # restart the host server (fixes most "device offline" cases)
+adb get-state                        # device / recovery / bootloader / sideload
+adb get-serialno
+adb wait-for-device shell getprop sys.boot_completed   # prints 1 when boot has finished
+```
+
+## 3. Shell and files
+
+```shell
+adb shell                            # interactive shell; "exit" to leave
+adb shell getprop ro.build.version.release
+adb push app.conf /data/local/tmp/   # host -> device
+adb pull /sdcard/Download/log.txt .  # device -> host
+adb exec-out screencap -p > screen.png   # exec-out: raw binary stdout, no tty/CRLF mangling
+adb shell screenrecord /sdcard/demo.mp4  # Ctrl-C to stop (max 3 min), then adb pull
+```
 
-### server
++ `/sdcard` is `/storage/emulated/0` (shared storage). `/data/local/tmp` is writable by the `shell` user.
++ `screencap` writes PNG if you pass `-p` **or** the file name ends in `.png`.
+  Otherwise it writes a raw dump (small header + pixels), so `screencap 05.jpg` is not a JPEG.
+  `-d <display-id>` picks a display (IDs from `dumpsys SurfaceFlinger --display-id`).
+  Without a file name, the image goes to stdout, which is what `exec-out` uses.
 
-+ `adb kill-server`  
-+ `adb start-server`; start up adb daemon
+## 4. Install and remove apps
 
-### reboot
-
-+ `adb reboot`  
-+ `adb reboot bootloader`  
-+ `adb reboot fastboot`  
-+ `adb reboot recovery`     // reboot device into recovery mode  
-+ `adb root`                //restarts adb with root permissions
-+ `fastboot devices`  
-
-Check connection and get basic information about devices connected to the computer.  
-This is essentially the same command as adb devices from earlier.  
-However, it works in the bootloader, which ADB does not. Handy for ensuring that you have properly established a connection.
-
-### take a screenshot
-
-+ `adb shell screencap -p /sdcard/001.png`  
-+ `adb pull /sdcard/001.png .`
-+ `adb shell screenrecord /sdcard/001.mp4`
-
-### push, pull
-
-+ Copy files from your computer to your phone: `adb push src dest`
-+ Copy files from your phone to your computer: `adb pull remoteFile savedFlie`
-
-### install APK
-
-+ `adb -e install yourApk`  
-  The flag you decide to use has to come before the actual adb command   
-  -d                      - directs command to the only connected USB device...  
-  -e                      - directs command to the only running emulator...  
-  -s serial_number  
-  -p product_name_or_path  
-
-### Install the given app on all connected devices
-
-+ `adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X install -r com.myAppPackage`
-
-### Uninstall APP
-
-+ `adb uninstall packageName`  
-+ `adb uninstall -k packageName`    // Uninstall .apk withour deleting data  
-+ `adb shell pm uninstall packageName`  
-+ `adb shell pm clear packageName` // Deletes all data associated with a package.  
-+ `adb devices | tail -n +2 | cut -sf 1 | xargs -IX adb -s X uninstall packageName` // Uninstall the given app from all connected devices
-
-### Update APP
-
-+ `adb install -r yourApk` // -r means re-install the app and keep its data on the device.  
-+ `adb install -k yourApk`
-
-### am: Activity Manager
-
-`adb shell am start|startservice|broadcast <INTENT> <COMPONENT>`  
-
-> -a ACTION       // e.g. android.intent.action.VIEW  
-> -c CATEGORY     // e.g. android.intent.category.LAUNCHER (start activity intent)  
-> -d <DATA_URI>   // e.g. URL http://example.com, a file URI file:///sdcard/Download/my_document.pdf  
-> -t <MIME_TYPE>  // e.g. image/png, video/mp4  
-> -n <COMPONENT>  // e.g. com.example.app/.ExampleActivity  
-
-+ `adb shell am start -a android.intent.action.CALL -d tel:+972527300294`                 // Make a call  
-+ `adb shell am start -W -c android.intent.category.HOME -a android.intent.action.MAIN`   // Home button  
-+ `adb shell am start -a android.intent.action.SENDTO -d sms:+972527300294 --es sms_body "Test --ez exit_on_sent false`  
-  // Open send sms screen with phone number and the message  
-+ `adb shell am start -a android.intent.action.VIEW`  
-+ `adb shell am start -a android.intent.action.VIEW -d URL`       // open URL  
-+ `adb shell am start -t image/* -a android.intent.action.VIEW`   // opens gallery  
-+ `adb shell am start -a android.intent.action.VIEW -d "file:///sdcard/Movies/1717998_25fps.mp4" -t video/mp4 -n "android.rk.RockVideoPlayer/.VideoPlayActivity"`  
-
-+ `adb shell am stop-service packageName/.ServiceName`  
-+ `adb shell am start-service packageName/.ServiceName`  
-+ `adb shell am broadcast -a 'my_action'`  
-
-### pm: Package Manager
-
-+ `adb shell pm list packages`    // list package names  
-+ `adb shell pm list packages -3` // list third party package names  
-+ `adb shell pm list packages -r` // list package name + path to apks  
-+ `adb shell pm list packages -s` // list only system packages  
-+ `adb shell pm list packages -u` // list package names + uninstalled  
-+ `adb shell pm dump packageName` // list info on one package  
-+ `adb shell pm dump packageName | grep codePath`  
-+ `adb shell pm dump packageName | grep versionName`  
-+ `adb shell pm dump com.android.webview`  
-+ `adb shell pm dump com.google.android.webview`  
-+ `adb shell pm dump android.rk.RockVideoPlayer`  
-+ `adb shell pm dump acr.browser.barebones`  
-
-`adb shell pm path packageName`  // path to the apk file
-
-+ `adb shell pm list features`                          // list phone features  
-+ `adb shell pm reset-permissions -p your.app.package`  // Reset permissions  
-+ `adb shell pm grant packageName  Permission`          // Grant a permission to an app.  
-+ `adb shell pm revoke packageName Permission`          // Revoke a permission from an app.  
-+ `adb shell pm install xxx.apk`  
-+ `adb shell pm uninstall xxx.apk`  
-
-### settings
-
-+ `adb shell settings list global`  
-+ `adb shell settings list secure`  
-+ `adb shell settings list system`  
-+ `adb shell settings get system screen_brightness`  
-+ `adb shell settings put system screen_brightness 120`  
-+ `adb shell settings get global low_power`  
-  > A value of 0 indicates that Battery Saver (low power mode) is disabled.  
-  > A value of 1 indicates that Battery Saver (low power mode) is enabled.  
-+ `adb shell settings put global low_power 1` # enter Power Saving Mode (PSM)  
-
-### dumpsys
-
-dumpsys is an android tool that runs on the device and dumps interesting information about the status of system services.  
-
-+ `adb shell dumpsys -h`  
-+ `adb shell dumpsys -l`                  // list services  
-+ `adb shell dumpsys -l | grep activity`  // here, activity is a service  
-+ `adb shell dumpsys activity -h`  
-+ `adb shell dumpsys battery`  
-+ `adb shell dumpsys battery unplug`          # a charging device cannot enter PSM  
-+ `adb shell dumpsys battery reset`  
-
-#### get info
-
-+ `adb shell dumpsys package packages`              // list info on all apps  
-+ `adb shell dumpsys activity activities | head`    // see which is the top activity  
-+ `adb shell dumpsys activity <package>/<activity>` // activity info  
-+ `adb shell dumpsys iphonesybinfo`                 // get the IMEI  
-+ `adb shell dumpsys window windows | grep -E 'mCurrentFocus|mFocusedApp` // print current app's opened activity  
-
-#### set settings with dumpsys
-
-+ `adb shell dumpsys battery`               // battery status  
-+ `adb shell dumpsys battery set level <n>` // change the level from 0 to 100  
-+ `adb shell dumpsys battery set status<n>` // change the level to unknown, charging, discharging, not charging or full  
-+ `adb shell dumpsys battery reset`         // reset the battery  
-+ `adb shell dumpsys battery set usb <n>`   // change the status of USB connection. ON or OFF  
-+ `adb shell dumpsys | grep ntp`
-
-### getprop: get device android version
-
-+ `adb shell getprop`  
-+ `adb shell getprop ro.build.version.release`  
-+ `adb shell getprop ro.build.version.sdk`  
-+ `adb shell getprop | grep hardware`  
-+ `adb shell getprop | grep ro.product.cpu`  
-+ `adb shell getprop | grep -i mac`  
-+ `adb shell cat /sys/class/net/eth0/address`  
-
-### wm: window manager
-
-+ `adb shell wm size`           // displays the current screen resolution  
-+ `adb shell wm size 2048x1536`  
-+ `adb shell wm size reset`     // And reset to default  
-+ `adb shell wm density`        // get the current density  
-+ `adb shell wm density 288`  
-+ `adb shell wm density reset`
-
-### input: emulate user input
-
-`adb shell input text 'Wow, it so cool feature'`
-
-+ `adb shell input keyevent 3`    // Home btn  
-+ `adb shell input keyevent 4`    // Back btn  
-+ `adb shell input keyevent 5`    // Call  
-+ `adb shell input keyevent 6`    // End call  
-+ `adb shell input keyevent 26`   // Turn Android device ON and OFF. It will toggle device to on/off status.  
-+ `adb shell input keyevent 27`   // Camera  
-+ `adb shell input keyevent 64`   // Open browser  
-+ `adb shell input keyevent 66`   // Enter  
-+ `adb shell input keyevent 67`   // Delete (backspace)  
-+ `adb shell input keyevent 207`  // Contacts  
-+ `adb shell input keyevent 220`  // 221 // Brightness down/up  
-+ `adb shell input keyevent 277`  // 278, 279: Cut, Copy, Paste  
-
-## Shared Preferences
-
-1. replace org.example.app with your application id  
-
-2. Add a value to default shared preferences.  
-   `adb shell 'am broadcast -a org.example.app.sp.PUT --es key key_name --es value "hello world!"'`  
-
-3. Remove a value to default shared preferences.  
-   `adb shell 'am broadcast -a org.example.app.sp.REMOVE --es key key_name'`  
-
-4. Clear all default shared preferences.  
-   `adb shell 'am broadcast -a org.example.app.sp.CLEAR --es key key_name'`  
-
-5. It's also possible to specify shared preferences file.  
-   `adb shell 'am broadcast -a org.example.app.sp.PUT --es name Game --es key level --ei value 10'`  
-
-6. Data types  
-   + `adb shell am broadcast -a org.example.app.sp.PUT --es key string --es value "hello world!"`  
-   + `adb shell am broadcast -a org.example.app.sp.PUT --es key boolean --ez value true`  
-   + `adb shell am broadcast -a org.example.app.sp.PUT --es key float --ef value 3.14159`  
-   + `adb shell am broadcast -a org.example.app.sp.PUT --es key int --ei value 2015`  
-   + `adb shell am broadcast -a org.example.app.sp.PUT --es key long --el value 9223372036854775807`  
-
-7. Restart application process after making changes  
-   `adb shell 'am broadcast -a org.example.app.sp.CLEAR --ez restart true'`  
-
-## Monkey
-
-`adb shell monkey -p com.myAppPackage -v 10000 -s 100`  // monkey tool is generating 10.000 random events on the real device  
-
-## Paths
-
-+ /data/data/packageName/databases        // app databases  
-+ /data/data/packageName/shared_prefs/    // shared preferences  
-+ /data/app                             // apk installed by user  
-+ /system/app                           // pre-installed APK files  
-+ /mmt/asec                             // encrypted apps, App2SD  
-+ /mmt/emmc                             // internal SD Card  
-+ /mmt/adcard                           // external/Internal SD Card  
-+ /mmt/adcard/external_sd               // external SD Card  
-
-## Device onformation
-
-+ `adb get-state`                       // print device state  
-+ `adb get-serialno`                    // get the serial number  
-+ `adb shell service list`              // list all services  
-
-## Device Related Commands
-
-+ `adb backup -apk -all -f backup.ab`             // backup settings and apps  
-+ `adb backup -apk -shared -all -f backup.ab`     // backup settings, apps and shared storage  
-+ `adb backup -apk -nosystem -all -f backup.ab`   // backup only non-system apps  
-+ `adb restore backup.ab`                         // restore a previous backup  
-
-## svc, simply short for service
-
-`svc` is a command-line tool used to control various services on an Android device.  
-It acts as a bridge between the command line and Android's system services (like power management, Wi-Fi, data connectivity, etc.),  
-allowing developers, power users, and automation scripts to toggle hardware features and device states without touching the user interface.
-
-### Common Commands and Usages
-
-To use svc, you typically run it through ADB in the following format: `adb shell svc [command] [subcommand] [options]`
-Here are the most frequently used subcommands:
-
-+ svc data: Controls mobile cellular data connectivity.
-  + `adb shell svc data enable`
-  + `adb shell svc data disable`
-+ svc power: Controls power management and device sleep states.
-  + `adb shell svc power stayon` [true|false|usb|ac|wireless] (Keeps the screen awake)
-  + `adb shell svc power shutdown` (Powers off the device)
-+ svc bluetooth: Controls the Bluetooth radio.
-  + `adb shell svc bluetooth enable`
-  + `adb shell svc bluetooth disable`
-+ svc wifi: Controls the Wi-Fi radio.
-  + `adb shell svc wifi enable` (Turns Wi-Fi on)
-  + `adb shell svc wifi disable` (Turns Wi-Fi off)
-+ svc usb: Controls USB connection modes (like MTP, PTP, or tethering).
-
-### Why Use svc
-
-+ Automation: Great for writing shell scripts or test automation (e.g., toggling network connections on and off during UI testing).
-+ Headless/Recovery Operations: Useful when debugging devices where the touch screen or UI settings menu might be unresponsive or inaccessible.
-
-## cmd utility
-
-The command `adb shell cmd` is a powerful interface used to interact with Android's System Services.  
-Here is a breakdown of what each part means and how it works:
-
-### Breaking Down the Command
-
-+ adb (Android Debug Bridge): The core command-line tool that lets you communicate with an Android emulator instance  
-  or a connected physical Android device from your computer.
-+ shell: Tells ADB to open a Unix command-line shell session on the target device, allowing you to run device-side commands.
-+ cmd: Specifically invokes **the cmd service manager daemon** introduced in Android 7.0 (Nougat).  
-  This service acts as the gateway to manage and *communicate directly with various system services running on the device*.
-
-### What Does cmd Actually Do
-
-Before the `cmd` tool was introduced, developers and administrators interacted with system services using the service call command,  
-which was low-level, difficult to read, and prone to breaking across Android versions.
-
-The `cmd` utility improves upon this by:
-
-+ Routing Commands to Services: It talks directly to the Service Manager to find and control system services  
-  (like activity, package, notification, battery, etc.).
-+ Providing Clean Interfaces: Many system services implement their own human-readable command-line interfaces accessible via `cmd`.
-
-While `adb shell cmd` acts as a general gateway to manage a wide variety of Android's system services,  
-`adb shell svc` is a specialized, narrower command line tool specifically used to control hardware power and connectivity services  
-(such as Wi-Fi, mobile data, power states, and USB/nfc settings).
-
-### Common Examples & Usage
-
-Instead of typing raw service codes, `cmd` allows you to run intuitive sub-commands for specific system services:
-
-+ Package Management (cmd package): `adb shell cmd package list packages -3`
-+ Activity Manager (cmd activity): `adb shell cmd activity force-stop com.example.app`
-+ Battery Simulation (cmd battery): `adb shell cmd battery set level 15`
-+ List All Available Services: `adb shell cmd -l`
-
-## Other
-
-+ `adb backup`      // Create a full backup of your phone and save to the computer.  
-+ `adb restore`     // Restore a backup to your phone.  
-+ `adb sideload`    //  Push and flash custom ROMs and zips from your computer.  
-
-## Using tail -n
-
-Use tail to remove the first line. Actually two lines. The first one is just a newline. The second is "List of devices attached."  
-
-+ `adb devices | tail -n +2`  
-
-## Using cut -sf
-
-Cut the last word and any white space off the end of each line.  
-
-+ `adb devices | tail -n +2 | cut -sf -1`  
-
-## Using xargs -I
-
-Given the -I option, xargs will perform an action for each line of text that we feed into it.  
-We can give the line a variable name to use in commands that xargs can execute.  
-
-+ `adb devices | tail -n +2 | cut -sf -1 | xargs -I X echo X aw yiss`  
-
-## Three options below together will print android version of all connected devices
-
-+ `adb devices | tail -n +2 | cut -sf -1 | xargs -I X adb -s X shell getprop ro.build.version.release`  
-
-## Using alias
-
-### Example 1
-
-`alias tellMeMore=echo`  
-`tellMeMore "hi there"`
-> Output => hi there  
-
-### Example 2
-
-`alias apkinstall="adb devices | tail -n +2 | cut -sf 1 | xargs -I X adb -s X install -r $1"`   // Define alias  
-`apkinstall ~/Downloads/MyAppRelease.apk` // Install an apk on all devices  
-
-### Example 3
-
-`alias rmapp="adb devices | tail -n +2 | cut -sf 1 | xargs -I X adb -s X uninstall $1"`  
-`rmapp com.example.myapp`                 // Uninstall a package from all devices  
-
-### Example 4
-
-`alias clearapp="adb devices | tail -n +2 | cut -sf 1 | xargs -I X adb -s X shell pm clear $1"`  
-`clearapp com.example.myapp`              // Clear data on all devices (leave installed)  
-
-### Example 5
-
-`alias startintent="adb devices | tail -n +2 | cut -sf 1 | xargs -I X adb -s X shell am start $1"`  
-`startintent https://twitter.com/JonFHancock` // Launch a deep link on all devices  
-
-### Setting up your .bash_profile
-
-Finally, to make this all reusable even after rebooting your computer (aliases only last through the current session), we have to add these to your .bash_profile.  
-You might or might not already have a .bash_profile, so let's make sure we append to it rather than overwriting it. Just open a terminal, and run the following command
-
-touch .bash_profile && open .bash_profile       // This will create it if it doesn't already exist, and open it in a text editor either way. Now just copy and paste all of the aliases into it, save, and close.
-
-`alias startintent="adb devices | tail -n +2 | cut -sf 1 | xargs -I X adb -s X shell am start $1"`  
-`alias apkinstall="adb devices | tail -n +2 | cut -sf 1 | xargs -I X adb -s X install -r $1"`  
-`alias rmapp="adb devices | tail -n +2 | cut -sf 1 | xargs -I X adb -s X uninstall $1"`  
-`alias clearapp="adb devices | tail -n +2 | cut -sf 1 | xargs -I X adb -s X shell pm clear $1"`
-
-#### Key event
-
-[KeyEvent](https://developer.android.com/reference/android/view/KeyEvent.html)
+```shell
+adb install app.apk                  # new install
+adb install -r app.apk               # replace an existing app, keep its data
+adb install -r -d app.apk            # allow a version-code downgrade (debuggable apps / userdebug builds)
+adb install -g app.apk               # grant all runtime permissions listed in the manifest
+adb install -t app-debug.apk         # allow test-only APKs (android:testOnly)
+adb install-multiple base.apk split_config.arm64_v8a.apk   # split APKs
+
+adb uninstall com.example.app
+adb shell pm uninstall -k com.example.app       # keep data and cache directories
+adb shell pm clear com.example.app              # delete the app's data, keep it installed
+```
+
++ `adb install` takes a **host** path to an APK. `adb uninstall` and `pm` take the **package name**.
++ `adb shell pm install` takes a path **on the device**.
++ Updating a system app with `adb install -r` works only if it is signed with the same key.
+  The update goes to `/data/app`, and the original copy stays in `/system`.
+
+## 5. Reboot, root, remount
+
+```shell
+adb reboot                           # normal reboot
+adb reboot recovery
+adb reboot bootloader                # bootloader fastboot mode; use the "fastboot" tool from here
+adb reboot fastboot                  # userspace fastbootd (Android 10+, dynamic partitions)
+adb reboot sideload                  # recovery, waiting for "adb sideload ota.zip"
+
+fastboot devices                     # adb doesn't work in bootloader mode; fastboot does
+```
+
+```shell
+adb root                             # restart adbd as root: userdebug/eng builds only (ro.debuggable=1)
+adb unroot
+adb disable-verity && adb reboot     # once per device, before remount (AVB / dm-verity)
+adb remount                          # make /system, /vendor, ... writable (overlayfs on dynamic partitions)
+```
+
+On a **user** build, `adb root` fails with "adbd cannot run as root in production builds".
+
+## 6. Bug reports and backups
+
+```shell
+adb bugreport bugreport.zip          # logs, dumpsys, tombstones, ANR traces (Android 7+: zip)
+```
+
+`adb backup` / `adb restore` are deprecated.
+Since Android 12, apps that target API 31+ are excluded from `adb backup` unless they are debuggable.
+Don't rely on it.
+
+## 7. Several devices at once
+
+`adb devices` prints a header line, then `serial<TAB>state` lines, then an empty line.
+Pick the serials of devices in the `device` state:
+
+```shell
+adb devices | awk 'NR > 1 && $2 == "device" { print $1 }'
+```
+
+Shell functions for `~/.bashrc` (aliases can't take arguments, so use functions):
+
+```shell
+adb_serials() { adb devices | awk 'NR > 1 && $2 == "device" { print $1 }'; }
+
+adb_all() {                          # run any adb command on every device
+    local s
+    for s in $(adb_serials); do
+        echo "== $s"
+        adb -s "$s" "$@"
+    done
+}
+
+# Examples
+adb_all install -r ~/Downloads/MyApp-release.apk
+adb_all uninstall com.example.myapp
+adb_all shell pm clear com.example.myapp
+adb_all shell getprop ro.build.version.release
+adb_all shell am start -a android.intent.action.VIEW -d https://developer.android.com
+```
+
+After editing `~/.bashrc`, run `source ~/.bashrc` or open a new terminal.
+
+## Related notes
+
++ [adb_shell_cmds.md](adb_shell_cmds.md): `am`, `pm`, `cmd`, `settings`, `dumpsys`, `svc`, `input`, ...
++ [logcat_intro.md](logcat_intro.md)
++ [AOSP_build_helplerCmds.md](AOSP_build_helplerCmds.md), [virtual_AB.md](virtual_AB.md)
+
+## Reference
+
++ [Android Debug Bridge (adb)](https://developer.android.com/tools/adb)
++ [SDK Platform-Tools release notes](https://developer.android.com/tools/releases/platform-tools)
++ [Capture and read bug reports](https://developer.android.com/studio/debug/bug-report)
++ [screencap source (AOSP)](https://android.googlesource.com/platform/frameworks/base/+/main/cmds/screencap/screencap.cpp)

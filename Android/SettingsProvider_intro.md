@@ -1,50 +1,68 @@
 # SettingsProvider
 
-SettingsProvider is a core system component in Android  
-that acts as the central repository and manager for device configuration, preferences, and system settings  
-(such as Wi-Fi state, screen brightness, volume, ringtones, and developer options).
+SettingsProvider (`frameworks/base/packages/SettingsProvider`, package `com.android.providers.settings`) is the
+`ContentProvider` that stores the framework's key/value settings: screen timeout, brightness, airplane mode, location mode, and so on.
+It runs inside the `system_server` process.
+Apps use it through `android.provider.Settings` (`content://settings/...`), and the shell uses it through the `settings` command.
 
-At its core, it is a standard Android ContentProvider bundled into a system app  
-that securely stores settings data—typically backed by SQLite databases—and exposes it to other apps, system services, and the Settings app.
+## 1. The 3 namespaces
 
-## Key Tables/Namespaces
+| Namespace | Scope | Examples | Who can write |
+| --- | --- | --- | --- |
+| `Settings.System` | Per user | `screen_brightness`, `screen_off_timeout`, `font_scale` | Apps with the special `WRITE_SETTINGS` access (user grants it in Settings), and only for public keys |
+| `Settings.Secure` | Per user | `location_mode`, `default_input_method`, `enabled_accessibility_services`, `android_id` | `WRITE_SECURE_SETTINGS` (signature/privileged; grantable to a debug app with `pm grant`) |
+| `Settings.Global` (Android 4.2+) | Device-wide, all users | `airplane_mode_on`, `adb_enabled`, `wifi_on`, `stay_on_while_plugged_in` | `WRITE_SECURE_SETTINGS` |
 
-SettingsProvider organizes data into distinct tables based on scope and access permissions:
++ Apps can read most keys, but apps targeting Android 12 (API 31) or higher can only read the keys that the SDK exposes.
+  They can't read hidden ones.
++ `adb shell settings` runs as the `shell` user, which holds `WRITE_SECURE_SETTINGS`, so it can change all 3 namespaces.
+  Commands: [adb_shell_cmds.md](adb_shell_cmds.md#4-settings).
 
-### System Settings (Settings.System):
+## 2. How it works
 
-+ Contains basic user preferences, like screen timeout, font size, or ringtone choices.
-+ Historically open, but modern Android heavily restricts writes to these settings  
-  unless the app holds specific permissions or system signatures.
++ **Storage**: since Android 6.0, each namespace is an XML file per user:
+  `/data/system/users/<userId>/settings_system.xml`, `settings_secure.xml`, and `settings_global.xml` (user 0 only).
+  Older releases used the SQLite database `settings.db`, which is migrated on upgrade.
+  Writes are batched to disk, so read values through the API or `settings get`, not from the file.
++ **Access**: `Settings.System.getInt(resolver, name)` and the similar calls go through Binder to the provider.
+  The provider checks the caller's permissions per namespace and per key.
++ **Caching**: the client side (`Settings.NameValueCache`) caches values in the app's process.
+  A generation counter shared with the provider tells it when a value has changed, so most reads don't cross processes.
++ **Change notifications**: register a `ContentObserver` on `Settings.Global.getUriFor(name)` (or `System` / `Secure`)
+  to react when a value changes.
 
-### Secure Settings (Settings.Secure):
+```kotlin
+val uri = Settings.Global.getUriFor(Settings.Global.AIRPLANE_MODE_ON)
+contentResolver.registerContentObserver(uri, false, object : ContentObserver(Handler(Looper.getMainLooper())) {
+    override fun onChange(selfChange: Boolean) {
+        val on = Settings.Global.getInt(contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) == 1
+        Log.d("Settings", "airplane mode = $on")
+    }
+})
+```
 
-+ Contains sensitive user preferences that require protection,  
-  such as whether Android Debug Bridge (ADB) is enabled, location service status, or lock screen settings.
-+ Third-party apps can read many of these, but writing to them is strictly restricted to system applications or apps with special permissions.
+## 3. Default values in an AOSP build
 
-### Global Settings (Settings.Global):
+The first-boot values come from `frameworks/base/packages/SettingsProvider/res/values/defaults.xml`
+(`def_screen_off_timeout`, `def_airplane_mode_on`, ...).
+Change them for a device with a resource overlay, for example
+`device/<vendor>/<board>/overlay/frameworks/base/packages/SettingsProvider/res/values/defaults.xml`, instead of editing the framework.
+Defaults apply only when the settings files are created, so test with a factory reset or a clean flash.
+Example: [wifi_default.md](wifi_default.md).
 
-+ Introduced in Android 4.2, these settings apply globally across all device users  
-  (e.g., airplane mode state, mobile data enabled/disabled, stay-awake-while-charging).
-+ Read-only for normal apps; writing requires system-level access or signature permissions.
+## 4. Settings vs hardware
 
-## How It Works
+SettingsProvider stores **configuration**, for example "the user wants the notification LED to blink".
+It doesn't drive hardware.
+A system service reads the setting and calls a HAL, which writes to the kernel interface (such as `/sys/class/leds/`).
+See [gpio_control.md](gpio_control.md) and [AIDL_HAL.md](AIDL_HAL.md).
 
-+ Data Storage: Settings are stored persistently in internal SQLite databases  
-  (typically located under /data/system/users/[user_id]/settings_*.db).
-+ Inter-Process Communication (IPC): Because SettingsProvider inherits from ContentProvider,  
-  other processes interact with it using standard content URIs (content://settings/...) via a ContentResolver.
-+ Caching: To prevent performance bottlenecks—since system components and apps frequently query configurations like volume or brightness —  
-  Android utilizes internal caching mechanisms (SettingsCache) so frequent reads don't constantly hit the SQLite database.
-+ Change Notifications: When a setting changes (e.g., a user toggles Bluetooth),  
-  SettingsProvider fires content change notifications allowing registered apps or services to react immediately.
+## Related notes
 
-## Relation to Your Previous LED Question
++ [adb_shell_cmds.md](adb_shell_cmds.md), [ContentProvider_sharing.md](ContentProvider_sharing.md)
++ [wifi_default.md](wifi_default.md), [timezone_default.md](timezone_default.md)
 
-While SettingsProvider manages high-level software settings  
-(like whether a notification LED should blink based on user preferences in the Settings UI),  
-it does not manage low-level hardware nodes like /sys/class/leds/.
+## Reference
 
-Hardware control is handled directly by kernel drivers and native daemons (like light HAL or custom system services),  
-whereas SettingsProvider is purely for maintaining configuration states at the Android framework layer.
++ [`android.provider.Settings`](https://developer.android.com/reference/android/provider/Settings)
++ [`Settings.System`](https://developer.android.com/reference/android/provider/Settings.System), [`Settings.Secure`](https://developer.android.com/reference/android/provider/Settings.Secure), [`Settings.Global`](https://developer.android.com/reference/android/provider/Settings.Global)

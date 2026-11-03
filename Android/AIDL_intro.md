@@ -14,7 +14,7 @@ AIDL generates the boilerplate that hides this:
 | --- | --- |
 | Layer | Every layer: app ↔ app, app ↔ system service, framework ↔ HAL (stable AIDL) |
 | Purpose | Defines the methods and data types that 2 processes use to talk to each other |
-| Transport | Binder (`/dev/binder`; `/dev/vndbinder` between vendor processes) |
+| Transport | Binder (`/dev/binder`; the older vendor ↔ vendor `/dev/vndbinder` is deprecated since Android 11) |
 | Backends | Java (Kotlin uses it), C++ `cpp`, C++ `ndk`, Rust: see [AIDL_impl_langs.md](AIDL_impl_langs.md) |
 
 ## 1. How AIDL works

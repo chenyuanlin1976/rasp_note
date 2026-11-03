@@ -18,7 +18,8 @@ There are **4 backends**. Kotlin is **not** a separate backend: it uses the Java
 + `libbinder` does **not** have a stable ABI, so both sides must be built together, from the same source tree and the same partition.
   It's fine for platform-internal services; avoid it for new code that crosses partitions.
 + Trap: the **vendor** variant of `libbinder` talks to `/dev/vndbinder` (`vndservicemanager`) by default.
-  That works for vendor ↔ vendor services, but framework clients can't find the service.
+  That works for vendor ↔ vendor services, but framework clients can't find the service,
+  and `/dev/vndbinder` is deprecated since Android 11. Use the NDK backend instead.
 
 ## 3. C++ "ndk" backend (`ndk`, library `libbinder_ndk`)
 

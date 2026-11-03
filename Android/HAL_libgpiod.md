@@ -69,7 +69,7 @@ JNI is still the right tool for in-app native **computation** (codecs, math, gam
 | Device | Service manager | Used between |
 | --- | --- | --- |
 | `/dev/binder` | `servicemanager` | apps ↔ framework, and **framework ↔ AIDL HALs** (this GPIO HAL) |
-| `/dev/vndbinder` | `vndservicemanager` | vendor process ↔ vendor process only |
+| `/dev/vndbinder` | `vndservicemanager` | vendor process ↔ vendor process only; deprecated since Android 11 (use stable AIDL on `/dev/binder`) |
 | `/dev/hwbinder` | `hwservicemanager` | framework ↔ HIDL HALs (legacy) |
 
 ### 2.4 Summary

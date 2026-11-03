@@ -60,7 +60,8 @@ Between the 2, it put a versioned, checked interface.
   + `@VintfStability`, plus the stable-ABI **NDK backend** (`libbinder_ndk`) for vendor code
   + `<hal format="aidl">` entries in the VINTF manifest
 + AIDL HALs register with the normal `servicemanager` (`/dev/binder`).
-  Vendor-to-vendor services use `/dev/vndbinder`.
+  Vendor-to-vendor services used `/dev/vndbinder` (Android 8–10). It is deprecated since Android 11;
+  new vendor ↔ vendor interfaces use stable AIDL on `/dev/binder` too.
 + Google has been migrating core HALs (lights, power, vibrator, health, camera, audio, ...) to AIDL, and new HAL interfaces must be AIDL.
   Devices upgraded from older releases may still ship some HIDL HALs.
   A few performance-critical same-process HALs are still loaded in-process instead of over Binder.

@@ -142,12 +142,14 @@ Checklist (names must agree everywhere):
 
 ## 6. Do you need VINTF?
 
-VINTF is about the **system ↔ vendor** boundary. A component that stays on one side doesn't need a VINTF entry.
+Every service with **VINTF stability** on `/dev/binder` needs a VINTF entry. That includes vendor ↔ vendor services,
+because `/dev/vndbinder` is deprecated since Android 11. Code that doesn't offer a Binder service doesn't need one.
 
 | Situation | Mechanism | VINTF entry? |
 | --- | --- | --- |
 | Framework, system app, or `system_server` calls a vendor HAL | Stable AIDL HAL on `/dev/binder` (`servicemanager`) | **Yes** (device manifest + framework matrix) |
-| Vendor process calls another vendor process | Vendor-stability AIDL on `/dev/vndbinder` (`vndservicemanager`) | No |
+| Vendor process calls another vendor process | Stable AIDL (NDK or Rust backend) on `/dev/binder` | **Yes**, like any HAL |
+| The same, legacy | cpp-backend AIDL on `/dev/vndbinder` (`vndservicemanager`), deprecated since Android 11 (opt-in) | No |
 | A vendor daemon uses hardware only for itself (for example libgpiod in that daemon) | No IPC | No |
 | Bring-up or debugging from `adb shell` (userdebug) | Command-line tools | No |
 | 3rd-party app needs the hardware | A system app with a bound service in front of the HAL; the HAL itself is declared in VINTF | Yes, for the HAL |

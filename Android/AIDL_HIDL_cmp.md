@@ -11,7 +11,7 @@ They were built for different layers and different eras of Android.
 | --- | --- | --- |
 | Introduced | Android 8 (Project Treble) | Android 1.0; HAL support (stable AIDL) since **Android 11** |
 | Domain | HALs only (framework ↔ vendor) | Apps, system services, **and HALs** |
-| Transport | `/dev/hwbinder` + `hwservicemanager` | `/dev/binder` + `servicemanager` (and `/dev/vndbinder` + `vndservicemanager` for vendor ↔ vendor) |
+| Transport | `/dev/hwbinder` + `hwservicemanager` | `/dev/binder` + `servicemanager` (vendor ↔ vendor `/dev/vndbinder` + `vndservicemanager` is deprecated since Android 11) |
 | File syntax | `.hal`, versioned packages `@1.0` | `.aidl`, versioned with `aidl_interface` `versions` |
 | Languages | C++, Java (binderized HALs only) | Java/Kotlin, C++ (`cpp`, `ndk`), Rust |
 | HAL modes | Binderized or passthrough (in-process) | Binderized only (lazy HALs can start on demand) |

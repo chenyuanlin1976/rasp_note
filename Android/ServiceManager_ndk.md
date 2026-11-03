@@ -13,7 +13,7 @@ This note covers only the service manager API and the rules around it.
 | Binder device | Service manager | Registers | Native API |
 | --- | --- | --- | --- |
 | `/dev/binder` | `servicemanager` | Framework services, AIDL HALs | `AServiceManager_*` (this note) |
-| `/dev/vndbinder` | `vndservicemanager` | Vendor ↔ vendor services | Same calls, in a process that opened `/dev/vndbinder` |
+| `/dev/vndbinder` | `vndservicemanager` | Vendor ↔ vendor services, deprecated since Android 11 | cpp backend: `android::ProcessState::initWithDriver("/dev/vndbinder")`. NDK code uses stable AIDL on `/dev/binder` instead |
 | `/dev/hwbinder` | `hwservicemanager` | HIDL HALs (legacy) | `IServiceManager` of HIDL |
 
 Typical path from an app to hardware on Android 11+:

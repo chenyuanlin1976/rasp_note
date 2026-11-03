@@ -78,7 +78,7 @@ The DAC owner and mode of the sysfs files are set in `ueventd.rc` (see [HAL_sysf
   Keep vendor data in `/data/vendor/...` with your own type.
 + **IPC**: vendor and core processes may not talk over raw sockets or arbitrary Binder.
   Cross-partition calls must go through a declared **stable AIDL HAL** (`hal_client_domain` / `hal_server_domain`).
-  `vndbinder` is for vendor ↔ vendor only.
+  `vndbinder` is for vendor ↔ vendor only, and it is deprecated since Android 11.
 
 ### 3.2 Apps executing code from writable storage
 

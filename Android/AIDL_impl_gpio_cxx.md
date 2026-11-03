@@ -256,7 +256,7 @@ Notes:
   + An `unstable` interface can't be used across the system ↔ vendor boundary.
     The system app client would be on `system`, while the daemon is on `vendor`.
   + The cpp backend (`libbinder`) on the vendor partition registers with **`vndservicemanager`** (`/dev/vndbinder`),
-    so framework and system apps can't see the service.
+    so framework and system apps can't see the service. (`/dev/vndbinder` is also deprecated since Android 11.)
 
 ## Step 5: init, ueventd, VINTF
 

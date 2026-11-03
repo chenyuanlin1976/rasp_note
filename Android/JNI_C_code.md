@@ -1,186 +1,130 @@
-# JNI anc c code
+# Native (C/C++) code via JNI: hardware access, privileges, performance
 
-To call C code from an Android app (typically written in Kotlin or Java) to control hardware like GPIO,  
-you use the **Java Native Interface (JNI)** and the Android NDK (Native Development Kit).
+A common plan to control hardware (GPIO, LEDs, a sensor) from an Android app goes like this:
+"Kotlin can't open `/sys/class/gpio`, so I'll do it in C through JNI."
+That plan **doesn't work**. This note explains why, what does work, and what C really gains over Kotlin.
+For JNI basics, see [JNI_intro.md](JNI_intro.md) and [JNI_android_studio.md](JNI_android_studio.md).
 
-## Step 1: Write the C Code with JNI Bindings
+## 1. Native code has no extra privileges
 
-You write a C function that follows **JNI naming conventions** so the Java/Kotlin runtime can locate and call it.  
-Inside your C file (e.g., `gpio_control.c`), you include **`<jni.h>`** and implement the function:
+The OS grants privileges to **processes**, not to languages.
+A JNI library is loaded **into the app's process**, so it runs with exactly the same:
+
++ **UID / GIDs** (e.g. `u0_a123`), which decide DAC file permissions
++ **SELinux domain** (e.g. `untrusted_app`), which decides MAC permissions
++ capabilities, seccomp filter, and mount namespace
+
+If Kotlin's `File("/sys/class/gpio/export").writeText("17")` fails with `EACCES`,
+C's `open("/sys/class/gpio/export", O_WRONLY)` fails in the same way.
+The kernel can't tell the two apart.
+
+Android doesn't rely on the VM for security: the **VM is not a security boundary**.
+So native code doesn't "escape" anything by leaving ART. The sandbox is the process (UID + SELinux).
+That does make native memory bugs more dangerous, though:
+a buffer overflow in a `.so` can be exploited with **all** of the app's permissions.
+
+## 2. What actually grants hardware access
+
+| Approach | Does it work? | Notes |
+| --- | --- | --- |
+| Normal app + JNI | **No** | DAC and SELinux block `/sys`, `/dev`, and `/dev/mem` for `untrusted_app` |
+| App calls `su -c ...` (rooted dev board) | Only on rooted/debug builds | `su` starts a **separate** root process. The app process and its JNI code stay unprivileged. `su` doesn't exist on user builds |
+| Platform-signed / system app | Mostly **no** for raw device nodes | It gets signature permissions and a `platform_app`/`system_app` domain, but SELinux `neverallow` rules still forbid app domains from most sysfs/device access. Being in `/system/app` alone gives nothing |
+| Change ownership in `init.rc` / `ueventd.rc` | Only together with SELinux rules | App UIDs are assigned at install time, so you can't hard-code them. This fixes DAC only, not SELinux |
+| **Privileged native service / HAL**, called over Binder | **Yes: the production design** | Its own domain and UID, with specifically labeled nodes. The app talks to it through AIDL |
+
+The correct architecture is:
+
+```text
+App (Kotlin) --Binder/AIDL--> system app (bound service) --Binder/stable AIDL--> GPIO HAL (C++, own SELinux domain) --libgpiod--> /dev/gpiochipN
+```
+
+It's described in [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md) and [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md),
+and why the shortcuts fail at build time is in [neverallow_error.md](neverallow_error.md).
+
+## 3. Example: a GPIO write in JNI code (rooted dev board / lab only)
+
+This is useful for bring-up on a dev board where you control SELinux and permissions,
+for example with `setenforce 0` on a userdebug build and the node `chmod`-ed.
+It uses the **legacy sysfs** interface; the character device with libgpiod is preferred (see [HAL_libgpiod.md](HAL_libgpiod.md)).
 
 ```c
+/* gpio_control.c */
 #include <jni.h>
+#include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
+#include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
-// Example JNI function to set a GPIO pin state
+/* Returns 0 on success, or -errno (e.g. -13 = EACCES) so Kotlin can see WHY it failed */
 JNIEXPORT jint JNICALL
-Java_com_example_gpioapp_MainActivity_nativeSetGpioState(JNIEnv *env, jobject thiz, jint pin, jint state) {
-    // In Linux/Android, you typically write to /sys/class/gpio/gpioX/value
-    // (Or use character devices /dev/gpiochipX depending on the kernel version)
-    
+Java_com_example_gpioapp_GpioNative_setGpio(JNIEnv *env, jclass clazz, jint gpio, jboolean high) {
     char path[64];
-    sprintf(path, "/sys/class/gpio/gpio%d/value", pin);
-    
-    int fd = open(path, O_WRONLY);
-    if (fd < -1) {
-        return -1; // Error opening GPIO
-    }
-    
-    if (state == 1) {
-        write(fd, "1", 1);
-    } else {
-        write(fd, "0", 1);
-    }
-    
+    snprintf(path, sizeof(path), "/sys/class/gpio/gpio%d/value", (int) gpio);  /* GLOBAL gpio number; must be exported */
+
+    int fd = open(path, O_WRONLY | O_CLOEXEC);
+    if (fd < 0) return -errno;
+
+    ssize_t n = write(fd, high ? "1" : "0", 1);
+    int err = (n == 1) ? 0 : -errno;
     close(fd);
-    return 0; // Success
+    return err;
 }
 ```
-
-## Step 2: Declare the Native Method in Kotlin/Java
-
-In your Android app, declare the method using the **external** keyword (in Kotlin)  
-and **load your compiled C library** in a `companion` object.
 
 ```kotlin
-class MainActivity : AppCompatActivity() {
+package com.example.gpioapp
 
-    companion object {
-        // Load the compiled shared library (.so file)
-        init {
-            System.loadLibrary("gpio_control")
-        }
-    }
-
-    // Declare the native method matching the C function signature
-    external fun nativeSetGpioState(pin: Int, state: Int): Int
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        // Call the C method to set GPIO pin 17 to HIGH (1)
-        val result = nativeSetGpioState(17, 1)
-    }
+object GpioNative {
+    init { System.loadLibrary("gpio_control") }
+    @JvmStatic external fun setGpio(gpio: Int, high: Boolean): Int
 }
+
+// usage: val rc = GpioNative.setGpio(17, true)   // rc == -13 -> EACCES: blocked by DAC/SELinux
 ```
 
-## Step 3: Build with Android NDK and CMake
-
-Android Studio uses CMake to compile C/C++ code into a shared library (`.so`).
-
-### 1. Create a `CMakeLists.txt` file in your app's cpp directory
-
-```ini
-cmake_minimum_required(VERSION 3.18.1)
-project("gpio_control")
-
-add_library(
-        gpio_control
-        SHARED
-        gpio_control.c
-)
-
-find_library(
-        log-lib
-        log
-)
-
-target_link_libraries(
-        gpio_control
-        ${log-lib}
-)
+```cmake
+# CMakeLists.txt
+cmake_minimum_required(VERSION 3.22.1)
+project("gpioapp" C)
+add_library(gpio_control SHARED gpio_control.c)
 ```
 
-### 2. Configure your build.gradle (Module-level) to point to the CMake file
+The Gradle `externalNativeBuild` setup is in [JNI_android_studio.md](JNI_android_studio.md#1-project-setup).
 
-```groovy
-android {
-    ...
-    defaultConfig {
-        ...
-        externalNativeBuild {
-            cmake {
-                cppFlags ""
-            }
-        }
-    }
-    externalNativeBuild {
-        cmake {
-            path file("src/main/cpp/CMakeLists.txt")
-            version "3.18.1"
-        }
-    }
-}
-```
+## 4. C vs Kotlin when access is allowed
 
-## Important Limitations on Android GPIO Access
+Suppose the process is allowed to open the node, for example inside a privileged service.
+How much does the language matter then?
 
-While the above technical pipeline (**Kotlin -> JNI -> C -> Linux System Calls**) is how native code execution works,  
-controlling GPIO directly from a standard Android application face **significant security roadblocks**:
+| | Kotlin (ART) | C/C++ (NDK) |
+| --- | --- | --- |
+| Writing a sysfs / device file | Fine: `FileOutputStream`, or `Os.open`/`Os.write`; you can keep the descriptor open | Fine: `open`/`write`/`ioctl` |
+| Cost per GPIO write | Dominated by the **system call** and the driver (µs); the language adds little | Same system call |
+| `ioctl` (e.g. GPIO chardev, I2C, SPI) | Not available in the public SDK API | **Native code is required** |
+| `mmap` of hardware registers | Not practical | Possible, but needs `/dev/mem` (root, and `CONFIG_STRICT_DEVMEM` usually blocks it), so it's **not** an option on production Android |
+| Bit operations | Same machine instructions (`and`, `or`, `shl`, `ushr`) | Same |
+| GC pauses | ART's GC is concurrent, but short pauses still happen | Threads that aren't attached to ART aren't paused by the GC |
+| Timing determinism | **No** | **No**: Android is not a real-time OS. Scheduling, interrupts, and CPU frequency changes add jitter of 10s of µs to ms |
+| Reusing vendor C SDKs / libgpiod | Needs a JNI or AIDL wrapper | Direct |
 
-+ **Permissions & Sandboxing**:  
-  Standard Android apps run inside a sandboxed user ID (`u0_a`...)  
-  and do **not** have read/write access to system paths like `/sys/class/gpio` or `/dev/mem`  
-  due to **strict SELinux policies and file permissions**.
-+ Requirements for Real-World Deployment:
-  1. **Root Access**: If you are building for a rooted development board  
-     (like a Raspberry Pi running Android, or custom embedded hardware),  
-     your app or the native binary may need `su` permissions.
-  2. **System App/ Custom ROM**: If you are manufacturing an embedded Android device (OEM),  
-     you can sign your app with the `platform certificate`, declare it as a **system app**,  
-     or modify the SELinux policy (`sepolicy`) and init scripts (`init.r`c)  
-     to grant the app ownership or access rights to the specific GPIO nodes.
-  3. Hardware Abstraction Layer (HAL):  
-     **In production Android architecture, standard apps do not touch GPIO directly.**  
-     Instead, they call a custom **Android Service**,  
-     which communicates with a vendor-specific HAL, which in turn executes the low-level C/C++ code **with proper system privileges**.
+Conclusions:
 
-## advantages: using c code
++ An occasional on/off (a relay, an LED, a button in the UI) runs at the same speed in Kotlin or C.
+  Choose based on where the code lives (the HAL is usually C++) and which libraries you need (libgpiod is C).
++ Native code is needed for `ioctl`-based interfaces and for reusing C libraries, **not** for speed or for privileges.
++ For **µs-precise timing** (bit-banging a protocol, software PWM), neither works from Android user space.
+  Use hardware peripherals (PWM, SPI, UART, I2C controllers) or a co-processor MCU
+  (see [HAL_STM32_example.md](HAL_STM32_example.md)).
 
-When developing an Android application that needs to interact with hardware like GPIO,  
-using C code via the **NDK (Native Development Kit)** offers several critical advantages  
-over writing everything in pure Kotlin or Java.
+## Related notes
 
-1. **Direct Hardware and System-Level Access:**
-   + **Low-Level Control**: C allows you to **directly** use Linux system calls (`open()`, `read()`, `write()`, `ioctl()`, `mmap()`)  
-     to interact with device drivers, memory-mapped I/O, and kernel interfaces (`/sys/class/gpio` or `/dev/gpiomem`).
-   + Pointer Arithmetic and Bit Manipulation: Controlling hardware often requires precise manipulation of bits, registers, and memory addresses.  
-     C provides native, highly efficient support for pointers and bitwise operations that Kotlin and Java abstract away or handle less efficiently.
-2. Maximum Performance and Minimal Latency
-   + **No Virtual Machine Overhead**: Kotlin and Java run on the Android Runtime (ART) and use Garbage Collection (GC).  
-     GC pauses can introduce unpredictable latency (jitter),  
-     which is disastrous if your GPIO needs to toggle pins with microsecond precision  
-     (e.g., bit-banging a protocol, software PWM, or reading fast sensors).  
-     C code runs directly on the CPU with zero runtime overhead.
-   + Speed: C executes raw machine instructions compiled specifically for your target architecture (ARM, x86, etc.),  
-     ensuring the fastest possible execution time.
-3. **Reuse of Existing C/C++ Libraries and Drivers:**
-   + Vendor SDKs: Most hardware vendors, microcontrollers, and sensor manufacturers  
-     (like those providing Linux drivers or embedded peripherals)  
-     write their reference drivers, SDKs, and libraries in C or C++.
-   + Portability: Instead of rewriting complex protocol parsers or hardware drivers from scratch in Kotlin,  
-     you can directly integrate existing, battle-tested C libraries into your Android app via JNI.
-4. Code Security and Reverse Engineering Protection
-   + Compiled Binaries: While Kotlin and Java bytecode can be relatively easily decompiled back into readable source code,  
-     C code compiles into native machine code (.so shared libraries).  
-     This makes it significantly harder to reverse-engineer proprietary algorithms,  
-     hardware communication protocols, or security keys embedded in the native layer.
++ [JNI_intro.md](JNI_intro.md), [JNI_android_studio.md](JNI_android_studio.md)
++ [libgpiod_HAL.md](libgpiod_HAL.md): JNI vs a native AIDL HAL for libgpiod
++ [HAL_libgpiod.md](HAL_libgpiod.md), [hw_control_sysfs.md](hw_control_sysfs.md), [SELinux_intro.md](SELinux_intro.md)
 
-## Comparison
+## Reference
 
-### Feature of Kotlin / Java
-
-+ Hardware/ System Calls: **Restricted** (Sandboxed/ No direct file descriptor access to low-level nodes)
-+ Execution Speed: Slower (Interpreted/JIT compiled, managed memory)
-+ Memory Management: Automatic (Garbage Collected - can cause pauses)
-+ Real-time Performance: Poor (GC pauses can cause timing jitter)
-
-### Feature of C (via NDK)
-
-+ Hardware/ System Calls: **Direct** (`open`, `ioctl`, `mmap`, **raw pointers**)
-+ Execution Speed: Maximum (Compiled straight to machine code)
-+ Memory Management: Manual (`malloc`/`free` or direct hardware addressing)
-+ Real-time Performance: Excellent (Deterministic execution timing)
++ [Application sandbox (AOSP)](https://source.android.com/docs/security/app-sandbox)
++ [JNI tips](https://developer.android.com/training/articles/perf-jni)

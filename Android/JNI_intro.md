@@ -1,137 +1,116 @@
 # JNI introduction
 
-**JNI stands for Java Native Interface.**  
-It is a standard programming framework that  
-allows Java or Kotlin code running inside a Java Virtual Machine (JVM) to interact with applications and libraries  
-**written in native languages like C and C++**.
+**JNI (Java Native Interface)** is the standard interface that lets code running in a Java runtime
+(the JVM on desktop, **ART** on Android) call functions written in **C/C++**, and lets those functions call back into Java.
+Kotlin/JVM and Kotlin on Android use the same mechanism.
 
-In the context of Android development (especially low-level features like controlling LEDs via `sysfs`),  
-JNI is the bridge that lets your high-level Android app or system service **talk directly to hardware or operating system drivers.**
++ JNI works **inside one process**. The Java code and the native library share the same address space, UID, and SELinux domain.
++ On Android, you build the native side with the **NDK** (see [NDK_intro.md](NDK_intro.md)).
+  The NDK compiles C/C++ into a shared library (`libfoo.so`) that is packaged in the APK.
 
-## Why Do We Use JNI
+## 1. How it works
 
-1. Hardware & OS Access: Android apps run inside a secure sandbox (ART/JVM)  
-   and **cannot** directly access low-level Linux kernel components like `/sys/class/leds/`.  
-   JNI allows your Java/Kotlin code to call C/C++ code that has **the necessary system privileges.**
-2. Performance: For intensive tasks (like image processing, cryptography, or real-time rendering),  
-   C/C++ runs significantly faster than managed Java/Kotlin code.
-3. Reusing Existing Libraries: It allows Android to use massive open-source C/C++ libraries  
-   (like OpenCV, FFmpeg, or custom hardware abstraction layers / HALs).
-
-## How JNI Works (The Architecture Flow)
-
-[ Kotlin/ Java Code ]
-       │  (Calls an `external` function)
-       v
-[ JNI Bridge Layer ]
-       │  (Translates JVM data types to C/C++ types)
-       v
-[ C/ C++ Native Code (`.so`) ]
-       │  (Interacts with Kernel, Hardware, Files, etc.)
-       v
-[ Linux Kernel/ Hardware ]
-
-## A Simple Code Example
-
-Here is a quick look at how JNI connects Kotlin to C++.
-
-### 1. The Kotlin Side
-
-You declare a method with the external keyword and load your native library:
-
-```kotlin
-class NativeLedController {
-    companion0 {
-        // Loads libled_native.so when the class is initialized
-        init {
-            System.loadLibrary("led_native")
-        }
-    }
-
-    // Declared as external (meaning the implementation is in C/C++)
-    external fun nativeSetLedState(state: Int, delayOn: Int, delayOff: Int)
-}
+```text
+[ Kotlin / Java ]      external fun add(a: Int, b: Int): Int     System.loadLibrary("native-lib")
+        |  ART looks up the native symbol (by name, or registered in JNI_OnLoad)
+        v
+[ JNI boundary ]       arguments converted: Int -> jint, String -> jstring (a reference), ...
+        v
+[ C/C++ in libnative-lib.so ]   receives JNIEnv*, can call back into Java through it
+        |  normal system calls, with the SAME privileges as the app process
+        v
+[ Kernel ]
 ```
 
-### 2. The C++ Side
+A minimal example:
 
-In your C++ code, you write a function with a **specific naming convention**  
-> Java_PackageName_ClassName_MethodName
-so the JVM knows how to map it:
+```kotlin
+package com.example.app
+
+object NativeLib {
+    init { System.loadLibrary("native-lib") }     // loads libnative-lib.so
+    @JvmStatic external fun add(a: Int, b: Int): Int
+}
+```
 
 ```c++
 #include <jni.h>
-#include <string>
-#include <fstream>
 
-// The function signature maps directly to NativeLedController.nativeSetLedState()
-extern "C" JNIEXPORT void JNICALL
-Java_com_example_led_NativeLedController_nativeSetLedState(
-    JNIEnv* env,          // JNI interface pointer
-    jobject /* this */,   // Reference to the Kotlin object instance
-    jint state, 
-    jint delayOn, 
-    jint delayOff) 
-{
-    // C++ code can now safely write to the Linux sysfs node
-    if (state == 1) {
-        std::ofstream("/sys/class/leds/sys_led_r/brightness") << "255";
-    } else {
-        std::ofstream("/sys/class/leds/sys_led_r/brightness") << "0";
-    }
+extern "C" JNIEXPORT jint JNICALL
+Java_com_example_app_NativeLib_add(JNIEnv* env, jclass clazz, jint a, jint b) {
+    return a + b;
 }
 ```
 
-## Key Things to Keep in Mind
+The complete Android Studio setup (Gradle, CMake, naming rules, types, threads) is in [JNI_android_studio.md](JNI_android_studio.md).
 
-+ Debugging Complexity: Debugging C/C++ code through JNI requires native debuggers (like LLDB in Android Studio)  
-  and is generally harder than debugging pure Kotlin.
-+ Memory Management: Unlike Java/Kotlin, C/C++ does not have an automatic Garbage Collector for everything.  
-  If you allocate memory in C++ using `malloc` or `new`, you must manually free it, or you will cause memory leaks.
-+ Security & Stability: A crash in your Java/Kotlin code usually throws an exception,  
-  but a crash in your native C++ code (like a segmentation fault) will instantly crash the entire process (causing an app or system crash).
+## 2. When to use JNI
 
-## JNI and AIDL
++ **Reusing existing C/C++ libraries**: OpenCV, FFmpeg, SQLite, a vendor SDK, or cross-platform code shared with iOS.
++ **Compute-heavy hot loops**: codecs, signal/image processing, physics, game engines, Vulkan/OpenGL ES rendering.
+  Benchmark first, though. ART's AOT/JIT-compiled Kotlin is often fast enough, and JNI calls have overhead.
++ **NDK-only APIs**: AAudio, the Vulkan loader, `ANativeWindow`, and native camera/media APIs.
 
-Strictly speaking,  
-JNI and AIDL are 2 completely different technologies that solve different problems,  
-but they work hand-in-hand in Android system architecture.
+## 3. When *not* to use JNI
 
-They do not directly call each other, but they are frequently used together in the same feature  
-(like controlling hardware from an app).
++ **To get hardware or system access.** Native code has **no extra privileges**: it runs with the app's UID and SELinux domain.
+  If Kotlin can't open `/sys/class/leds/...`, C can't either.
+  Hardware access belongs in a privileged service or HAL, which the app calls over Binder (AIDL).
+  See [JNI_C_code.md](JNI_C_code.md).
++ **For security through obscurity.** A `.so` is harder to read than DEX bytecode, but it's still easy to disassemble,
+  and strings or keys in it are easy to extract. Don't keep secrets there.
++ **For small or frequent calls.** Each crossing costs time (argument conversion, reference management),
+  so lots of tiny calls can be **slower** than pure Kotlin. Batch the work so there are few crossings.
 
-### How They Differ
+## 4. Costs and risks
 
-+ **AIDL** (Android Interface Definition Language): Used for IPC (Inter-Process Communication).  
-  **It allows code in Process A (e.g., your Kotlin application) to talk to Process B**  
-  (e.g., a system service or background daemon) across process boundaries using **Android's Binder driver.**
-+ **JNI**: Used for language translation/bridging.  
-  **It allows managed code (Java/Kotlin) inside the JVM to talk directly to native code (C/C++) running within the exact same process.**
++ **Crashes**: a bug in Kotlin throws a catchable exception.
+  A bug in C/C++ (segfault, buffer overflow, use-after-free) kills the **whole process** with a native crash (tombstone).
++ **Memory**: native allocations (`malloc`/`new`) aren't garbage-collected.
+  JNI **references** must be managed too (local vs global references; see [JNI_android_studio.md](JNI_android_studio.md)).
++ **Security**: native code bypasses Kotlin's bounds checks, so memory-safety bugs become exploitable.
+  On Android, the VM is **not** a security boundary: the real sandbox is the process (UID + SELinux), and native code is inside it.
++ **Tooling**: you need the NDK, CMake, per-ABI builds (`arm64-v8a`, `x86_64`, ...), and native debugging (LLDB).
 
-### How They Work Together (The Blueprint)
+## 5. JNI vs AIDL
 
-When you want to control hardware (like an LED) from an Android app, AIDL and JNI form a relay chain.  
-AIDL handles crossing the process boundary,  
-and JNI handles dropping down into native C/C++ to touch the system files or hardware.
+They solve different problems:
 
-[ Kotlin App Process ]
-       │
-       │  1. Calls AIDL interface method over Binder IPC
-       v
-[ System Service/ Daemon Process ]
-       │  (Implements the AIDL Stub)
-       │  2. Calls a native method via JNI
-       v
-[ C/C++ Native Layer ]
-       │  (Implements the JNI function)
-       │  3. Writes to Linux sysfs
-       v
-[ Linux Kernel / Hardware (`/sys/class/leds/`) ]
+| | JNI | AIDL (Binder) |
+| --- | --- | --- |
+| Crosses | The **language** boundary (Java ↔ C/C++) | The **process** boundary (process A ↔ process B) |
+| Same process? | Yes | No (usually) |
+| Privileges | Exactly the caller's | The callee's: a privileged service can do what the caller can't |
+| Generated code | None (you write the bridge) | Proxy/stub generated for Java, C++, Rust |
 
-### Alternative: Pure C++ AIDL (Without JNI)
+For "app controls hardware", the modern design needs **no JNI at all**:
 
-**Modern Android (AOSP) supports a C++ backend for AIDL** (aidl-cpp or the NDK backend).
+```text
+App (Kotlin) --Binder/AIDL--> system app / service --Binder/stable AIDL--> native C++ HAL (NDK backend) --> /sys, /dev
+```
 
-If your system daemon is **written entirely in C++** (rather than Java/Kotlin), it can implement the AIDL server **stub** natively in C++.  
-In this specific architecture, *JNI is bypassed entirely* because your native daemon receives the Binder/AIDL call directly in C++,  
-and can write to the sysfs node without ever touching Java or JNI.
+The AIDL compiler generates both the Java proxy and the C++ stub, so no hand-written JNI bridge is involved.
+JNI shows up only where Java code must call a native library **in its own process**.
+Pre-Treble framework services (for example the old LightsService, which loaded `libhardware` modules into `system_server`) worked that way.
+See [libgpiod_HAL.md](libgpiod_HAL.md) and [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md).
+
+## 6. Alternatives to hand-written JNI
+
+| Option | Where it works | Notes |
+| --- | --- | --- |
+| Native AIDL service (C++/Rust) | Android platform/vendor | Cross-process; no JNI; see [AIDL_HAL_impl.md](AIDL_HAL_impl.md) |
+| JNA (Java Native Access) | Desktop JVM; also Android (with its own `.so`) | No glue code, but slower than JNI |
+| Panama FFM API (`java.lang.foreign`) | Desktop JDK 22+ | **Not available on Android/ART** |
+| Kotlin/Native `cinterop` | Kotlin Multiplatform native targets (iOS, Linux, ...) | Not the Kotlin/JVM or Android-ART path |
+| Code generators (SWIG, djinni, `jni-rs` for Rust) | Any JVM | Generate the JNI glue for you |
+
+## Related notes
+
++ [JNI_android_studio.md](JNI_android_studio.md): building a JNI library step by step
++ [JNI_C_code.md](JNI_C_code.md): native code, hardware access, and privileges
++ [NDK_intro.md](NDK_intro.md), [AIDL_intro.md](AIDL_intro.md), [HAL_intro.md](HAL_intro.md)
+
+## Reference
+
++ [JNI tips (Android)](https://developer.android.com/training/articles/perf-jni)
++ [JNI specification (Oracle)](https://docs.oracle.com/en/java/javase/21/docs/specs/jni/index.html)

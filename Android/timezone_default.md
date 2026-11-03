@@ -48,11 +48,11 @@ adb shell cmd time_zone_detector is_auto_detection_enabled
 adb logcat -b all -d | grep -i 'persist.sys.timezone'    # permission errors while loading build.prop
 ```
 
-Time zone detection (NITZ, location, `time_zone_detector`) and time sources (NTP, NITZ, GNSS) are in [timeZone_note.md](timeZone_note.md).
+Time zone detection (NITZ, location, `time_zone_detector`) and time sources (NTP, NITZ, GNSS) are in [time_detection.md](time_detection.md).
 
 ## Related notes
 
-+ [timeZone_note.md](timeZone_note.md), [wifi_default.md](wifi_default.md), [SettingsProvider_intro.md](SettingsProvider_intro.md)
++ [time_detection.md](time_detection.md), [wifi_default.md](wifi_default.md), [SettingsProvider_intro.md](SettingsProvider_intro.md)
 + [adb_shell_cmds.md](adb_shell_cmds.md)
 
 ## Reference

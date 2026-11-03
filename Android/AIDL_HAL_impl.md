@@ -349,7 +349,7 @@ Put that rule in `system_ext/private`, which works because `hal_myhal` is in `sy
 
 + [AIDL_HAL.md](AIDL_HAL.md): concept and the "contract"
 + [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md), [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md): hardware examples
-+ [VINTF_AIDL.md](VINTF_AIDL.md), [SELinux_policy.md](SELinux_policy.md), [Service_Cone_Mngr.md](Service_Cone_Mngr.md)
++ [VINTF_intro.md](VINTF_intro.md), [SELinux_policy.md](SELinux_policy.md), [Service_Cone_Mngr.md](Service_Cone_Mngr.md)
 
 ## Reference
 

@@ -80,19 +80,10 @@ The usual workflow is when user clicks on your application's icon.
 
 ## sharedUserId
 
-In Android, **android:sharedUserId** is an attribute in the **AndroidManifest.xml** file that allows multiple applications to share the same Linux user ID (UID).  
-This enables them to run in the same process and access each other's data and code with the same permissions.  
-
-When applications declare the same **android:sharedUserId** in their manifests and are **signed with the same certificate**,  
-they will be assigned the same UID by the Android system.  
-
-| AndroidManifest.xml                       | Android.mk                  |
-|-------------------------------------------|-----------------------------|
-| android:sharedUserId="android.uid.system" | LOCAL_CERTIFICATE:=platform |
-| android:sharedUserId="android.uid.nfc"    | LOCAL_CERTIFICATE:=platform |
-| android:sharedUserId="android.uid.se"     | LOCAL_CERTIFICATE:=platform |
-| android:sharedUserId="android.uid.shared" | LOCAL_CERTIFICATE:=shared   |
-| android:sharedUserId="android.media"      | LOCAL_CERTIFICATE:=media    |
+`android:sharedUserId` puts apps signed with the same certificate into one Linux UID. It is deprecated since API 29.
+Platform apps still use the system shared UIDs, for example `android.uid.system` with `certificate: "platform"`
+(`LOCAL_CERTIFICATE := platform` in `Android.mk`).
+Details, the platform UID table, migration, and replacements: [sharedUserId.md](sharedUserId.md).
 
 ## applications: stopped/active states
 

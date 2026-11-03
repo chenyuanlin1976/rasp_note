@@ -113,7 +113,7 @@ This is the same idea as Android's `untrusted_app` vs `system_server`: each prog
 ## Related notes
 
 + [SELinux_intro.md](SELinux_intro.md), [SELinux_policy.md](SELinux_policy.md), [SELinux_DomainTran.md](SELinux_DomainTran.md)
-+ [sharedUserId_deprecated_0.md](sharedUserId_deprecated_0.md): why system-UID apps (`system_app`) are being phased out
++ [sharedUserId.md](sharedUserId.md): why system-UID apps (`system_app`) are being phased out
 
 ## Reference
 

@@ -199,6 +199,7 @@ Notes:
 
 + [AIDL_intro.md](AIDL_intro.md), [AIDL_call_flow.md](AIDL_call_flow.md)
 + [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)
++ [sharedUserId.md](sharedUserId.md): why cross-app calls use a bound service instead of a shared UID; [ContentProvider_sharing.md](ContentProvider_sharing.md)
 
 ## Reference
 

@@ -6,7 +6,8 @@ By default, the app **can't reach it**:
 + **Hidden API**: `android.os.ServiceManager` is `@hide`, so an SDK app can't look up services by name.
 + **SELinux**: `untrusted_app` may only `find` services labeled `app_api_service`.
   A `neverallow` rule in AOSP enforces this, so you can't simply add an `allow` rule.
-+ **Treble**: apps may not talk to **vendor** services or HALs directly at all.
++ **Treble**: untrusted apps may not talk to **vendor** services or HALs at all.
+  Only platform components that are declared HAL clients may, such as some system apps and `system_server`.
 + **Interface**: the app also needs the client-side stub classes.
 
 ## 1. Choose the architecture
@@ -38,6 +39,19 @@ These conditions make it a platform API, which is not appropriate for a custom f
 Use Approach A.
 
 ## 2. Server side (system app, Approach A)
+
+The **public** interface that the system app exposes. It is separate from the HAL's interface,
+so you can keep it small and change the HAL freely.
+
+```java
+// IGpioService.aidl: shared with 3rd-party developers
+package com.yourcompany.gpio;
+
+interface IGpioService {
+    /** Returns false if the pin is not allowed for apps or the HAL reports an error. */
+    boolean setGpio(int pin, boolean high);
+}
+```
 
 ```xml
 <!-- AndroidManifest.xml of the system app (com.yourcompany.gpiohost) -->
@@ -107,10 +121,18 @@ In the client's `AndroidManifest.xml`:
 You only open the path **system app → native service**. Example, with the domain/type names from [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md):
 
 ```text
-# Give the system app its own domain (seapp_contexts), e.g. gpio_bridge_app,
-# then make it a client of the GPIO HAL:
-hal_client_domain(gpio_bridge_app, hal_gpioctl)   # allows find on hal_gpioctl_service + binder_call
+# system_ext/private/gpio_bridge_app.te: a dedicated domain for the bridge app
+type gpio_bridge_app, domain, coredomain;
+app_domain(gpio_bridge_app)
+allow gpio_bridge_app app_api_service:service_manager find;     # normal framework services
+hal_client_domain(gpio_bridge_app, hal_gpioctl)                 # find hal_gpioctl_service + binder_call
+
+# system_ext/private/seapp_contexts: put the platform-signed app into that domain
+user=_app seinfo=platform name=com.yourcompany.gpiohost domain=gpio_bridge_app type=app_data_file levelFrom=all
 ```
+
+`hal_gpioctl` must be defined in `system_ext/public`, not in vendor policy, or this file can't reference it.
+See [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md#step-6-selinux).
 
 Don't add rules like `allow untrusted_app gpio_device:chr_file ...`.
 The app never opens `/dev/gpiochip*`; only the daemon does.

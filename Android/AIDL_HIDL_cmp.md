@@ -14,6 +14,7 @@ They were built for different layers and different eras of Android.
 | Transport | `/dev/hwbinder` + `hwservicemanager` | `/dev/binder` + `servicemanager` (and `/dev/vndbinder` + `vndservicemanager` for vendor ↔ vendor) |
 | File syntax | `.hal`, versioned packages `@1.0` | `.aidl`, versioned with `aidl_interface` `versions` |
 | Languages | C++, Java (binderized HALs only) | Java/Kotlin, C++ (`cpp`, `ndk`), Rust |
+| HAL modes | Binderized or passthrough (in-process) | Binderized only (lazy HALs can start on demand) |
 | Status | **Deprecated since Android 10**; no new HIDL HALs | Current standard |
 
 ## 2. Why HIDL existed

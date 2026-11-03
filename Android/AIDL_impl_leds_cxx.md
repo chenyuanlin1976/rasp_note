@@ -49,7 +49,9 @@ cc_binary {
 About `stability`:
 
 + `unstable: true` is enough if every user of the interface is built **in the same partition** (for example, all on `system`).
-+ If the interface has to cross system ↔ vendor (a real HAL), use `stability: "vintf"` instead.
+  That is fine for a platform-internal tool or a prototype.
++ For a **product**, LED control belongs to the vendor (the LED, its sysfs node, and its SELinux label are vendor-specific).
+  So make it a vendor HAL that the framework calls, which means the interface crosses system ↔ vendor and needs `stability: "vintf"`.
   That is **not** an optional extra: it also requires `@VintfStability` on the interface, `vendor_available: true`,
   a frozen version (`m com.example.led-freeze-api`), and the `-V1-ndk` library name.
   See [AIDL_HAL_impl.md](AIDL_HAL_impl.md).
@@ -69,13 +71,14 @@ in the namespace `aidl::com::example::led`.
 
 class LedControlService : public aidl::com::example::led::BnLedControl {
   public:
-    explicit LedControlService(std::string ledDir) : mDir(std::move(ledDir)) {}
+    explicit LedControlService(std::string ledDir);
 
     ndk::ScopedAStatus setLedState(int32_t state, int32_t delayOnMs, int32_t delayOffMs) override;
 
   private:
     bool writeAttr(const char* attr, const std::string& value);
-    std::string mDir;   // e.g. "/sys/class/leds/sys_led_r"
+    std::string mDir;            // e.g. "/sys/class/leds/sys_led_r"
+    std::string mMaxBrightness;  // read from max_brightness: 1 for a GPIO LED, 255 for many PWM LEDs
 };
 ```
 
@@ -92,6 +95,11 @@ class LedControlService : public aidl::com::example::led::BnLedControl {
 
 using ndk::ScopedAStatus;
 using aidl::com::example::led::ILedControl;
+
+LedControlService::LedControlService(std::string ledDir) : mDir(std::move(ledDir)) {
+    std::ifstream f(mDir + "/max_brightness");
+    if (!(f >> mMaxBrightness)) mMaxBrightness = "1";
+}
 
 bool LedControlService::writeAttr(const char* attr, const std::string& value) {
     std::ofstream f(mDir + "/" + attr);
@@ -111,7 +119,7 @@ ScopedAStatus LedControlService::setLedState(int32_t state, int32_t delayOnMs, i
             ok = writeAttr("trigger", "none") && writeAttr("brightness", "0");
             break;
         case ILedControl::STATE_ON:
-            ok = writeAttr("trigger", "none") && writeAttr("brightness", "255");   // max_brightness may differ
+            ok = writeAttr("trigger", "none") && writeAttr("brightness", mMaxBrightness);
             break;
         case ILedControl::STATE_BLINK:
             // delay_on/delay_off exist only after trigger=timer, so set the trigger first

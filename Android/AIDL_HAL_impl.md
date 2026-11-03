@@ -58,10 +58,13 @@ aidl_interface {
 }
 ```
 
-+ During development, run `m vendor.example.hardware.myhal-update-api`.
++ The block above shows the state **after** v1 is frozen.
+  During development, leave out `versions_with_info`/`frozen` and run `m vendor.example.hardware.myhal-update-api` after you edit the `.aidl` file.
   To release v1, run `m vendor.example.hardware.myhal-freeze-api`.
   This creates `aidl_api/.../1/` and fills in `versions_with_info`.
+  The `frozen:` property exists since Android 14; older trees use only `versions_with_info` (or `versions`).
 + The generated libraries are named with the version, for example `vendor.example.hardware.myhal-V1-ndk`.
+  Clients link a specific version. A newer server must keep answering the old version's methods.
 
 ## 2. The server (`default/`)
 
@@ -210,29 +213,37 @@ For a vendor HAL, add it to the device framework compatibility matrix (`DEVICE_F
 
 ## 4. SELinux
 
-```text
-# vendor sepolicy: attributes + domain
-hal_attribute(myhal)                         # creates hal_myhal, hal_myhal_client, hal_myhal_server
+**Where the policy goes depends on who the clients are.**
+Platform policy (system, system_ext, product) can't reference types that are defined in **vendor** policy.
 
++ If all clients are vendor processes, everything can live in vendor policy.
++ If **any client is on the system side** (a system app, `system_server`, a system_ext daemon),
+  the HAL attribute and the service type must be defined in a **public** policy directory that both sides see.
+  For a device-specific HAL that is `system_ext/public` (`SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS`).
+
+```text
+# system_ext/public/hal_myhal.te: shared by vendor (server) and system_ext (clients)
+hal_attribute(myhal)                         # creates hal_myhal, hal_myhal_client, hal_myhal_server
+type hal_myhal_service, hal_service_type, protected_service, service_manager_type;
+hal_attribute_service(hal_myhal, hal_myhal_service)   # server may add, clients may find
+
+# vendor/hal_myhal_default.te: the server domain
 type hal_myhal_default, domain;
 hal_server_domain(hal_myhal_default, hal_myhal)
 type hal_myhal_default_exec, exec_type, vendor_file_type, file_type;
 init_daemon_domain(hal_myhal_default)
 
-# service.te
-type hal_myhal_service, hal_service_type, service_manager_type;
-hal_attribute_service(hal_myhal, hal_myhal_service)   # server may add, client may find
-
-# file_contexts
+# vendor/file_contexts
 /vendor/bin/hw/vendor\.example\.hardware\.myhal-service  u:object_r:hal_myhal_default_exec:s0
 
-# service_contexts
+# vendor/service_contexts
 vendor.example.hardware.myhal.IMyHalService/default     u:object_r:hal_myhal_service:s0
 
-# each client domain
+# in the policy of each client domain (vendor or system_ext/private)
 hal_client_domain(my_client_domain, hal_myhal)
 ```
 
+`protected_service` marks the service as one that only declared HAL clients may find.
 Debug denials with `adb logcat | grep avc` (see [avc_denied.md](avc_denied.md)).
 
 ## 5. Clients
@@ -260,7 +271,9 @@ using aidl::vendor::example::hardware::myhal::IMyHalService;
 int main() {
     const std::string instance = std::string(IMyHalService::descriptor) + "/default";
 
-    // Blocks until the service is registered (returns nullptr only if it isn't declared / allowed)
+    // Blocks until the service is registered (it can wait forever if the HAL never starts).
+    // Returns nullptr if SELinux denies "find".
+    // For VINTF HALs, check AServiceManager_isDeclared(instance) first if the HAL is optional on some devices.
     ndk::SpAIBinder binder(AServiceManager_waitForService(instance.c_str()));
     std::shared_ptr<IMyHalService> hal = IMyHalService::fromBinder(binder);
     if (hal == nullptr) {
@@ -320,6 +333,7 @@ try {
 ```
 
 The app's SELinux domain (for example `platform_app`, or a custom domain) also needs `hal_client_domain(<domain>, hal_myhal)`.
+Put that rule in `system_ext/private`, which works because `hal_myhal` is in `system_ext/public` (see section 4).
 `neverallow` rules may forbid this for some app domains; in that case, put the access in a system service instead.
 
 ## 6. Quick checklist

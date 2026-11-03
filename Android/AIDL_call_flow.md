@@ -73,6 +73,19 @@ to the server, and back.
 8. **Return**: the Proxy unmarshals the reply. It returns the value or throws the exception.
    If the server process has died, the client gets a `DeadObjectException` (`RemoteException`).
 
+## 3. Limits worth knowing
+
++ **Transaction buffer**: each process has about **1 MB** of Binder buffer, shared by all transactions in flight.
+  A call that is too large fails with `TransactionTooLargeException` (Java) or `FAILED_TRANSACTION`.
+  Send big data as a `ParcelFileDescriptor`, shared memory (`SharedMemory`/ashmem), or in chunks.
++ **`oneway` calls** use the server's async buffer, which is half of that space.
+  Calls to the same binder object are queued and delivered one at a time.
+  A flood of `oneway` calls can fill the buffer.
++ **Thread pool**: if all of the server's binder threads are busy (for example, blocked in long calls),
+  new calls wait. The default limit for Java processes is 15 extra threads plus the main thread when it joins.
++ **Death notification**: a client that keeps a remote binder should call `linkToDeath()` (`AIBinder_linkToDeath()` in NDK)
+  to find out when the server process dies.
+
 ## Related notes
 
 + [AIDL_intro.md](AIDL_intro.md)

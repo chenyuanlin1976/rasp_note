@@ -124,7 +124,6 @@ class MainActivity : AppCompatActivity() {
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             aidlService = IMyAidlInterface.Stub.asInterface(service)
-            isBound = true
             // Note: this callback runs on the MAIN thread. A remote call here blocks the UI
             // until the server replies, so move slow calls to a background thread / coroutine.
             try {
@@ -134,10 +133,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Called only when the service process crashes / is killed, NOT on unbindService()
+        // Called only when the service process crashes / is killed, NOT on unbindService().
+        // The binding itself stays registered (the system reconnects later),
+        // so keep isBound = true and still call unbindService() in onStop().
         override fun onServiceDisconnected(name: ComponentName) {
             aidlService = null
-            isBound = false
         }
     }
 
@@ -147,7 +147,7 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, MyAidlService::class.java)
         // Other app: action + package (setPackage is required; implicit service intents are rejected)
         // val intent = Intent("com.example.aidldemo.IMyAidlInterface").setPackage("com.example.aidldemo")
-        bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        isBound = bindService(intent, connection, Context.BIND_AUTO_CREATE)   // false: not found / not allowed
     }
 
     override fun onStop() {
@@ -168,6 +168,9 @@ Notes:
 + Kotlin maps the AIDL method `getPid()` to the property `aidlService?.pid`.
 + Pair `bindService` with `unbindService` in matching lifecycle callbacks (`onStart`/`onStop` or `onCreate`/`onDestroy`).
   Otherwise the `ServiceConnection` leaks.
+  `isBound` tracks the *binding* (the result of `bindService()`), not whether the service is currently connected.
++ `ServiceConnection` also has `onBindingDied()` (API 26+: the binding is dead for good, so unbind and bind again)
+  and `onNullBinding()` (API 28+: the service returned `null` from `onBind()`).
 
 ## Step 6: Cross-app checklist
 

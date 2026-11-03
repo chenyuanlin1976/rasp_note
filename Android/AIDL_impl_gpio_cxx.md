@@ -44,6 +44,7 @@ Design points:
   and another process may grab it.
 + **Don't re-request an output line as input** just to read it, because that flips the pin's direction.
   If the service already holds the line as an output, read it through that same handle.
+  If the line is an output that the service *doesn't* own, refuse with `EPERM`.
 + Binder calls arrive on several threads, so protect the shared state with a **mutex**.
 + Report failures with `fromServiceSpecificError(errno)`, not with a `false` return value.
 
@@ -160,6 +161,12 @@ ScopedAStatus GpioControl::getLineValue(int32_t chip, int32_t lineOffset, bool* 
 
     gpiod_line* line = gpiod_chip_get_line(c, lineOffset);
     if (line == nullptr) return errnoStatus("gpiod_chip_get_line");
+
+    // Requesting an input would switch an output pin (set up by the bootloader or by another
+    // owner) to input. Refuse instead of silently changing the hardware state.
+    if (gpiod_line_direction(line) == GPIOD_LINE_DIRECTION_OUTPUT) {
+        return ScopedAStatus::fromServiceSpecificError(EPERM);
+    }
 
     if (gpiod_line_request_input(line, kConsumer) < 0) return errnoStatus("gpiod_line_request_input");
     int v = gpiod_line_get_value(line);
@@ -282,10 +289,17 @@ Avoid `user root`: the service needs only access to the device nodes, which the 
 
 ## Step 6: SELinux
 
-```text
-# device/<vendor>/<board>/sepolicy/vendor/
-hal_attribute(gpioctl)
+The client is a **system-side** app (see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)).
+So the HAL attribute and the service type go in **`system_ext/public`**, where both partitions' policies can see them.
+The reason is explained in [AIDL_HAL_impl.md](AIDL_HAL_impl.md#4-selinux).
 
+```text
+# device/<vendor>/<board>/sepolicy/system_ext/public/hal_gpioctl.te
+hal_attribute(gpioctl)
+type hal_gpioctl_service, hal_service_type, protected_service, service_manager_type;
+hal_attribute_service(hal_gpioctl, hal_gpioctl_service)
+
+# device/<vendor>/<board>/sepolicy/vendor/hal_gpioctl_default.te
 type hal_gpioctl_default, domain;
 hal_server_domain(hal_gpioctl_default, hal_gpioctl)
 type hal_gpioctl_default_exec, exec_type, vendor_file_type, file_type;
@@ -294,18 +308,16 @@ init_daemon_domain(hal_gpioctl_default)          # domain transition instead of 
 type gpio_device, dev_type;
 allow hal_gpioctl_default gpio_device:chr_file rw_file_perms;   # rw_file_perms includes ioctl
 
-type hal_gpioctl_service, hal_service_type, service_manager_type;
-hal_attribute_service(hal_gpioctl, hal_gpioctl_service)
-
-# file_contexts
+# vendor/file_contexts
 /dev/gpiochip[0-9]+                                         u:object_r:gpio_device:s0
 /vendor/bin/hw/vendor\.example\.hardware\.gpio-service      u:object_r:hal_gpioctl_default_exec:s0
 
-# service_contexts
+# vendor/service_contexts
 vendor.example.hardware.gpio.IGpioControl/default           u:object_r:hal_gpioctl_service:s0
 ```
 
-The client's domain (for example the system app described in [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)) gets `hal_client_domain(<client_domain>, hal_gpioctl)`.
+The client's domain (the system app in [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)) gets `hal_client_domain(<client_domain>, hal_gpioctl)`
+in `system_ext/private`.
 
 ## Step 7: Calling it
 

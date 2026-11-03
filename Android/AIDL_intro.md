@@ -76,13 +76,16 @@ The complete Android Studio walkthrough (Gradle, manifest, client lifecycle) is 
 ## 3. Supported data types
 
 + Primitives: `boolean`, `byte`, `char`, `int`, `long`, `float`, `double`. **`short` is not supported.**
-+ `String`, `CharSequence` (Java backend only), `IBinder`, `FileDescriptor` / `ParcelFileDescriptor`
++ `String`, `IBinder`, `ParcelFileDescriptor` (`ndk::ScopedFileDescriptor` in the NDK backend)
 + Arrays of the supported types (`int[]`, `String[]`, ...)
-+ `List`: either raw `List` or **generic** `List<T>` (`List<String>`, `List<MyParcelable>`). The receiver always gets an `ArrayList`.
-+ `Map`: raw `Map`, or generic `Map<String, V>` in newer AIDL versions. The receiver always gets a `HashMap`.
-  Keys must be `String` for the non-Java backends.
++ `List<T>` (`List<String>`, `List<MyParcelable>`). Java gets an `ArrayList`, and C++ gets a `std::vector`.
+  A raw, untyped `List` works only in the Java backend and isn't allowed in stable interfaces.
++ **Java backend only**: `CharSequence`, `FileDescriptor`, and `Map` (the receiver gets a `HashMap`).
+  The C++/NDK/Rust backends have no `Map`; use a `List` of key/value parcelables instead.
 + Other AIDL interfaces (for callbacks), plus `parcelable` types (structured AIDL parcelables, or Java classes that implement `Parcelable`)
-+ Constants (`const int VERSION = 1;`) and `enum` types
++ Constants (`const int VERSION = 1;`), `enum` types (`@Backing(type="int")`), and `union` types (Android 12+)
+
+The exact per-backend table is in the AOSP "AIDL backends" page.
 
 ## 4. Constraints and design rules
 
@@ -91,8 +94,8 @@ The complete Android Studio walkthrough (Gradle, manifest, client lifecycle) is 
 + **Arbitrary classes**: anything you pass must be one of the types above. Other classes must become a `parcelable`.
 + **Fields / static state**: an interface may contain only methods and constants.
 + **`short`** (see above).
-+ **Direction tags**: non-primitive parameters need `in`, `out`, or `inout` (e.g. `void fill(out int[] buf)`).
-  Primitives, `String`, and interfaces are always `in`.
++ **Direction tags**: arrays, lists, and parcelables need `in`, `out`, or `inout` (e.g. `void fill(out int[] buf)`).
+  Primitives, `String`, `IBinder`, and interfaces are always `in` and take no tag.
 
 ### 4.2 Design patterns that the AIDL style guide (and `aidl` warnings) flags
 
@@ -105,10 +108,15 @@ The complete Android Studio walkthrough (Gradle, manifest, client lifecycle) is 
 
 ### 4.3 Threading
 
-+ Incoming remote calls run on the **binder thread pool**, never on the main/UI thread.
++ Incoming remote calls run on the **binder thread pool**.
+  In a Java app, that is never the main/UI thread.
+  In a native service, the main thread often joins the pool (`joinThreadPool()`), so it handles calls too.
 + Several clients (or one client with several threads) can call at the same time, so the implementation **must be thread-safe**.
 + On the client side, a normal (non-`oneway`) call **blocks** until the reply arrives.
   Calling from the UI thread can cause an ANR.
++ A `oneway` method returns immediately and has no return value or exceptions.
+  `oneway` calls to the **same binder object** are delivered one at a time, in order.
+  A `oneway` call to a binder in the **same process** still runs synchronously.
 
 ## 5. Local vs remote service
 

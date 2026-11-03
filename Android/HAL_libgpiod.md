@@ -196,7 +196,7 @@ Standard AOSP has **no** public GPIO API. You build your own vendor HAL plus a s
 
 + [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md): full AIDL + libgpiod GPIO HAL
 + [../Linux/libgpiod_intro.md](../Linux/libgpiod_intro.md), [libgpiod_android.md](libgpiod_android.md), [JNI_intro.md](JNI_intro.md)
-+ [hw_control_sysfs.md](hw_control_sysfs.md), [gpio_control.md](gpio_control.md), [gpio_export.md](gpio_export.md)
++ [hw_control_sysfs.md](hw_control_sysfs.md), [gpio_control.md](gpio_control.md)
 + [HAL_intro.md](HAL_intro.md), [HAL_sysfsNodes.md](HAL_sysfsNodes.md)
 
 ## Reference

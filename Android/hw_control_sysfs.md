@@ -116,7 +116,7 @@ The full example is in [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md).
 ## Related notes
 
 + [HAL_sysfsNodes.md](HAL_sysfsNodes.md), [HAL_libgpiod.md](HAL_libgpiod.md), [JNI_C_code.md](JNI_C_code.md)
-+ [SELinux_policy.md](SELinux_policy.md), [neverallow_error.md](neverallow_error.md), [gpio_export.md](gpio_export.md)
++ [SELinux_policy.md](SELinux_policy.md), [neverallow_error.md](neverallow_error.md), [gpio_control.md](gpio_control.md)
 + [../Linux/libgpiod_sysfs_cmp.md](../Linux/libgpiod_sysfs_cmp.md), [../Linux/sysfs_intro.md](../Linux/sysfs_intro.md)
 
 ## Reference

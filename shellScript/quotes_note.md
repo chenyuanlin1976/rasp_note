@@ -36,7 +36,7 @@ Regex metacharacters (`* ? [ ] $ ^ \ ( ) |`) overlap with shell syntax, so:
 + If the variable's value must match **literally** (dots, brackets, ...), use `grep -F "$text"`, or escape it.
 + Mixing works: `grep '^[0-9]*'"$suffix"'$' file`.
 
-Regex syntax itself: [../Linux/Regex_intro.md](../Linux/Regex_intro.md).
+Regex syntax itself: [Regex_intro.md](Regex_intro.md).
 
 ## Related notes
 

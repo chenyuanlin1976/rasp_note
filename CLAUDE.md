@@ -7,7 +7,7 @@ Personal technical notes (Markdown) on embedded Linux, Android/AOSP, and boards
 ## Layout
 - `Android/`: AOSP, AIDL/HIDL/HAL, Binder, SELinux, VINTF, JNI, apps, signing
 - `Linux/`: kernel, device tree, drivers, GPIO, tools
-- `shellScript/`: Bash scripting notes (basics, brackets, quoting, recipes), text tools (grep, sed, awk), Linux command cheat sheet, small scripts
+- `shellScript/`: Bash scripting notes (basics, brackets, quoting, recipes), regular expressions, text tools (grep, sed, awk), Linux command cheat sheet, small scripts
 - top level: misc topics (protocols, boards, RF, math, ...)
 - Some topics exist in both folders (e.g. `Linux/HAL_intro.md` vs `Android/HAL_intro.md`,
   libgpiod notes). Check both before writing, so they don't contradict each other.

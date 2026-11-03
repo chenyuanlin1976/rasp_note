@@ -76,7 +76,7 @@ sed -i 's/\r$//' file                  # convert CRLF (Windows) line endings to 
 ```
 
 `sed` always uses regular expressions. `-E` only switches from basic (BRE) to extended (ERE) syntax.
-Regex syntax: [../Linux/Regex_intro.md](../Linux/Regex_intro.md).
+Regex syntax: [Regex_intro.md](Regex_intro.md).
 
 ## Related notes
 

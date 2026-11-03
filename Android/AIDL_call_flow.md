@@ -89,7 +89,7 @@ to the server, and back.
 ## Related notes
 
 + [AIDL_intro.md](AIDL_intro.md)
-+ [Binder_IPC_driver.md](Binder_IPC_driver.md), [Binder_AIDL.md](Binder_AIDL.md)
++ [Binder_intro.md](Binder_intro.md): the driver, contexts, and libraries
 
 ## Reference
 

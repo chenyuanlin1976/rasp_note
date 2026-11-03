@@ -1,185 +1,211 @@
-# HAL in linux
+# Device tree, kernel drivers, and a user-space HAL on Linux
 
-In the context of Linux-based embedded systems,  
-a `.dtsi` (Device Tree Source Include) file and a Hardware Abstraction Layer (**HAL**)  
-operate at completely different levels of the software/hardware stack.
+On embedded Linux, a `.dts`/`.dtsi` file and a Hardware Abstraction Layer (HAL) work at **different levels**:
 
-## 1. What is a .dtsi File?
++ The **device tree** describes the hardware **to the kernel**.
++ A **user-space HAL** abstracts the kernel's interfaces **for applications**.
 
-A .dtsi file is part of the Linux **Device Tree** architecture.
+They never talk to each other directly.
+The **kernel driver** sits between them: it reads the device tree and exposes `/sys` or `/dev` files that the HAL uses.
 
-+ Role: It is a **text-based hardware description data file** (not code).  
-  It tells the Linux kernel what hardware components exist on a System-on-Chip (SoC) or a board,  
-  where they are mapped in memory (base addresses), and how they are wired (interrupts, clocks, GPIOs).
-+ Structure: A .dtsi file (like `imx6q.dtsi` or `rk3506.dtsi`) defines reusable SoC-level peripherals.  
-  Specific board files (.dts) include these .dtsi files  
-  and override or enable only the hardware features actually wired up on that physical board.
-+ Analogy: It is like an architectural blueprint or a parts catalog handed to the OS kernel at boot time  
-  so it knows what layout it is dealing with.
+## 1. The device tree (`.dts` / `.dtsi`)
 
-## 2. What is a Linux HAL?
++ **What it is**: a hardware **description**, data rather than code.
+  It lists which devices exist, their register addresses (`reg`), interrupts, clocks, GPIO wiring, and pin muxing.
++ **`.dtsi`** (include): the SoC-level description, usually from the chip vendor (e.g. `imx6qdl.dtsi`, `rk3566.dtsi`).
+  Many peripherals are defined there with `status = "disabled"`.
++ **`.dts`** (board): includes the `.dtsi`, enables what the board actually uses, and adds board-level devices such as LEDs, regulators, and sensors on I2C.
++ **Build/boot**: `dtc` compiles it into a **`.dtb`**. The bootloader (U-Boot, ...) loads the `.dtb` and passes it to the kernel,
+  optionally with **overlays** (`.dtbo`).
++ On a running system: `/proc/device-tree/` (or `/sys/firmware/devicetree/base/`).
 
-**Unlike** bare-metal environments where a HAL is tightly coupled to drivers,  
-**a Linux HAL typically lives in user space** (such as in Android or specialized embedded middleware).
+## 2. What "HAL" means on Linux
 
-+ Role: It is a software programming layer (**API/libraries**) that abstracts low-level kernel interfaces  
-  so that high-level applications (like UI frameworks, camera services, or hardware sensors)  
-  can interact with hardware uniformly without caring about kernel-specific ioctl calls or driver implementations.
-+ Example: Android's HAL (gralloc, camera, sensors HALs)  
-  sits between the Android runtime/framework and the Linux kernel drivers.
+Linux itself has **no single HAL layer**. In the kernel, hardware is abstracted by **driver subsystems**
+(gpiolib, the LED class, IIO, input, V4L2, ALSA, ...), each with a standard user-space interface.
+A "HAL" on Linux is usually a **user-space library or daemon** on top of those interfaces.
+Examples:
 
-## How .dtsi and HAL Interact
++ Android HALs (camera, lights, sensors) in their own processes, called over Binder.
+  See [../Android/HAL_intro.md](../Android/HAL_intro.md).
++ Middleware in a product (an `ILed`/`IGpio` C++ library, a hardware daemon with a D-Bus API).
++ Libraries such as libgpiod, libiio, or libcamera, which wrap one subsystem.
 
-While they don't talk to each other directly, they are connected sequentially in the boot and execution chain:
+## 3. The chain
 
-1. **Hardware Description** (.dtsi -> DTB): The .dtsi and .dts files are compiled into a **Binary Device Tree** (DTB)  
-   passed to the Linux kernel by the *bootloader*.
-2. **Kernel Initialization & Drivers**: The Linux kernel parses the DTB, matches nodes to native kernel drivers  
-   (e.g., an I2C or GPIO driver), and initializes them.
-3. **Exposing to User Space**: The kernel exposes these devices to user space via standard file nodes (e.g., `/dev/ or /sys/class/`).  
-4. **The HAL Layer**: User-space HAL libraries open those device nodes, read/write data,  
-   and translate them into clean, high-level object-oriented or procedural APIs for application software.
+```text
+board.dts + soc.dtsi --dtc--> board.dtb --bootloader--> kernel
+                                                          | matches "compatible" -> probes drivers
+                                                          v
+                                   kernel driver (gpio-leds, gpio controller, ...)
+                                                          | exposes standard interfaces
+                                                          v
+                                   /sys/class/leds/<name>/brightness, /dev/gpiochipN, /dev/i2c-N, ...
+                                                          | open/read/write/ioctl
+                                                          v
+                                   user-space HAL (C/C++ library or daemon)
+                                                          | clean API: led.turnOn()
+                                                          v
+                                   application
+```
 
-+ In short: .dtsi describes the hardware layout to the kernel,  
-  while the HAL abstracts the kernel's interface for user-space applications.
+## 4. Example: a status LED
 
-## example: control a Led
+### Step 1: Device tree
 
-To bring this together, let's walk through a concrete, end-to-end example:  
-controlling a system status LED on an embedded Linux board.
+The SoC `.dtsi` (from the vendor) defines the GPIO controller.
+The fragment below is shortened, in the style of i.MX6 `gpio1`:
 
-We will track how this hardware is defined in the Device Tree (.dtsi / .dts),  
-how the Linux kernel exposes it, and how a C++ Native HAL wraps it for application software.
+```dts
+/* soc.dtsi (fragment) */
+#include <dt-bindings/interrupt-controller/arm-gic.h>
 
-### Step 1: The Device Tree (.dtsi and .dts)
-
-The hardware description starts in the device tree files.
-
-+ The SoC .dtsi file (provided by the chip vendor) defines the base GPIO controller hardware block:
-
-```ini
-// Fragment inside chip.dtsi
 soc {
     gpio1: gpio@209c000 {
-        compatible = "vendor,gpio-controller";
-        reg = <0x209c000 0x4000>;
-        interrupts = <0 12 4>;
-        #gpio-cells = <2>;
+        compatible = "fsl,imx6q-gpio", "fsl,imx35-gpio";
+        reg = <0x0209c000 0x4000>;
+        interrupts = <GIC_SPI 66 IRQ_TYPE_LEVEL_HIGH>,
+                     <GIC_SPI 67 IRQ_TYPE_LEVEL_HIGH>;
         gpio-controller;
+        #gpio-cells = <2>;
+        interrupt-controller;
+        #interrupt-cells = <2>;
     };
 };
 ```
 
-+ The Board .dts file (written by your team for your specific circuit board)  
-  includes that .dtsi and wires up a physical LED to pin 4 of gpio1:
-+ Result: When Linux boots, its **generic** gpio-leds driver reads this device tree node  
-  and automatically creates a user-space control entry at `/sys/class/leds/system_status/brightness`.
+The board `.dts` wires an LED to GPIO1 pin 4, using the generic **`gpio-leds`** driver:
 
-```ini
-// Fragment inside board.dts
+```dts
+/* board.dts */
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/leds/common.h>
+#include "soc.dtsi"
+
 / {
     leds {
         compatible = "gpio-leds";
 
-        status_led {
-            label = "system_status";
-            gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>; // Connected to GPIO1, Pin 4
+        led-status {
+            label = "system_status";               /* -> /sys/class/leds/system_status */
+            gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;   /* controller, pin, flags */
             default-state = "off";
+            linux,default-trigger = "none";        /* e.g. "heartbeat", "mmc0" */
         };
     };
 };
 ```
 
-### Step 2: The C++ Native HAL (User Space)
+With `CONFIG_LEDS_GPIO` enabled, the `gpio-leds` driver probes this node at boot and creates `/sys/class/leds/system_status/`
+(with `brightness`, `max_brightness`, `trigger`).
+The pin also has to be muxed as GPIO, which needs a `pinctrl` entry on most SoCs (see [dts_leds_pinctrl.md](dts_leds_pinctrl.md)).
+Newer bindings prefer `function = LED_FUNCTION_STATUS;` and `color = <LED_COLOR_ID_GREEN>;` to `label`;
+the kernel then builds the name, for example `green:status`.
 
-Your application doesn't want to deal with writing files to `/sys/class/leds/` manually.  
-Instead, you write a C++ Native HAL to abstract it.
+You can test it from a shell before writing any code:
 
-#### 1. Define the Abstract Interface
+```shell
+cat /sys/class/leds/system_status/max_brightness       # 1 for a GPIO LED
+echo 1 | sudo tee /sys/class/leds/system_status/brightness
+echo heartbeat | sudo tee /sys/class/leds/system_status/trigger
+```
+
+### Step 2: The C++ HAL in user space
+
+The application shouldn't know about `/sys` paths.
+The HAL interface describes *what* an LED can do. The design pattern (interfaces, dependency injection, mocks) is explained in [HAL_intro.md](HAL_intro.md).
 
 ```c++
+// ILed.h
 class ILed {
-public:
+  public:
     virtual ~ILed() = default;
-    virtual void turnOn() = 0;
-    virtual void turnOff() = 0;
+    virtual bool turnOn() = 0;      // false on failure: hardware access can fail
+    virtual bool turnOff() = 0;
     virtual bool isOn() const = 0;
 };
 ```
 
-#### 2. Implement the Linux-Specific HAL Class
-
-This class talks to the file path created by the Linux kernel driver (which was mapped via the Device Tree).
-
 ```c++
+// SysfsLed.h: Linux implementation on top of the LED class driver
 #include <fstream>
 #include <string>
+#include "ILed.h"
 
-class LinuxSysfsLed : public ILed {
-private:
-    std::string path_;
-
-public:
-    explicit LinuxSysfsLed(const std::string& sysfsName) 
-        : path_("/sys/class/leds/" + sysfsName + "/brightness") {}
-
-    void turnOn() override {
-        std::ofstream file(path_);
-        if (file.is_open()) {
-            file << "1"; // Kernel driver turns physical LED on
-        }
+class SysfsLed : public ILed {
+  public:
+    explicit SysfsLed(const std::string& name)
+        : dir_("/sys/class/leds/" + name + "/") {
+        std::ifstream f(dir_ + "max_brightness");
+        if (!(f >> max_)) max_ = 1;
     }
 
-    void turnOff() override {
-        std::ofstream file(path_);
-        if (file.is_open()) {
-            file << "0"; // Kernel driver turns physical LED off
-        }
-    }
+    bool turnOn() override  { return write("brightness", std::to_string(max_)); }
+    bool turnOff() override { return write("brightness", "0"); }   // also stops any trigger
 
     bool isOn() const override {
-        std::ifstream file(path_);
-        int value = 0;
-        if (file.is_open()) {
-            file >> value;
-        }
-        return value == 1;
+        std::ifstream f(dir_ + "brightness");
+        int v = 0;
+        return (f >> v) && v > 0;    // PWM LEDs report 0..max_brightness, not just 0/1
     }
+
+  private:
+    bool write(const char* attr, const std::string& value) const {
+        std::ofstream f(dir_ + attr);
+        f << value;
+        f.flush();
+        return static_cast<bool>(f);  // false if open or write failed (e.g. EACCES)
+    }
+
+    std::string dir_;
+    int max_ = 1;
 };
 ```
 
-### Step 3: High-Level Application Code
-
-Now, your high-level business logic is completely clean and **decoupled** from both Linux file paths and physical hardware details:
+### Step 3: The application
 
 ```c++
+#include <cstdio>
+#include "SysfsLed.h"
+
 class SystemMonitor {
-private:
-    ILed& statusLed_; // Depends only on the abstract interface
-
-public:
+  public:
     explicit SystemMonitor(ILed& led) : statusLed_(led) {}
-
     void onSystemError() {
-        statusLed_.turnOn(); // Flashes or turns on LED safely
+        if (!statusLed_.turnOn()) std::fprintf(stderr, "status LED unavailable\n");
     }
+  private:
+    ILed& statusLed_;   // depends only on the interface
 };
 
 int main() {
-    // Instantiate the Linux-specific HAL targeting the device tree node name ("system_status")
-    LinuxSysfsLed boardLed("system_status");
-    
-    // Pass it to the application via dependency injection
+    SysfsLed boardLed("system_status");   // the only line that knows it's Linux + this LED name
     SystemMonitor monitor(boardLed);
-    
     monitor.onSystemError();
-    return 0;
 }
 ```
 
-### Summary of How They Work Together
+Permissions: writing `brightness` needs root by default.
+Give a non-root service access with a **udev rule**, for example
+`SUBSYSTEM=="leds", KERNEL=="system_status", RUN+="/bin/chgrp leds /sys%p/brightness", RUN+="/bin/chmod g+w /sys%p/brightness"`,
+or run the HAL as a small privileged daemon.
 
-1. .dtsi/ .dts told the Linux kernel: "There is an LED on GPIO1 pin 4."
-2. The Linux Kernel mapped that physical pin to `/sys/class/leds/system_status/brightness`.
-3. The C++ Native HAL (LinuxSysfsLed) wrapped that file path into a clean, object-oriented API (`turnOn()`, `turnOff()`).
-4. The Application used the HAL without knowing anything about **Device Tree syntax** or **Linux file paths**.
+## 5. Summary
+
+1. **`.dtsi`/`.dts` → `.dtb`** tell the kernel: "there is an LED on GPIO1 pin 4."
+2. The **`gpio-leds` driver** binds to the node and exposes `/sys/class/leds/system_status/`.
+3. The **user-space HAL** (`SysfsLed`) wraps that file in `turnOn()`/`turnOff()`.
+4. The **application** uses `ILed` and knows nothing about the device tree, drivers, or paths.
+   Porting to another board changes the `.dts` (and maybe the LED name), not the application.
+
+## Related notes
+
++ [HAL_intro.md](HAL_intro.md): C++ HAL design
++ [HAL_mmio_vs_sysfs.md](HAL_mmio_vs_sysfs.md): why the HAL uses kernel interfaces, not `/dev/mem`
++ [dts_intro.md](dts_intro.md), [dts_node_leds.md](dts_node_leds.md), [dts_leds_pinctrl.md](dts_leds_pinctrl.md), [linuxDriver_dtsi.md](linuxDriver_dtsi.md)
+
+## Reference
+
++ [Devicetree usage (kernel docs)](https://docs.kernel.org/devicetree/usage-model.html)
++ [LED class (kernel docs)](https://docs.kernel.org/leds/leds-class.html)
++ [gpio-leds binding (leds-gpio.yaml)](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/leds/leds-gpio.yaml)

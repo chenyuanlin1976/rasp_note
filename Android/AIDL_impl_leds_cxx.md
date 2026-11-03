@@ -5,7 +5,7 @@ There is no JVM/ART and no JNI.
 The `.aidl` file is the same one a Java client would use; only the generated code differs.
 
 This example controls an LED through the kernel LED class (`/sys/class/leds/<name>/`).
-For the sysfs side, see [Led_blinking.md](Led_blinking.md) and [HAL_sysfsNodes.md](HAL_sysfsNodes.md).
+For the design (Lights HAL vs a custom HAL, kernel blinking), see [Led_control.md](Led_control.md); for the sysfs side, [../Linux/sysfs_leds.md](../Linux/sysfs_leds.md).
 
 ## Step 1: The AIDL file
 
@@ -200,7 +200,7 @@ The client links `libbinder_ndk` and `com.example.led-ndk`.
 
 + [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md): the same pattern with libgpiod
 + [AIDL_HAL_impl.md](AIDL_HAL_impl.md): turning a service like this into a stable vendor HAL
-+ [Led_on_off.md](Led_on_off.md), [Led_blinking.md](Led_blinking.md)
++ [Led_control.md](Led_control.md)
 
 ## Reference
 

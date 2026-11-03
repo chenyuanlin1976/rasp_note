@@ -247,7 +247,7 @@ Shell commands and `adb root` are for bring-up only. In a product:
 ## Related notes
 
 + [hw_control_sysfs.md](hw_control_sysfs.md), [HAL_libgpiod.md](HAL_libgpiod.md), [libgpiod_android.md](libgpiod_android.md)
-+ [Led_on_off.md](Led_on_off.md), [Led_blinking.md](Led_blinking.md)
++ [Led_control.md](Led_control.md)
 + [../Linux/libgpiod_sysfs_cmp.md](../Linux/libgpiod_sysfs_cmp.md), [../Linux/dts_node_leds.md](../Linux/dts_node_leds.md)
 
 ## Reference

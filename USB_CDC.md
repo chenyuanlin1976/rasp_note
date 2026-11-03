@@ -1,64 +1,110 @@
-# USB CDC
+# USB CDC: serial ports and networking over USB
 
-USB CDC stands for Universal Serial Bus **Communication Device Class**.  
-It is a formal specification defined by the USB Implementers Forum (USB-IF)  
-that allows electronic devices to communicate with a host computer by emulating standard communication interfaces,  
-such as *traditional serial ports (UART) or network connections*.
+**CDC (Communications Device Class)** is a USB-IF class specification for communication devices: serial ports, modems, and network adapters.
+Operating systems ship generic CDC drivers, so a device that follows the class works without a vendor driver.
 
-Instead of requiring custom, proprietary drivers for every new hardware device,  
-operating systems (Windows, macOS, Linux) often include built-in, generic drivers for standard CDC subclasses.  
-This allows devices to work "out of the box."
+## 1. CDC subclasses
 
-## Key Subclasses of USB CDC
+| Subclass | Emulates | Linux host driver → node | Typical devices |
+| --- | --- | --- | --- |
+| **ACM** (Abstract Control Model) | A serial port (originally an AT-command modem) | `cdc_acm` → `/dev/ttyACM*` | MCUs with native USB (STM32, RP2040, ESP32-S2/S3/C3), Arduino Uno's ATmega16U2, ST-LINK virtual COM port, cellular modems |
+| **ECM** (Ethernet Control Model) | An Ethernet adapter | `cdc_ether` → `usb0` / `enx<MAC>` | USB Ethernet adapters, Linux gadgets |
+| **NCM** (Network Control Model) | Ethernet, with several frames per USB transfer (faster than ECM) | `cdc_ncm` | Newer adapters and phones, Linux gadgets |
+| **EEM** (Ethernet Emulation Model) | Ethernet, simpler framing | `cdc_eem` | Some Linux gadgets |
+| **MBIM** (Mobile Broadband Interface Model) | A mobile broadband (LTE/5G) modem | `cdc_mbim` → `wwan0` (with ModemManager) | Cellular modules |
+| OBEX, WMC, ATM networking, ... | Object exchange, wireless handsets, ATM networks | | Rare today |
 
-The CDC specification is divided into several models or subclasses  
-depending on what type of interface the device needs to emulate:
++ **RNDIS** is Microsoft's own protocol, not part of CDC, although it uses CDC-like descriptors (`rndis_host` on Linux).
+  Android USB tethering has traditionally used RNDIS; newer devices can use NCM.
++ **USB-to-UART bridge chips** (FTDI, CP210x, CH340, PL2303) are usually **not** CDC: they use vendor-specific protocols,
+  and Linux has a driver for each (`ftdi_sio`, `cp210x`, `ch341`, `pl2303`) that creates `/dev/ttyUSB*`.
+  Boards such as the original ESP32 DevKit and many Arduino Nano clones use them.
 
-+ **ACM (Abstract Control Model)**: The most common subclass. It emulates a *traditional RS-232 serial/COM port*.  
-  Microcontrollers (like Arduino, ESP32, and STM32) use this so you can send and receive text via a Serial Monitor.
-+ ECM (Ethernet Control Model) / NCM (Network Control Model): Used to emulate wired Ethernet adapters over a USB connection.  
-  Devices like USB-to-Ethernet dongles or tethered smartphones use these to provide network access.
-+ OBEX (Object Exchange) & ATM: Less common subclasses used for file transfers and ATM-style networking over USB.
+## 2. How CDC-ACM works
 
-## How USB CDC-ACM Works (Virtual COM Ports)
+A CDC-ACM function has two interfaces, grouped by an Interface Association Descriptor (IAD) when the device has other functions too:
 
-When you plug a microcontroller into your computer and open a terminal program, USB CDC-ACM translates data streams:
+| Interface | Endpoints | Carries |
+| --- | --- | --- |
+| Communication (class `02`, subclass `02`) | 1 interrupt IN | Notifications such as `SERIAL_STATE` (carrier detect, errors) |
+| Data (class `0A`) | 1 bulk IN + 1 bulk OUT | The byte stream |
 
-1. Data Packets: The device packages serial data into standard USB **bulk transfer packets**.
-2. Enumeration: Upon connection, the device tells the operating system, "I am a CDC-compliant communication device."
-3. Driver Assignment: The OS assigns a generic driver (e.g., usbser.sys on Windows or built-in kernel modules on Linux/macOS)  
-   and creates a virtual port (like COM3 or **`/dev/ttyACM0`**).
-4. Communication: Software applications can read and write to this virtual port just like an old-school hardware serial cable.
+The serial settings are **class requests on the control endpoint (EP0)**:
 
-## Advantages and Use Cases
++ `SET_LINE_CODING`: baud rate, stop bits, parity, data bits (what `stty` or a terminal program sets).
++ `SET_CONTROL_LINE_STATE`: DTR and RTS. Many firmwares send data only while DTR is set, that is, while a terminal has the port open.
 
-+ No Custom Drivers Needed: Major operating systems support CDC-ACM natively, saving developers from writing proprietary Windows/Mac drivers.
-+ Debugging and Logging: Invaluable for embedded systems development, allowing microcontrollers to stream debug logs directly to a PC.
-+ Firmware Updates: Used in bootloaders to receive new firmware binaries over a simple serial connection.
+There is no real UART between the host and an MCU with native USB, so the **baud rate is ignored**.
+Data moves at USB bulk speed: up to about 1 MB/s at Full Speed (12 Mbit/s).
+The baud rate only matters when the device forwards the data to a real UART (USB-UART bridges, debug probes).
 
-## When the OS is Android
+The OS names the port: `/dev/ttyACM0` on Linux, `/dev/cu.usbmodem*` on macOS, and `COMn` on Windows
+(Windows 10 and later load the inbox `usbser.sys` driver automatically; older versions need an INF file).
 
-When the OS is Android, USB CDC functions in one of 2 directions depending on whether  
-the Android device acts as a **USB Host** (plugging an external device into the phone)  
-or a **USB Device**/Accessory (plugging the phone into a PC or another microcontroller).
+## 3. Linux host
 
-### Android as a USB Host (Connecting external hardware to a phone/tablet)
+```shell
+sudo dmesg | grep -i acm                  # cdc_acm 1-2:1.0: ttyACM0: USB ACM device
+ls -l /dev/serial/by-id/                  # stable names (vendor, product, serial number) -> ../../ttyACM0
+sudo usermod -aG dialout "$USER"          # access to ttyACM*/ttyUSB* without sudo (log in again)
+picocom -b 115200 /dev/ttyACM0            # terminal; exit with Ctrl-A Ctrl-X
+```
 
-If you plug an Arduino, an STM32, or a USB-to-serial adapter into an Android phone via an **OTG (On-The-Go) cable**,  
-the external hardware is presenting itself as a USB CDC-ACM device.
+ModemManager probes new `ttyACM` ports with AT commands, which can confuse an MCU or a bootloader.
+To exclude a device, use a udev rule:
 
-+ The Challenge: Standard Android does **NOT** expose traditional Linux serial device nodes like `/dev/ttyACM0`  
-  to regular user-space apps due to security sandboxing and lack of built-in driver bindings in the Android framework.
-+ The Solution: Android apps use **the Android USB Host API** (`android.hardware.usb`) combined with user-space driver libraries.
-+ Popular Libraries: Libraries like usb-serial-for-android talk directly to the USB endpoints over Java/Kotlin,  
-  allowing apps to read and write bytes from CDC-ACM hardware without needing root access.
+```text
+# /etc/udev/rules.d/99-mydevice.rules
+ATTRS{idVendor}=="0483", ATTRS{idProduct}=="5740", ENV{ID_MM_DEVICE_IGNORE}="1"
+```
 
-### Android as a USB Device (Connecting a phone to a PC or Host)
+## 4. Android as the USB host
 
-If an Android device is acting as a gadget (e.g., tethering, or custom hardware running Android Things/embedded Android communicating with a PC),  
-it can emulate a USB CDC interface.  
+When a CDC-ACM device is plugged into an Android phone or tablet (through an OTG adapter or a USB-C port), apps can't open `/dev/ttyACM*`:
+the node, if the kernel creates it, is owned by root and blocked by SELinux.
 
-+ Gadget Serial (`/dev/ttyGS0`): Android's underlying Linux kernel supports USB gadget drivers.  
-  By configuring the kernel's ConfigFS, an Android system can present itself to a connected PC as a virtual COM port (CDC-ACM).  
-+ Use Case: Developers building custom Android-based hardware or kiosks use this to stream logs, debug via a PC terminal,  
-  or exchange data over a standard USB cable using native daemons or libraries (like gadget-serial).
++ Apps use the **USB Host API** (`android.hardware.usb`: `UsbManager`, `UsbDeviceConnection`) and talk to the bulk endpoints themselves.
+  The user grants access in a permission dialog, or the app declares a `USB_DEVICE_ATTACHED` intent filter with a `device_filter.xml`.
++ The open-source library **usb-serial-for-android** implements CDC-ACM and the common bridge chips (FTDI, CP210x, CH34x, PL2303) on top of this API, without root.
++ On a custom board where a device is permanently attached, a system service or HAL can own the tty node instead,
+  with explicit SELinux rules. Apps then reach it through that service, not through the node.
+
+## 5. Linux or Android as the USB device (gadget)
+
+A board whose USB controller runs in **peripheral** mode ([USB_OTG.md](USB_OTG.md)) can present a CDC function to a PC.
+The ACM function creates **`/dev/ttyGS0`** on the board and `/dev/ttyACM0` (or `COMn`) on the PC.
+Gadgets are configured through **configfs** (the old way: `modprobe g_serial`):
+
+```shell
+sudo modprobe libcomposite
+cd /sys/kernel/config/usb_gadget
+sudo mkdir g1 && cd g1
+echo 0x1d6b | sudo tee idVendor            # Linux Foundation IDs: for testing only
+echo 0x0104 | sudo tee idProduct           # "Multifunction Composite Gadget"
+sudo mkdir strings/0x409
+echo "my-board" | sudo tee strings/0x409/product
+sudo mkdir configs/c.1
+sudo mkdir functions/acm.usb0              # -> /dev/ttyGS0; ecm.usb0 / ncm.usb0 for networking
+sudo ln -s functions/acm.usb0 configs/c.1/
+ls /sys/class/udc | sudo tee UDC           # bind the gadget to the device controller
+```
+
++ For a login console on the PC: `sudo systemctl enable --now serial-getty@ttyGS0.service` on the board.
++ Android sets up its gadget the same way (configfs mounted at `/config/usb_gadget/g1`), from the device's `init.*.usb.rc`
+  and the USB gadget HAL, for adb, MTP, tethering, and so on. Adding an ACM function there is a vendor change in those files.
+
+## Related notes
+
++ [USB_OTG.md](USB_OTG.md): host, device, and dual-role ports
++ [Android/USB_port_speed.md](Android/USB_port_speed.md): USB 2.0 vs 3.0 ports
++ [Modbus_RTU.md](Modbus_RTU.md): RS-485 over USB serial adapters
++ [RPi_pico_Cxx_SDK.md](RPi_pico_Cxx_SDK.md): `stdio` over USB CDC on the Pico
++ [Linux/sysfs_intro.md](Linux/sysfs_intro.md): configfs
+
+## Reference
+
++ [USB-IF class specifications (CDC)](https://www.usb.org/documents)
++ [Linux USB gadget configfs (kernel docs)](https://docs.kernel.org/usb/gadget_configfs.html)
++ [Linux CDC ACM driver (kernel docs)](https://docs.kernel.org/usb/acm.html)
++ [USB host overview (Android developers)](https://developer.android.com/develop/connectivity/usb/host)
++ [usb-serial-for-android (GitHub)](https://github.com/mik3y/usb-serial-for-android)

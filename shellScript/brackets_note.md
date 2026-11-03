@@ -1,180 +1,155 @@
-# shell script brackets
+# Bash brackets quick reference
 
-<https://dev.to/rpalo/bash-brackets-quick-reference-4eh6>
+| Syntax | Name | Result |
+| --- | --- | --- |
+| `( cmds )` | Subshell | Runs `cmds` in a child shell; variable changes don't survive |
+| `{ cmds; }` | Group | Runs `cmds` in the current shell; changes survive |
+| `$( cmd )` | Command substitution | The **output** of `cmd` as a string |
+| `<( cmd )`, `>( cmd )` | Process substitution *(Bash)* | A file name (`/dev/fd/N`) connected to `cmd` |
+| `(( expr ))` | Arithmetic command *(Bash)* | Status 0 if `expr` ≠ 0; assignments stick |
+| `$(( expr ))` | Arithmetic expansion | The **value** of `expr` |
+| `[ expr ]` | `test` | POSIX condition |
+| `[[ expr ]]` | Conditional *(Bash)* | Condition with globs, regex, `&&`/`\|\|`, no word splitting |
+| `{a,b}`, `{1..5}` | Brace expansion | Generates words |
+| `${var...}` | Parameter expansion | Value of a variable, with optional operations |
+| `arr=( ... )`, `${arr[i]}` | Array *(Bash)* | See [shellScript_basic.md](shellScript_basic.md#21-arrays-bash) |
 
-## Bash Brackets Quick Reference
+**Spaces**: `[`, `]`, `[[`, `]]`, `{` and `}` (as a group) are separate words, so they need spaces around them,
+and a group needs `;` or a newline before `}`: `{ echo a; }`.
+Round brackets don't need spaces: `(cd /tmp && ls)`.
+Inside `${...}` there are no spaces.
 
-Bash has lots of different kinds of brackets.  
-Like, many much lots. It adds meaning to doubling up different brackets,  
-and **a dollar sign in front** means something even more different.  
-And, the brackets are used differently than many other languages.  
+All examples were run with GNU Bash 5.2.
 
-A tiny note on all of these is that Bash generally likes **to see a space between round or square brackets and whatever's inside**.  
-It doesn't like space where curly braces are concerned. We'll go through in order of net total squigglyness.
+## 1. Parentheses
 
----
+### 1.1 `( cmds )`: subshell
 
-## Catalog
-
-+ [Parenthesis](#parenthesis-)
-+ [Square brackets](#square-brackets-)
-+ [Curly braces](#curly-braces-)
-
----
-
-## Parenthesis ()
-
-### Single parenthesis ( command )
-
-+ **Subshell Execution**: Commands within single parentheses are executed in a subshell, meaning variables and environment changes made inside are not persistent in the parent shell.
-+ **Command Grouping**: Group commands to redirect their collective output or manage their execution flow.
-
-This means that they run through all of the commands inside, and then return a single exit code.
-
-```bash
-a='This string'
-( a=banana; mkdir $a )
-echo $a
-ls
+```shell
+a="original"
+( a="changed"; cd /tmp )     # runs in a child shell
+echo "$a"; pwd               # original, and the directory didn't change
 ```
 
-### Dollar single parentheses $( command )
+Use it to change directory, variables, or `set` options temporarily.
 
-**Command Substitution**: The output of the command(s) inside is captured and substituted into the surrounding command line.  
-This is for interpolating a subshell command output into a **string**.  
-The command inside gets run inside a subshell, and then any output gets placed into whatever string you're building.
+### 1.2 `$( cmd )`: command substitution
 
-```bash
-intro="My name is $( whoami )"
-echo $intro
+```shell
+intro="My name is $(whoami)"
+files_count=$(ls | wc -l)
+today="$(date +%F)"          # quote it when assigning or using it, to keep spaces and newlines
 ```
 
-The following code block takes the output from COMMAND and creates an **array-variable** from it.
++ The result is **one string**, with trailing newlines removed. It is not an array.
+  To get one array element per line, use `mapfile -t lines < <(cmd)` *(Bash 4+)*.
++ `` `cmd` `` (backticks) is the old form, which is hard to nest. Use `$( )`.
++ The exit status of `cmd` is in `$?` afterwards. Testing it directly is clearer:
+  `if grep -q PATTERN file; then ...` instead of `echo $(grep -q PATTERN file)$?`.
 
-```bash
-var=$( ls )
-echo $var
+### 1.3 `<( cmd )`: process substitution *(Bash)*
+
+The output of `cmd` appears as a file, for commands that need file names instead of stdin:
+
+```shell
+diff <(sort a.txt) <(sort b.txt)
+while read -r line; do echo "$line"; done < <(ls /etc)   # loop in the current shell (a pipe would use a subshell)
 ```
 
-```bash
-fruits=("apple" "lemon" "banana" "cherry" "kiwi")
-echo ${#fruits[@]}
-for i in ${fruits[@]}; do
-  echo "$i"
-done
-array=("123" "456" "789")
-echo ${array[1]}
-```
+### 1.4 `(( expr ))` and `$(( expr ))`: arithmetic
 
-### Dollar single parentheses dollar question mark $( command )$?
-
-If you want to interpolate a command, but only the exit code and not the value, this is what you use.
-
-`echo $( grep -q PATTERN FILE )$?`
-
-### Angle parentheses <( stuff ) is known as a process substitution
-
-It's a lot like a pipe, except you can use it anywhere a command expects a **file argument**.
-
-`sort -nr -k 5 <( ls -l /bin ) <( ls -l /usr/bin ) <( ls -l /sbin )`
-
-### Double parentheses (( arithmetic ))
-
-**Arithmetic Evaluation**: Used for **integer arithmetic** operations.  
-Variables are treated as integers, and various arithmetic and boolean operators are supported.  
-The exit status is 0 if the arithmetic result is non-zero, and 1 if it's zero.  
-
-You can perform assignments, logical operations, and mathematic operations like multiplication or modulo inside these parentheses.  
-However, do note that **there is no output**.  
-**Any variable changes that happen inside them will stick**, but don't expect to be able to assign the result to anything.
-
-```bash
+```shell
 i=7
-(( i += 3 ))
-echo $i
-```
-
-### Dollar double parentheses $(( arithmetic ))
-
-**Arithmetic Expansion**: Performs arithmetic operations and substitutes the numerical result into the command line.  
-you can use Dollar Double Parentheses $((  )) to perform an Arithmetic Interpolation,  
-which is just a fancy way of saying, "**Place the output result into this string**."
-
-```bash
+(( i += 3 ))                 # command: changes i, no output
+(( i > 5 )) && echo "big"    # status 0 when the expression is non-zero
 legs=100
-message="rabbit number is $(( legs / 4 ))"
-echo $message
+echo "rabbits: $(( legs / 4 ))"   # expansion: substitutes the value (25)
 ```
 
----
+Integers only. Inside, variables don't need `$`. See [shellScript_basic.md](shellScript_basic.md#7-arithmetic).
 
-## Square brackets []
+## 2. Square brackets
 
-### Single square brackets [  ]
+### 2.1 `[ expr ]`: POSIX test
 
-**Conditional Expressions (Test Command)**: Used for basic conditional tests, including string comparisons, numerical comparisons, and file tests. This is POSIX compliant.
-Strings of zero length are false.  
-Strings of length one or more are true. (even if those characters are whitespace)
-One last thing that's important to note is that `test` and `[` are actually shell commands.
+`[` is a command (a shell builtin, also `/usr/bin/[`) whose last argument must be `]`.
 
-```bash
-if [ -f fileName ]; then
-  echo "file exists"
-else
-  echo "file NOT exists"
-fi
+```shell
+if [ -f "$file" ] && [ "$count" -gt 0 ]; then echo "ok"; fi
 ```
 
-### Double square brackets [[  ]]
+Quote variables: `[ $x = y ]` fails with "unary operator expected" when `$x` is empty.
 
-**Extended Conditional Expressions**: Offers more advanced features than single square brackets,  
-including extended regular expression matching (=~), pattern matching, and locale-aware string comparisons (<, >). This is a Bash-specific extension.
+### 2.2 `[[ expr ]]`: Bash conditional
 
-```bash
+```shell
 name="John Doe"
-if [[ "$name" == J*Doe ]]; then
-  echo "Name matches pattern."
-fi
+[[ $name == J*Doe ]] && echo "glob match"            # right side unquoted = pattern
+[[ $ver =~ ^([0-9]+)\.([0-9]+)$ ]] && echo "major=${BASH_REMATCH[1]}"
+[[ -f $f && $f != *.bak ]] && echo "use $f"          # && and || inside
 ```
 
----
+No word splitting or globbing inside `[[ ]]`, so unquoted variables are safe there.
+Quote the right side of `==` to compare literally: `[[ $a == "$b" ]]`.
 
-## Curly Braces {}
+Operator table: [shellScript_basic.md](shellScript_basic.md#4-exit-status-and-conditions).
 
-### Single curly braces
+## 3. Curly braces
 
-+ **Parameter Expansion**: Used to delimit variable names, especially when concatenating with other characters, e.g., ${var}suffix.
-+ **Brace Expansion**: Generates sequences of strings, e.g., {a,b,c} expands to a b c.
-+ **Command Grouping (without subshell)**: Groups commands for redirection or flow control without creating a subshell, so variables and environment changes persist in the current shell.
+### 3.1 `{ cmds; }`: group in the current shell
 
-`echo h{a,e,i,o,u}p`  
-`echo {01..10}`
-
-```bash
-sum=0
-for i in {1..100}; do
-  (( sum=$sum+i ))
-done
-echo $sum
+```shell
+{ echo "header"; date; } > report.txt     # one redirection for several commands
+[ -f config ] || { echo "missing config" >&2; exit 1; }
 ```
 
-### dollar curly braces ${contents}
+### 3.2 Brace expansion
 
-Note that there are **no spaces around the contents**.  
-This is for variable interpolation. You use it when normal string interpolation could get weird.
-
-```bash
-fruit=banana
-echo $fruitification
-echo ${fruit}ification
-echo {0..10..2}
+```shell
+echo h{a,e,i,o,u}p           # hap hep hip hop hup
+echo {01..05}                # 01 02 03 04 05 (zero-padded)
+echo {0..10..5}              # 0 5 10
+cp config.ini{,.bak}         # cp config.ini config.ini.bak
+mkdir -p proj/{src,include,test}
 ```
 
-The other thing you can use it for is variable manipulation.
+Brace expansion happens before variable expansion: `{1..$n}` stays literal.
 
-```bash
-function Greeting() {
-  echo "Hello, ${1:-World}!"
-}
-Greeting Ryan
+## 4. Dollar curly braces
+
+`${...}` expands a variable. The braces delimit the name, and operators inside transform the value:
+
+| Expansion | Result (`s=hello_world.tar.gz`) |
+| --- | --- |
+| `${s}suffix` | Value followed by text (`$ssuffix` would be a variable named `ssuffix`) |
+| `${#s}` | Length: `18` |
+| `${s:0:5}` | Substring (offset, length): `hello` |
+| `${s#*.}` / `${s##*.}` | Remove shortest / longest prefix matching `*.`: `tar.gz` / `gz` |
+| `${s%.*}` / `${s%%.*}` | Remove shortest / longest suffix matching `.*`: `hello_world.tar` / `hello_world` |
+| `${s/o/0}` / `${s//o/0}` | Replace first / all `o`: `hell0_world.tar.gz` / `hell0_w0rld.tar.gz` |
+| `${s^^}` / `${s,,}` | Upper / lower case *(Bash 4+)* |
+| `${v:-default}` | `default` if `v` is unset **or empty** (`${v-default}`: only if unset) |
+| `${v:=default}` | Like `:-`, and also assigns the default to `v` |
+| `${v:?message}` | Exit with `message` if `v` is unset or empty |
+| `${v:+alt}` | `alt` if `v` is set and not empty, otherwise empty |
+| `${arr[@]}`, `${#arr[@]}` | All elements / number of elements *(Bash)* |
+
+```shell
+greeting() { echo "Hello, ${1:-World}!"; }
+greeting            # Hello, World!
+greeting Ryan       # Hello, Ryan!
+
+for f in *.jpeg; do mv -- "$f" "${f%.jpeg}.jpg"; done   # change extensions
 ```
+
+More on defaults: [fallbacks.md](fallbacks.md).
+
+## Related notes
+
++ [shellScript_basic.md](shellScript_basic.md), [quotes_note.md](quotes_note.md), [shellScript_recipes.md](shellScript_recipes.md)
+
+## Reference
+
++ [Bash manual: Shell Expansions](https://www.gnu.org/software/bash/manual/html_node/Shell-Expansions.html)
++ [Bash manual: Compound Commands](https://www.gnu.org/software/bash/manual/html_node/Compound-Commands.html)
++ [Bash brackets quick reference (dev.to)](https://dev.to/rpalo/bash-brackets-quick-reference-4eh6)

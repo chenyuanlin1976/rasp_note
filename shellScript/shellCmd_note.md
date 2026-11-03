@@ -1,324 +1,158 @@
-# linux command note
-
-## Basic
-
-### man - an interface to the system reference manuals
-
-`man df`
-
-### uname - print system information
-
-+ print all information: `uname -a`
-+ print the kernel release: `uname -r`
-+ print the kernel version: `uname -v`
-
-## disk
-
-### du - estimate file space usage
-
-`du -h`
-
-### df - report file system space usage
-
-`df -h`
-
-### fdisk - manipulate disk partition table
-
-### mke2fs - create an ext2/ext3/ext4 file system
-
-## ps and top
-
-+ `ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head`
-+ `ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%cpu | head`
-+ `top -b -o +%MEM | head -n 15`
-+ `top` and then press Shift + M to sort by memory
-
-### nproc - Print the number of processing units available to the current process
-
-## memory usage
-
-`top -h`
-`free -h`
-
-## text file handle
-
-+ `head filename`
-+ `tail filename`
-+ `cat filename | grep -i pattern`
-+ `cat filenmae | grep -i "pattern1\|pattern2"`
-+ `cat filename | sort | uniq`
-+ `cat filename | tr str1 str2`
-+ `cut -c20-80 filename`
-+ `column -t -s ',' filename`
-
-### sort: it treats numbers as text string characters
-
-+ to interpret and organize the data based on its true mathematical value.: `sort -n filename`
-+ Reverse Numeric Sort (Descending): `sort -nr filename`
-+ Sort by a Specific Column: `sort -k2n filename`
-+ Sort Human-Readable Numbers (2K, 45M, 2G): `sort -h filename`
-+ Sort Decimals or Scientific Notation (1.2e6): `sort -g filename`
-
-### grep - print lines that match patterns
-
-`grep [OPTION...] PATTERNS [FILE...]`  
-Search for PATTERN in each FILE or standard input.  
-PATTERN is, by default, a basic regular expression (BRE).
-
-+ **OPTION**
-  + -e PATTERNS, --regexp=PATTERNS
-  + -f, Obtain patterns from FILE, one per line
-  + -i, Ignore case distinctions in patterns and input data
-  + -v, Invert the sense of matching, to select non-matching lines.
-  + -L, print only names of FILEs containing no match
-  + -l, print only names of FILEs containing matches
-+ `grep --help`  
-
-#### grep examples 1
-
-+ `-A`: print NUM lines of trailing context, `cat filename | grep -A3 pattern`
-+ `-B`: print NUM lines of leading context, `cat filename | grep -B3 pattern`
-+ `-C`: print NUM lines of output context, `cat filename | grep -C3 pattern`
-+ `-E`: PATTERN is an extended regular expression (ERE), `cat filename | grep -E '^.{N}F`
-+ `-G`: PATTERN is a basic regular expression (BRE),
-
-#### grep examples 2
-
-To search for .c files in a folder that contain the string "malloc",  
-use the grep command on Linux: `grep -rnw --include="*.c" . -e "malloc"`  
-
-+ `-r`: Searches recursively through subdirectories.
-+ `-n`: Prints the exact line number where the string is found.
-+ `-w`: Matches the whole word only (omit this if you want to find partial matches).
-+ `--include="*.c"`: Restricts the search exclusively to files ending in **.c**.
-+ `.`: Points to the current directory (change this to a specific folder path if needed).
-+ `-e "malloc"`: Specifies the string you are looking for.
-
-#### Buffered Output
-
-`grep` is a block-buffered command.  
-If you pipe the output of C++'s standard output to it, `grep` will not print anything to the screen  
-until its internal buffer is completely full or the process finishes.  
-
-### echo - display a line of text
-
-`echo -n -e '\x74\x24\xca\x38\xa3\xe1' > MACA3E1.bin`
-
-+ option: -n: do not output the trailing newline
-+ option: -e: enable interpretation of backslash escapes
-
-### xxd - make a hex dump or do the reverse
-
-+ view hex: `echo -n "hello" | xxd -g1`
-+ view ascii: `echo -e "\x68\x65\x6c\x6c\x6f"`
-
-+ `xxd -p MACA3E1.bin`
-+ `xxd -g1 MACA3E1.bin`
-  + option: -p: plain hex dump style
-  + option: -gn: Separate  the output of every n bytes
-
-### hexdump - display file contents in hexadecimal, decimal, octal, or ascii
-
-`hexdump -C MACA3E1.bin`  
-option: -C: Canonical hex+ASCII display
-
-### cmp
-
-`cmp file1 file2`
-
-### diff
-
-`diff -y file1 file2`
-
-## Search command or file
-
-### which - locate a command
-
-It Locates executable commands within the directories specified in the user's PATH environment variable.
-
-`which ls`
-
-### whereis - locate the binary, source, and manual page files for a command
-
-whereis: This command is specifically designed to locate the binary (executable), source files, and manual pages for a given command.  
-It searches in standard locations where programs are typically installed and their associated files are stored.  
-whereis is very fast because it only searches a limited set of predefined directories.
-
-`whereis ls`
-
-### locate
-
-locate: This command searches a pre-built database of filenames, typically located at /var/lib/mlocate/mlocate.db (or similar).  
-This database is updated periodically by the updatedb command.  
-locate is extremely fast because it does not search the file system in real-time but rather queries an index.  
-However, it may not find newly created or recently modified files until the database is updated.
-
-`locate filename`
-
-### find - search for files in a directory hierarchy
-
-find: This command performs a real-time, comprehensive search of the file system based on specified criteria.  
-It can search by name, type, size, modification time, ownership, and more.  
-find is powerful and flexible but can be slow, especially when searching large directories or entire file systems, as it directly traverses the directory structure.
-
-+ `find /path/to/search -name "filename"`
-+ search in the current directory: `find . -name "filename"`
-+ Case-insensitive search: `find . -iname "filename"`
-+ Partial Name Match (Wildcards): `find . -name "*.pdf"`
-
-## File manager
-
-### chown - change file owner and group
-
-### chmod - change file mode bits
-
-+ `find . -type d -exec chmod 755 {} \;`
-+ `find . -type f -exec chmod 644 {} \;`
-
-### rsync - a fast, versatile, remote (and local) file-copying tool
-
-`rsync -avu --delete "/home/user/SRC/" "/home/user/DEST"`
-
-+ -a Do the sync preserving all filesystem attributes
-+ -v run verbosely
-+ -u only copy files with a newer modification time (or size difference if the times are equal)
-+ --delete delete the files in target folder that do not exist in the source
-
-## openssl - OpenSSL command line program
-
-[openssl-dgst](https://docs.openssl.org/3.0/man1/openssl-dgst/)
-
-+ `echo -n 'hello world' | openssl dgst -sha1 -hmac "key"`
-+ `echo -n 'hello world' | openssl dgst -sha1 -hmac "key" -binary > hash-file.bin`
-+ `xxd -p hash-file.bin`
-+ `xxd -g1 hash-file.bin`
-+ `hexdump -C hash-file.bin`
-
-There is a difference in how to interpret the endianness.
-
-+ `xxd hash-file.bin`
-+ `hexdump hash-file.bin`
-
-## date - print or set the system date and time
-
-VARIABLE_NAME=$(date +FORMAT_STRING)
-
-+ %Y: Year with century (e.g., 2025)
-+ %m: Month as a decimal number (01-12)
-+ %d: Day of the month (01-31)
-+ %H: Hour (00-23)
-+ %M: Minute (00-59)
-+ %S: Second (00-59)
-+ %F: Full date; equivalent to %Y-%m-%d
-+ %T: Time; equivalent to %H:%M:%S
-
-```bash
-TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-echo "Timestamp: $TIMESTAMP"
-
-VAR1=$(date +"%F")
-echo "$VAR1"
-
-VAR2=$(date +"%T")
-echo "$VAR2"
+# Linux command cheat sheet
+
+Everyday commands on a Debian/Ubuntu host or a board (Raspberry Pi, Orange Pi, Jetson).
+Text tools have their own notes: [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_demo.md](awk_demo.md).
+
+## 1. System information
+
+```shell
+man df                      # manual page (man -k keyword: search)
+uname -a                    # kernel name, release, version, arch; -r: release only
+cat /etc/os-release         # distribution and version
+nproc                       # number of usable CPUs
+lscpu; free -h              # CPU details; memory (RAM and swap)
+uptime                      # load average
 ```
 
-`date +"%Z %z"`
+## 2. Processes
 
-### timedatectl - Control the system time and date
+```shell
+ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head     # top memory users
+ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%cpu | head     # top CPU users
+top                         # interactive; Shift+M: sort by memory, Shift+P: by CPU
+top -b -n 1 -o %MEM | head -n 15                      # one snapshot, for scripts
+pgrep -a ssh; pkill -f myscript.sh                     # find / kill by name
+kill -TERM "$pid"; kill -KILL "$pid"                   # ask to stop / force
+```
 
-+ `timedatectl | grep "Time zone"`
-+ `cat /etc/timezone`
+## 3. Disks and file systems
 
-## module
+```shell
+df -h                       # free space per mounted file system
+du -sh dir; du -h --max-depth=1 . | sort -h     # size of a directory / of each subdirectory
+lsblk -f                    # block devices, partitions, file system types, mount points
+sudo fdisk -l /dev/sdX      # partition table (fdisk /dev/sdX: edit it interactively)
+sudo mkfs.ext4 -L data /dev/sdX1                # create an ext4 file system (mke2fs -t ext4)
+sudo mount /dev/sdX1 /mnt; sudo umount /mnt
+```
 
-### lsmod - Show the status of modules in the Linux Kernel
+Double-check the device name with `lsblk` before `fdisk` or `mkfs`. They destroy data.
 
-`lsmod | grep iwlwifi`
+## 4. Find files and commands
 
-### modprobe - Add and remove modules from the Linux Kernel
+| Command | Searches | Speed / freshness |
+| --- | --- | --- |
+| `command -v ls`, `type ls` | Commands as the shell resolves them (builtins, aliases, `PATH`) | Instant. Preferred in scripts |
+| `which ls` | Executables in `PATH` | Instant |
+| `whereis ls` | Binary, source, and man page in standard directories | Instant |
+| `locate name` | A prebuilt database of file names (`plocate`/`mlocate`, refreshed by `updatedb`) | Instant, but misses new files |
+| `find` | The real directory tree, by any criteria | Slow on large trees, always current |
 
-`sudo modprobe iwlwifi`
+```shell
+find . -name '*.pdf'                      # quote the pattern so the shell doesn't expand it
+find . -iname 'readme*'                   # case-insensitive
+find /var/log -type f -mtime -1 -size +1M # modified in the last 24 h, larger than 1 MiB
+find . -type d -exec chmod 755 {} +       # '+' passes many files per chmod ('\;' runs one per file)
+find . -type f -exec chmod 644 {} +
+```
 
-### modinfo - Show information about a Linux Kernel module
+## 5. Files
 
-`modinfo iwlwifi`
+```shell
+chown user:group file; chmod 640 file; chmod u+x script.sh
+cmp file1 file2             # first differing byte (binary files)
+diff -u file1 file2         # unified diff; diff -y: side by side
+rsync -avu --delete /home/user/SRC/ /home/user/DEST     # see ../Linux/rsync_demo.md
+wget -c -i urls.txt         # resume downloads from a list; see ../Linux/wget_intro.md
+```
 
-### insmod - Simple program to insert a module into the Linux Kernel
+## 6. Bytes and hex
 
-## Network
+```shell
+printf '\x74\x24\xca\x38\xa3\xe1' > mac.bin   # write raw bytes (portable; 'echo -e' doesn't work in dash/sh)
+xxd mac.bin                 # 00000000: 7424 ca38 a3e1   t$.8..
+xxd -p mac.bin              # 7424ca38a3e1 (plain); xxd -g1: one byte per group
+xxd -r -p hex.txt out.bin   # hex text back to binary
+hexdump -C mac.bin          # 00000000  74 24 ca 38 a3 e1  |t$.8..|
+hexdump mac.bin             # 0000000 2474 38ca e1a3   <- 16-bit words, little-endian: bytes look swapped
+```
 
-### ifconfig - Display or configure network interface
+Use `hexdump -C` or `xxd`, which show bytes in file order. Plain `hexdump` (and `od -x`) groups bytes into host-endian 16-bit words.
 
-### iwconfig - configure a wireless network interface
+Hashes and HMAC (`openssl dgst`), checksums: [../openssl_note.md](../openssl_note.md), [../checksumCmd.md](../checksumCmd.md).
 
-### ping - send ICMP ECHO_REQUEST to network hosts
+## 7. Date and time
 
-### nmcli - command-line tool for controlling NetworkManager
+```shell
+date '+%F %T %Z %z'         # 2026-11-03 10:15:30 CST +0800
+timedatectl                 # local time, time zone, NTP sync (systemd)
+timedatectl list-timezones | grep Taipei
+sudo timedatectl set-timezone Asia/Taipei
+```
 
-`nmcli device`
+`date` formats and timestamps in scripts: [shellScript_recipes.md](shellScript_recipes.md#4-timestamps-and-delays).
 
-### arp - Linux ARP kernel module
+## 8. Kernel modules and hardware
 
-This  kernel protocol module implements the Address Resolution Protocol defined in RFC 826.
+```shell
+lsmod | grep iwlwifi        # loaded modules
+modinfo iwlwifi             # parameters, firmware, version
+sudo modprobe iwlwifi       # load, with dependencies (from /lib/modules/$(uname -r))
+sudo modprobe -r iwlwifi    # unload
+sudo insmod ./mydrv.ko      # load one .ko by path, no dependency handling (for development)
+sudo dmesg -w | grep -i iwlwifi        # kernel log (follow)
+lspci -nnk                  # PCI devices, IDs, kernel driver in use
+lsusb; lsusb -t             # USB devices; as a tree with drivers
+sudo lshw -C network        # hardware details by class
+```
 
-`arp -n`
+`dkms` rebuilds out-of-tree modules automatically for new kernels.
 
-### netstat - Display networking information
+## 9. Network
 
-`netstat -nltp`
+Prefer the `iproute2` commands. `ifconfig`, `netstat`, and `arp` (net-tools) are deprecated and often not installed.
 
-+ r: Routing table
-+ a: All sockets (not just connected)
-+ l: Listening server sockets
-+ t: TCP sockets
-+ u: UDP sockets
-+ w: Raw sockets
-+ x: Unix sockets
-+ e: Extended info
-+ n: Don't resolve names
-+ W: Wide display
-+ p: Show PID/program name of sockets
+| Old (net-tools) | Current |
+| --- | --- |
+| `ifconfig` | `ip addr`, `ip link` |
+| `route -n` | `ip route` |
+| `arp -n` | `ip neigh` |
+| `netstat -tulpn` | `ss -tulpn` |
+| `iwconfig` | `iw dev`, `iw dev wlan0 link` |
 
-### ss - another utility to investigate sockets
+```shell
+ss -tulpn                   # listening TCP/UDP sockets with process (-p needs root for other users' sockets)
+nmcli device; nmcli device wifi list    # NetworkManager
+ping -c 4 8.8.8.8
+```
 
-ss is used to dump socket statistics. It allows showing information similar to netstat.  
-It can display more TCP and state information than other tools.
+More: [../network_cmds.md](../network_cmds.md).
 
-### standard input/output and file descriptors
+## 10. Packages (Debian/Ubuntu)
 
-+ 0 (Standard Input - stdin) : This is the default channel for a program to receive input.
-+ 1 (Standard Output- stdout): This is the default channel for a program to display its normal output.
-+ 2 (Standard Error - stderr): This is the default channel for a program to display error messages and diagnostic information.
+```shell
+sudo apt update && sudo apt upgrade
+apt download build-essential                  # fetch a .deb into the current directory (no sudo)
+sudo apt install ./build-essential_*.deb      # install a local file: './' is required, and apt resolves dependencies
+sudo dpkg -i package.deb                      # low level: no dependency resolution (then: sudo apt -f install)
+dpkg -L package; dpkg -S /usr/bin/xxd         # files of a package; which package owns a file
+```
 
-### apt-get - APT package handling utility
+More: [../Linux/apt_dpkg_cmd.md](../Linux/apt_dpkg_cmd.md).
 
-+ `sudo apt-get update`
-+ `sudo apt-get upgrade`
-+ `sudo apt-get download build-essential`
-+ `sudo apt install build-essential_12.10ubuntu1_amd64.deb`
+## 11. Standard streams
 
-### dpkg - package manager for Debian
+Every process starts with 3 file descriptors: **0 stdin**, **1 stdout**, **2 stderr**.
+Redirection (`>`, `2>&1`, `|`, ...) is in [shellScript_basic.md](shellScript_basic.md#8-input-output-redirection).
 
-`sudo dpkg -i build-essential_12.10ubuntu1_amd64.deb`
+## Related notes
 
-### dmesg - print or control the kernel ring buffer
++ [shellScript_basic.md](shellScript_basic.md), [shellScript_recipes.md](shellScript_recipes.md), [grep_demo.md](grep_demo.md)
++ [../Linux/rsync_demo.md](../Linux/rsync_demo.md), [../Linux/wget_intro.md](../Linux/wget_intro.md), [../Linux/apt_dpkg_cmd.md](../Linux/apt_dpkg_cmd.md)
++ [../network_cmds.md](../network_cmds.md), [../openssl_note.md](../openssl_note.md), [../checksumCmd.md](../checksumCmd.md)
 
-`dmesg | grep iwlwifi`
+## Reference
 
-### dkms - Dynamic Kernel Module Support
-
-### wget - The non-interactive network downloader
-
-`wget -c -i urls.txt`
-
-### lspci - shows detailed information about all PCI buses and devices on the system
-
-`lspci -nnk`
-
-### lsusb - list USB devices
-
-### others
-
-+ shows all device drivers recognized by the kernel: `dmesg`
-+ list hardware: `lshw -C network`
++ [GNU coreutils manual](https://www.gnu.org/software/coreutils/manual/coreutils.html)
++ [man7.org: Linux man pages](https://man7.org/linux/man-pages/)
++ [iproute2 (ip, ss)](https://wiki.linuxfoundation.org/networking/iproute2)

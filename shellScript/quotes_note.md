@@ -1,50 +1,49 @@
-# single or double quotes
+# Quoting in shell scripts (and for regex)
 
-When working with shell scripts and regular expressions (regex),  
-the difference between double quotes (`""`) and single quotes (`''`) boils down to expansion, interpretation, and literal values.
+The shell processes a command line before running it: it expands variables, substitutes commands, splits words, and expands globs.
+Quotes control which of these steps happen. Tested with GNU Bash 5.2.
 
-## In Shell Scripts (Bash / Sh)
+## 1. The quoting forms
 
-In the shell, quotes control how characters and variables are interpreted before a command is executed.
+| Form | `$var`, `$(cmd)` | `\` escapes | Word splitting, globs (`*`) | Example → output |
+| --- | --- | --- | --- | --- |
+| Unquoted | Expanded | Yes | **Yes** | `x="a  b *"; echo $x` → `a b` + file names |
+| `"double"` | Expanded | Only before `$`, `` ` ``, `"`, `\`, newline | No | `echo "$x"` → `a  b *` |
+| `'single'` | Literal | No (a `'` can't appear inside) | No | `echo '$HOME'` → `$HOME` |
+| `$'ANSI-C'` *(Bash)* | Literal | C escapes: `\n`, `\t`, `\x41`, `\'` | No | `echo $'tab:\there'` → tab character |
+| `\c` | — | Quotes one character | — | `echo \$HOME` → `$HOME` |
 
-### Single Quotes ('' - Strong Quoting):
+A single quote inside a single-quoted string: close, escape, reopen: `'it'\''s'` → `it's` (or `$'it\'s'`).
 
-+ Literal preservation: **Everything inside single quotes is treated as a literal string**.
-+ **No expansion**: Variable interpolation (e.g., `$VAR`), command substitution (e.g., `$(pwd)`), and backslashes **lose** their special meaning.
-+ Example: `echo '$USER'` will literally output $USER, not your username.
+## 2. Rules of thumb
 
-### Double Quotes ("" - Weak Quoting):
++ **Quote every expansion**: `"$var"`, `"$(cmd)"`, `"$@"`, `"${arr[@]}"`.
+  Unquoted, a value with spaces becomes several arguments, and `*` turns into file names.
++ Use single quotes for fixed text that contains `$`, `` ` ``, `\`, or `!`:
+  `dpkg-query -Wf '${Installed-Size}\t${Package}\n'` passes the `${...}` to dpkg, not to the shell.
++ Leave a variable unquoted only when you **want** splitting or globbing, and say so in a comment.
++ Inside `[[ ]]` and in assignments (`a=$b`), no splitting happens, but quoting is still harmless.
 
-+ **Allows expansion**: Variables and command substitutions inside double quotes are evaluated and expanded.
-+ **Preserves spaces**: It prevents word splitting and globbing `(wildcards like *)`, keeping spaces intact within the argument.
-+ Example: `echo "Hello, $USER"` will output your actual username.
+## 3. Quotes and regular expressions
 
-## In Regular Expressions (Regex)
+A regex has no quote syntax of its own. The quotes belong to the **shell** (or the programming language) that passes the pattern to the tool.
+Regex metacharacters (`* ? [ ] $ ^ \ ( ) |`) overlap with shell syntax, so:
 
-Regular expressions themselves do **NOT** have a built-in syntactic distinction between single and double quotes -  
-they are just treated as literal characters unless part of a specific tool or programming language's string syntax.
++ **Single quotes by default**: the tool gets the pattern exactly as written.
+  `grep -E '^[0-9]+\.[0-9]+$' versions.txt`
++ **Double quotes** when part of the pattern comes from a variable: `grep "^$prefix" file`.
+  `$` followed by a name is then expanded, and `\` before `` $ ` " \ `` is removed by the shell.
++ If the variable's value must match **literally** (dots, brackets, ...), use `grep -F "$text"`, or escape it.
++ Mixing works: `grep '^[0-9]*'"$suffix"'$' file`.
 
-However, how you pass a regex into a command-line tool matters significantly:
+Regex syntax itself: [../Linux/Regex_intro.md](../Linux/Regex_intro.md).
 
-### Using Single Quotes for Regex in Shell:
+## Related notes
 
-+ Best practice: **Always** use single quotes for **regex patterns** in the terminal (e.g., `grep 'a[0-9]*' file.txt`).
-+ Why: Regex often uses special characters like `*, $, ?, and [ ]` that the shell also uses for globbing or variables.  
-  Single quotes protect these characters from being interpreted by the shell, passing the raw regex pattern directly to the tool.
++ [shellScript_basic.md](shellScript_basic.md), [brackets_note.md](brackets_note.md)
++ [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_demo.md](awk_demo.md)
 
-### Using Double Quotes for Regex in Shell:
+## Reference
 
-+ Use double quotes **only if** you need to dynamically inject a shell variable into your regex pattern.
-+ Example: `grep "$pattern" file.txt` will expand the variable `$pattern` before running grep.
-
-## Quick Reference
-
-| Context                     | Single Quotes (`''`)                     | Double Quotes (`""`)                    |
-| --------------------------- | ---------------------------------------- | --------------------------------------- |
-| Shell Variables             | Ignored (treated as literal text `$VAR`) | Expanded (replaced with variable value) |
-| Special Characters (`*, ?`) | Treated as literal characters            | Note_1                                  |
-| Best Use for Regex          | Note_2a                                  | Note_2b                                 |
-
-Note_1: Treated as literal characters, but shell variables/command substitutions still expand
-Note_2a: Default choice for patterns to protect special regex characters from the shell
-Note_2b: Use only when you need to embed shell variables inside the pattern
++ [Bash manual: Quoting](https://www.gnu.org/software/bash/manual/html_node/Quoting.html)
++ [POSIX: Quoting](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html#tag_19_02)

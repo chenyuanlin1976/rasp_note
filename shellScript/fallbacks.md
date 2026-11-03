@@ -1,41 +1,99 @@
-# Fallbacks
+# Fallbacks in shell scripts and C
 
-In programming and software development, a fallback is a designated alternative mechanism, value, or behavior  
-that is automatically triggered when the primary system, process, or value fails, is unavailable, or encounters an error.
+A **fallback** is the alternative a program uses when the preferred value, resource, or code path is missing or fails:
+a default value, a second tool, a software implementation.
+A good fallback is **explicit and logged**. A fallback that silently hides an error makes bugs harder to find.
 
-Fallbacks are essential for building fault-tolerant, robust, and user-friendly applications.
+| Kind | Shell | C |
+| --- | --- | --- |
+| Default value | `${VAR:-default}` | `getenv()` + `?:`, `#ifndef` |
+| Alternative resource | `[ -r a ] \|\| use b` | `fopen()` returns `NULL` → try the next path |
+| Alternative tool / implementation | `command -v x \|\| ...` | Function pointer, chosen at init |
+| Retry, then give up | `until`/`for` loop | Loop on the error code |
 
-## Common Use Cases & Examples
+The shell examples were run with Bash 5.2. The C example was compiled with `gcc -Wall -Wextra`.
 
-1. **Default Values** (Variables and Functions): If a variable or function parameter is not provided or evaluates to null/undefined,  
-   a fallback value ensures the program doesn't crash.
-2. **Error Handling** (Try-Catch / Exceptions): When a primary operation fails (like a database query or network request),  
-   a fallback code block catches the exception and executes a safe alternative.
-3. UI/UX Design (Graceful Degradation): In frontend development, fallbacks ensure that if a browser doesn't support a modern feature,  
-   an older or simpler styling/functionality is used instead.
-4. API Gateways and Microservices: In distributed systems, if a primary microservice goes down or times out,  
-   a circuit breaker pattern redirects traffic to a fallback service or returns a cached response.
+## 1. Shell
 
-## Key Benefits
+```shell
+port="${PORT:-8080}"                  # unset or empty -> 8080
+: "${LOG_DIR:=/tmp/logs}"             # also assign the default (':' is a no-op command)
+: "${API_KEY:?API_KEY must be set}"   # no fallback: stop with an error
 
-+ Improved Reliability: Prevents catastrophic crashes (Unhandled Exceptions).
-+ Better User Experience: Keeps the application functional even when ideal conditions aren't met.
-+ Easier Maintenance: Centralizes default behaviors rather than scattering error-check conditionals throughout the codebase.
+editor=$(command -v nvim || command -v vim || command -v vi || echo nano)   # first tool that exists
 
-## In C language
+cfg="/etc/myapp.conf"
+[ -r "$cfg" ] || { echo "warn: $cfg missing, using defaults" >&2; cfg="./default.conf"; }
 
-In the C programming language, because it lacks modern high-level features like built-in exception handling (try-catch)  
-or nullish coalescing operators (??),  
-fallbacks are typically implemented using *conditional statements, preprocessor directives, or function pointers*.
+fetch() {                              # alternative implementation
+    if command -v curl >/dev/null; then curl -fsSL "$1"
+    elif command -v wget >/dev/null; then wget -qO- "$1"
+    else echo "need curl or wget" >&2; return 1
+    fi
+}
 
-1. Default Values Using Ternary Operators or if-else:  
-   When a function argument or configuration value might be invalid, zero, or uninitialized, a conditional check acts as the fallback.
-2. Macro Fallbacks Using Conditional Compilation (`#ifdef`):  
-   The preprocessor can check if a macro or constant is defined.  
-   If it isn't, a fallback definition is provided. This is widely used for cross-platform compatibility or configuration headers.
-3. Error Handling and Return Code Fallbacks:  
-   Because C functions return status codes (like NULL for pointers or -1 for integers)  
-   rather than throwing exceptions, developers use if statements to trigger fallback behavior upon failure.
-4. Function Pointers as Dynamic Fallbacks:  
-   You can use function pointers to swap out behavior dynamically.  
-   If a primary hardware driver or algorithm fails to initialize, you can fallback to a software-emulated routine.
+for i in 1 2 3; do                     # retry, then fail loudly
+    fetch "$url" > out.json && break
+    echo "attempt $i failed" >&2; sleep 2
+done
+```
+
+`cmd1 || cmd2` runs `cmd2` when `cmd1` fails. `a && b || c` is **not** if/else: `c` also runs when `b` fails.
+More on `${...}`: [brackets_note.md](brackets_note.md#4-dollar-curly-braces).
+
+## 2. C
+
+C has no exceptions or `??` operator. Fallbacks are explicit checks of return values, the preprocessor, and function pointers:
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+#ifndef BUF_SIZE                       /* compile-time default, override with -DBUF_SIZE=512 */
+#define BUF_SIZE 256
+#endif
+
+static const char *env_or(const char *name, const char *fallback)
+{
+    const char *v = getenv(name);
+    return (v != NULL && v[0] != '\0') ? v : fallback;
+}
+
+static int crc_hw(const void *d, size_t n, unsigned *out);   /* hardware accelerator: may fail */
+static int crc_sw(const void *d, size_t n, unsigned *out);   /* portable software version */
+
+int main(void)
+{
+    printf("port=%s buf=%d\n", env_or("PORT", "8080"), BUF_SIZE);
+
+    FILE *f = fopen("/etc/myapp.conf", "r");                  /* resource fallback */
+    if (f == NULL) {
+        fprintf(stderr, "warn: /etc/myapp.conf missing, using ./default.conf\n");
+        f = fopen("./default.conf", "r");
+    }
+    if (f == NULL) {
+        perror("config");                                      /* no fallback left: fail */
+        return EXIT_FAILURE;
+    }
+    fclose(f);
+
+    int (*crc)(const void *, size_t, unsigned *) = crc_hw;    /* implementation fallback */
+    unsigned c;
+    if (crc("abc", 3, &c) != 0) {
+        crc = crc_sw;
+        crc("abc", 3, &c);
+    }
+    return 0;
+}
+```
+
+The `crc_hw` / `crc_sw` bodies are omitted. In a driver, the same pattern picks a DMA path and falls back to PIO when DMA setup fails.
+
+## Related notes
+
++ [shellScript_basic.md](shellScript_basic.md), [brackets_note.md](brackets_note.md), [shellScript_recipes.md](shellScript_recipes.md)
+
+## Reference
+
++ [Bash manual: Shell Parameter Expansion](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html)
++ [`getenv(3)`](https://man7.org/linux/man-pages/man3/getenv.3.html), [`fopen(3)`](https://man7.org/linux/man-pages/man3/fopen.3.html)

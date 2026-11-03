@@ -1,95 +1,82 @@
-# awk - pattern scanning and text processing language
+# awk: pattern scanning and processing
 
-<https://invisible-island.net/mawk/manpage/mawk.html>
+`awk` is a small language for column-oriented text: it reads input **record by record** (normally line by line),
+splits each record into **fields**, and runs `pattern { action }` rules on it.
+It is good for reports, sums, and reformatting columns. For simple search, use `grep`. For substitutions, use `sed`.
 
-Awk is a **scripting language** used for **manipulating data and generating reports**.  
-The awk command programming language requires no compiling and allows the user to use variables, numeric functions, string functions, and logical operators.  
+Implementations: **gawk** (GNU, most features), **mawk** (fast; the default `awk` on Debian/Ubuntu), BusyBox awk (embedded/Android).
+All examples were run with gawk 5.2 and mawk.
 
-Awk is a utility that enables a programmer to write tiny but effective programs in the form of statements  
-that define text **patterns** that are to be searched for in each line of a document  
-and the **action** that is to be taken when a match is found within a line.  
+## 1. Syntax
 
-Awk is mostly used for pattern scanning and processing.  
-It searches one or more files to see if they contain lines that matches with the specified patterns and then perform the associated actions.  
+```shell
+awk [-F sep] [-v var=value] 'pattern { action } ...' [file...]
+awk -f program.awk [file...]
+```
 
-AWK is a data-driven scripting language originally designed for **pattern searching and text manipulation**.  
-It requires no compilation and allows us to use variables, functions, and logical operators.  
-The AWK language has different **interpreters** like awk, nawk, gawk, and mawk on different operating systems.
+| Part | Meaning |
+| --- | --- |
+| `-F sep` | Field separator (default: runs of spaces/tabs). `-F:`, `-F','`, `-F'\t'` |
+| `-v var=value` | Pass a shell value into the program (safer than splicing it into the quotes) |
+| `pattern` | Regex `/re/`, condition `$3 > 10`, range `NR==2, NR==5`, `BEGIN`, `END`. No pattern = every record |
+| `{ action }` | Statements. No action = `{ print }` (print the record) |
 
-## syntax
+Always put the program in **single quotes**, so the shell leaves `$1` alone (see [quotes_note.md](quotes_note.md)).
 
-`awk options 'pattern {action }' inputfile > outputfile`  
+## 2. Built-in variables
 
-| Option  | Description                       |
-|---------|-----------------------------------|
-| -F      | Sets a custom field separator     |
-| -f      | Reads awk program from a file     |
-| '{}'    | Encloses action to take on match  |
+| Variable | Meaning |
+| --- | --- |
+| `$0` | The whole record. `$1`, `$2`, ... are the fields |
+| `NF` | Number of fields in the record. `$NF` is the last field |
+| `NR` | Record number over all input. `FNR` restarts for each file |
+| `FS` / `OFS` | Input / output field separator (`OFS` goes between `print` arguments separated by commas) |
+| `RS` / `ORS` | Input / output record separator (default newline) |
+| `FILENAME` | Current input file |
 
-## WHAT CAN WE DO WITH AWK
+## 3. Examples
 
-1. AWK Operations:
-    + Scans a file line by line
-    + Splits each input line into fields
-    + Compares input line/fields to pattern
-    + Performs action(s) on matched lines
+Input `a.txt`:
 
-1. Useful For:
-    + Transform data files
-    + Produce formatted reports
+```text
+alice 30 B6 x
+bob 25 A1 y
+carol 41 B6 z
+```
 
-1. Programming Constructs:
-    + Format output lines
-    + Arithmetic and string operations
-    + Conditionals and loops
+```shell
+awk '{ print $1, $NF }' a.txt                    # first and last field
+awk '/bob/' a.txt                                # lines matching a regex (like grep)
+awk '$3 == "B6"' a.txt                           # field equals a value
+awk 'NR==2, NR==3 { print NR": "$0 }' a.txt      # line range, with line numbers
+awk 'END { print NR }' a.txt                     # count lines
+awk 'length($0) > 12' a.txt                      # lines longer than 12 characters
+awk '{ if (length($0) > max) max = length($0) } END { print max }' a.txt   # longest line
+awk -v min=28 '$2 > min { print $1 }' a.txt     # shell value via -v
+awk '{ s += $2 } END { print s, s/NR }' a.txt    # sum and average of column 2: 96 32
+awk '{ c[$3]++ } END { for (k in c) print k, c[k] }' a.txt   # count per value (order not defined)
+awk 'BEGIN { OFS = "," } { print $1, $2 }' a.txt            # CSV output
+awk '{ printf "%-6s %3d\n", $1, $2 }' a.txt      # formatted columns
+awk -F: '{ print $1 }' /etc/passwd               # other separator
+awk 'BEGIN { for (i = 1; i <= 6; i++) print "square of", i, "is", i*i }'   # no input needed
+```
 
-## Examples
+With other commands:
 
-1. Print All Lines (Default Behavior)  
-    `awk '{print}' filename`
-1. Search Lines with a Keyword  
-    `awk '/hello/ {print}' filename`
+```shell
+ps -eo pid,comm,%mem --sort=-%mem | awk 'NR > 1 && $3 > 1.0'   # processes using > 1 % memory
+df -h | awk 'NR > 1 { print $5, $6 }'                          # usage per mount point
+adb devices | awk 'NR > 1 && $2 == "device" { print $1 }'      # serials of connected devices
+```
 
-1. Print Specific Columns  
-   For each line, the awk command splits the line **delimited by space character** by default and stores it in the $n variables.  
-   If the line has 4 words, it will be stored in $1, $2, $3 and $4 respectively. Also, $0 represents the whole line.  
-    `awk '{print $1,$4}' filename`  
-    `ls -l | awk '{print $1,$NF}'`  
-    `ls -l | awk '{print $1,"filename="$9}'`  
-    `ps | awk {print $1}`
+Don't parse `ls -l` for file names (names may contain spaces). Use `find` or a glob.
+For sizes: `find . -type f -size +1M`.
 
-## Built-In Variables In Awk
+## Related notes
 
-Awk's built-in variables include the field variables $1, $2, $3, and so on ($0 is the entire line), that break a line of text into individual words or pieces called fields.
++ [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [quotes_note.md](quotes_note.md), [sumup_1st_col.sh](sumup_1st_col.sh)
 
-+ **NR**: NR command keeps a current count of the number of input records. Remember that records are usually **lines**.  
-  Awk command performs the pattern/action statements once for each record in a file.  
-+ **NF**: NF command keeps a count of the number of fields within the current input record.  
-+ **FS**: FS command contains the field separator character which is used to divide fields on the input line.  
-  The default is "white space", meaning space and tab characters. FS can be reassigned to another character (typically in BEGIN) to change the field separator.  
-+ **RS**: RS command stores the current record separator character. Since, by default, an input line is the input record, the default record separator character is a newline.  
-+ **OFS**: OFS command stores the output field separator, which separates the fields when Awk prints them.  
-  The default is a blank space. Whenever print has several parameters separated with commas, it will print the value of OFS in between each parameter.  
-+ **ORS**: ORS command stores the output record separator, which separates the output lines when Awk prints them.  
-  The default is a newline character. print automatically outputs the contents of ORS at the end of whatever it is given to print.  
+## Reference
 
-### examples
-
-+ Display Line Number  
-    `awk '{print NR,$0}' filename`
-+ Display 1st and Last Field  
-    `awk '{print $1,$NF}' filename`
-+ Display Line From 3 to 6  
-    `awk 'NR==3, NR==6 {print NR,$0}' filename`
-+ To find the length of the longest line present in the file  
-    `awk '{ if (length($0) > max) max = length($0) } END { print max }' filename`
-+ To count the lines in a file  
-    `awk 'END { print NR }' filename`
-+ Printing lines with more than 10 characters  
-    `awk 'length($0) > 10' filename`
-+ To find/check for any string in any specific column  
-    `awk '{ if($3 == "B6") print $0;}' filename`
-+ To print the squares of first numbers from 1 to n say 6  
-    `awk 'BEGIN { for(i=1;i<=6;i++) print "square of", i, "is",i*i; }'`
-+ Print the line if file size > 1M
-    `ls -l | awk '{if ($5 > 1000000) print $NF}'`
++ [The GNU Awk User's Guide](https://www.gnu.org/software/gawk/manual/gawk.html)
++ [POSIX awk](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/awk.html)

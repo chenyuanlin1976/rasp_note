@@ -55,7 +55,7 @@ m                                                          # parallel by default
   Run `lunch` without arguments to list targets.
 + Variants: `user` (production), `userdebug` (production-like, with root/debugging), `eng` (development); see [AOSP_build_system.md](AOSP_build_system.md).
 + `m` already runs as many jobs as there are CPUs. Lower it (`m -j16`) if the machine runs out of memory.
-+ Partial builds: `m <module>`, `mm` (current directory), `mmm <dir>`; see [AOSP_build_helplerCmds.md](AOSP_build_helplerCmds.md).
++ Partial builds: `m <module>`, `mm` (current directory), `mmm <dir>`; see [AOSP_envsetup_cmds.md](AOSP_envsetup_cmds.md).
 
 ## 5. Results
 
@@ -69,7 +69,7 @@ adb reboot bootloader && fastboot flashall -w    # physical device with a matchi
 
 ## Related notes
 
-+ [Googles_Repo.md](Googles_Repo.md), [AOSP_build_system.md](AOSP_build_system.md), [AOSP_build_helplerCmds.md](AOSP_build_helplerCmds.md), [Android_bp_intro.md](Android_bp_intro.md)
++ [Googles_Repo.md](Googles_Repo.md), [AOSP_build_system.md](AOSP_build_system.md), [AOSP_envsetup_cmds.md](AOSP_envsetup_cmds.md), [Android_bp_intro.md](Android_bp_intro.md)
 + [Bazel_intro.md](Bazel_intro.md): Bazel/Kleaf for Android kernels
 + [verify_platformKeys.md](verify_platformKeys.md): release-signing the build
 

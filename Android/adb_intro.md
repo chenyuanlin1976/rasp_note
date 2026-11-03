@@ -182,7 +182,7 @@ After editing `~/.bashrc`, run `source ~/.bashrc` or open a new terminal.
 
 + [adb_shell_cmds.md](adb_shell_cmds.md): `am`, `pm`, `cmd`, `settings`, `dumpsys`, `svc`, `input`, ...
 + [logcat_intro.md](logcat_intro.md)
-+ [AOSP_build_helplerCmds.md](AOSP_build_helplerCmds.md), [virtual_AB.md](virtual_AB.md)
++ [AOSP_envsetup_cmds.md](AOSP_envsetup_cmds.md), [virtual_AB.md](virtual_AB.md)
 
 ## Reference
 

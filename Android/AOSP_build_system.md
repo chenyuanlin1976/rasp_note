@@ -59,7 +59,7 @@ and the commit shows every file whose line endings or mode change.
 
 ## Related notes
 
-+ [AOSP_build.md](AOSP_build.md), [Android_bp_intro.md](Android_bp_intro.md), [AOSP_build_helplerCmds.md](AOSP_build_helplerCmds.md)
++ [AOSP_build.md](AOSP_build.md), [Android_bp_intro.md](Android_bp_intro.md), [AOSP_envsetup_cmds.md](AOSP_envsetup_cmds.md)
 + [Googles_Repo.md](Googles_Repo.md), [Bazel_intro.md](Bazel_intro.md)
 + [SELinux_intro.md](SELinux_intro.md): SELinux (MAC vs DAC) on Android
 

@@ -1,97 +1,140 @@
-# Bazel syntax
+# Bazel `BUILD` files and Starlark
 
-BUILD.bazel (or BUILD) files are written in **Starlark**, a lightweight, deterministic language inspired by Python.  
-While it looks like Python, it has strict limitations designed to ensure builds are fast, parallelizable, and hermetic (reproducible).
+`BUILD` / `BUILD.bazel` files and `.bzl` extension files are written in **Starlark**, a Python-like language.
+It is restricted so that files can be evaluated in parallel and always give the same result.
+Concepts, workspace layout, and commands are in [Bazel_intro.md](Bazel_intro.md).
 
-## 1. Core Syntax & Structure
-
-A `BUILD.bazel` file consists primarily of `load statements`, `package metadata declarations`, and `build rule targets`.
+## 1. A `BUILD.bazel` file
 
 ```python
-# 1. Load extensions (.bzl files) if needed
-load(":my_rules.bzl", "custom_rule")
+# lib/math/BUILD.bazel  ->  package //lib/math
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")   # load() statements come first
 
-# 2. Package-wide settings (optional, must be near the top)
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = ["//app:__pkg__"])            # then package(), then targets
 
-# 3. Target declarations (rules)
 cc_library(
-    name = "string_utils",
-    srcs = ["string_utils.cc"],
-    hdrs = ["string_utils.h"],
+    name = "math_utils",
+    srcs = ["math_utils.cc"],
+    hdrs = ["math_utils.h"],
 )
 
-cc_binary(
-    name = "app",
-    srcs = ["main.cc"],
+cc_test(
+    name = "math_utils_test",
+    srcs = ["math_utils_test.cc"],
     deps = [
-        ":string_utils",  # Local target reference
+        ":math_utils",
+        "@googletest//:gtest_main",
     ],
 )
 ```
 
-## 2. Key Components of a Target
-
-Every target in a `BUILD.bazel` file follows this template.
-
 ```python
-rule_name(
-    name = "target_name",           # Unique identifier within this package
-    srcs = ["file1.cc", ...],       # Source files required to build
-    deps = ["//some/other:target"], # Dependencies on other targets
-    data = ["config.json"],         # Runtime/test data files
+# app/BUILD.bazel  ->  package //app
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
+cc_binary(
+    name = "calculator",
+    srcs = ["main.cc"],
+    deps = ["//lib/math:math_utils"],
 )
 ```
 
-+ **name**: The name of the target. Must be unique within that specific BUILD.bazel file.
-+ **srcs**: Source files processed directly by this rule (e.g., .cc, .java, .py).
-+ **deps**: Other targets that this target depends on to compile or run.
-+ **data**: Files needed at runtime (not compile time), such as configuration files, scripts, or test assets.
+## 2. Common attributes
 
-## 3. Labels and Targeting Syntax
+| Attribute | Meaning |
+| --- | --- |
+| `name` | Target name, unique within the **package** |
+| `srcs` | Source files that this rule processes |
+| `hdrs` | (C/C++) public headers that dependents may include |
+| `deps` | Targets needed to compile/link (libraries) |
+| `data` | Files needed at **run time** (configs, test data). They appear in the runfiles tree |
+| `visibility` | Which packages may depend on this target. Default: private to the package |
+| `testonly` | Only test targets (and other `testonly` targets) may depend on it |
+| `tags` | Free-form labels, for example `"manual"` (not built by `//...`) |
 
-Bazel uses **Labels** to point to targets, packages, and files.
+`visibility` values: `["//visibility:public"]`, `["//visibility:private"]`, `["//some/pkg:__pkg__"]` (that package),
+`["//some/pkg:__subpackages__"]` (that package and below).
 
-+ Local Target: ":string_utils" (targets in the current BUILD file).
-+ Package-Relative Target: "//code/core:string_utils" (absolute path from the workspace root).
-+ Shorthand Target: "//code/core" (equivalent to "//code/core:core" if the target name matches the directory name).
+## 3. Labels
 
-## 4. Starlark vs. Python (Crucial Restrictions)
+| Form | Meaning |
+| --- | --- |
+| `:math_utils` | Target in the **same** package |
+| `//lib/math:math_utils` | Absolute label: package `lib/math` in the main repository |
+| `//lib/math` | Short for `//lib/math:math` (target named like the last directory) |
+| `math_utils.h`, `//lib/math:math_utils.h` | A source file is also a target |
+| `@googletest//:gtest_main` | Target in an external repository (apparent name from `MODULE.bazel`) |
+| `//lib/...`, `//lib/math:all` | Patterns for the command line: everything below `//lib`, all targets in a package |
 
-Because `BUILD.bazel` files are evaluated concurrently,  
-**Starlark** is heavily restricted compared to standard Python.
-
-+ No top-level def statements: You cannot define custom functions inside a BUILD.bazel file.  
-  (Custom functions/rules must be written in .bzl files and imported via load()).
-+ No `for` or `if` statements at the top level: Control flow is restricted.  
-  However, list comprehensions and conditional expressions (ternary operators) are allowed:
+## 4. Built-in functions
 
 ```python
-# Allowed:
-srcs = ["main.cc"] + (["debug.cc"] if DEBUG_MODE else [])
+srcs = glob(["*.cc"], exclude = ["*_test.cc"])      # files in this package (glob doesn't enter subpackages)
 
-# NOT allowed at top-level:
-# if DEBUG_MODE:
+copts = select({                                     # value chosen by build configuration
+    "@platforms//cpu:arm64": ["-march=armv8-a"],
+    "//conditions:default": [],
+})
+```
+
++ `glob()` sees only files of the current package. It stops at subdirectories that have their own `BUILD` file.
++ `select()` picks an attribute value from the configuration (CPU, OS, `--define`, `config_setting` targets).
++ `package()` sets defaults for the package, such as `default_visibility`. `exports_files([...])` makes plain files usable by other packages.
+
+## 5. Starlark restrictions
+
+| Python habit | In Starlark |
+| --- | --- |
+| `def` in a `BUILD` file | Not allowed. Functions (macros) and rules go in `.bzl` files and are `load()`ed |
+| `for` / `if` **statements** at top level | Not allowed (also in `.bzl`; use them inside functions). Comprehensions and `x if c else y` are fine |
+| `import`, file I/O, environment, network | Not available. `BUILD` files see only `glob()`, attributes, and loaded symbols |
+| Mutating shared state | A file's values are **frozen** when it finishes loading. A list from another `.bzl` can't be appended to |
+| `*args`, `**kwargs` in calls | Not allowed in `BUILD` files |
+| Dict / set iteration order | Deterministic (insertion order) |
+
+```python
+# Allowed in a BUILD file
+srcs = ["main.cc"] + (["debug.cc"] if DEBUG else [])        # DEBUG loaded from a .bzl file
+names = ["test_%d" % i for i in range(3)]
+
+# Not allowed in a BUILD file
+# if DEBUG:
 #     srcs.append("debug.cc")
 ```
 
-+ No arbitrary I/O: BUILD files cannot read environment variables, access arbitrary local disk paths  
-  (outside of safe built-ins like glob()), or make network requests.
-+ Immutability: Once a data structure or global variable is initialized,  
-  it becomes immutable to prevent race conditions during parallel processing.
-
-## 5. Common Built-in Functions
-
-+ glob(): Dynamically matches files in a directory.
+## 6. Macros and rules (`.bzl`)
 
 ```python
-cc_library(
-    name = "all_tests",
-    srcs = glob(["test_*.cc"]),
-    hdrs = glob(["*.h"]),
-)
+# tools/defs.bzl
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+
+def tool_binary(name, srcs, **kwargs):                 # a macro: expands into existing rules
+    cc_binary(
+        name = name,
+        srcs = srcs,
+        copts = ["-Wall", "-Werror"],
+        **kwargs
+    )
 ```
 
-+ load(): Imports rules, macros, or constants from a .bzl extension file.  
-  Must always be placed at the very top of the file (right after comments).
-  `load("@rules_java//java:defs.bzl", "java_binary")`
+```python
+# tools/BUILD.bazel
+load("//tools:defs.bzl", "tool_binary")
+
+tool_binary(name = "dump", srcs = ["dump.cc"])
+```
+
++ A **macro** is a function that calls existing rules. It runs while the `BUILD` file is loaded.
++ A **rule** (`rule(implementation = ..., attrs = ...)`) defines new actions and providers. It is evaluated in the analysis phase.
++ Format `BUILD` and `.bzl` files with **buildifier**, which also sorts `load()`s and lists and reports common mistakes.
+
+## Related notes
+
++ [Bazel_intro.md](Bazel_intro.md), [Android_bp_intro.md](Android_bp_intro.md)
+
+## Reference
+
++ [BUILD files](https://bazel.build/concepts/build-files), [Labels](https://bazel.build/concepts/labels), [Visibility](https://bazel.build/concepts/visibility)
++ [Starlark language (differences with Python)](https://bazel.build/rules/language)
++ [Built-in functions: glob, select, package, ...](https://bazel.build/reference/be/functions)
++ [Configurable attributes (select)](https://bazel.build/docs/configurable-attributes), [Macros](https://bazel.build/extending/macros)

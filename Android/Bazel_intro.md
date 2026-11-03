@@ -1,108 +1,96 @@
-# Bazel introduction
+# Bazel
 
-## Part 1: Understanding Bazel and BUILD.bazel
+Bazel is Google's open-source build and test tool (the public version of its internal tool Blaze).
+It builds large, multi-language code bases from an explicit **dependency graph**,
+rebuilds only what changed, and can share results through a cache.
+`BUILD` file syntax (Starlark) is in [Bazel_syntax.md](Bazel_syntax.md).
 
-### What is Bazel
+## 1. Key ideas
 
-Bazel is an open-source, fast, scalable build and test system created by Google (derived from its internal tool, Blaze).  
-It is designed to handle massive codebases with complex dependency graphs efficiently.  
-Key design philosophies of Bazel include:
++ **Explicit dependencies**: every target lists its sources and dependencies. Bazel builds the graph and runs independent actions in parallel.
++ **Incremental and cached**: an action reruns only when its inputs change (content hashes, not timestamps).
+  Results can come from a local disk cache or a shared remote cache, and actions can run on remote executors.
++ **Sandboxing / hermeticity**: actions run in a sandbox that exposes only the declared inputs, so undeclared dependencies fail.
+  Builds are reproducible only if the **toolchains** are pinned too.
+  An auto-detected host C++ compiler, for example, makes the output depend on the machine.
++ **Multi-language through rule sets**: C/C++, Java, Python, Go, Rust, ... are supported by rule sets
+  (`rules_cc`, `rules_java`, `rules_python`, `rules_go`, `rules_rust`).
+  Recent Bazel versions move even the C++/Java/Python rules out of the core into these modules, so `BUILD` files `load()` them.
 
-+ Hermetic and Reproducible Builds: Bazel ensures that builds are isolated from the host system environment,  
-  meaning the same source code will always produce the exact same output binary regardless of the machine building it.
-+ Incremental Caching: It tracks inputs and outputs meticulously, only recompiling what has actually changed.
-+ Multi-Language Support: It natively builds C++, Java, Python, Go, Rust, and more.
+## 2. Workspace layout
 
-### What is a BUILD.bazel file
+```text
+my_project/
+├── MODULE.bazel          # root of the workspace: module name + external dependencies (Bzlmod)
+├── .bazelversion         # Bazel version, used by Bazelisk
+├── .bazelrc              # default flags
+├── app/
+│   ├── BUILD.bazel       # package //app
+│   └── main.cc
+└── lib/math/
+    ├── BUILD.bazel       # package //lib/math
+    ├── math_utils.cc
+    └── math_utils.h
+```
 
-A BUILD.bazel (or simply BUILD) file is a plain text script placed inside project directories  
-to tell Bazel **how to build software components within that directory**.  
-It uses Starlark, a safe, restricted subset of Python.  
-Inside a BUILD.bazel file, you define targets using rules.
-
-+ Rules: Functions that define how to transform a set of input files into output files  
-  (e.g., compiling C++ code, packaging an archive, or building a kernel).  
-  Examples include cc_library, java_binary, or custom-written macros.
-+ Targets: Specific instances of rules. For example, a target might be a specific C++ library module.
-+ Dependencies (deps): Explicitly declared links between targets,  
-  letting Bazel know which targets must be built before another can start.
-
-### Example of a BUILD.bazel file
++ The **workspace** is the directory tree with `MODULE.bazel` at its root.
++ A **package** is a directory that contains a `BUILD` or `BUILD.bazel` file, plus its subdirectories without their own `BUILD` file.
++ A **target** is something defined in a `BUILD` file (a rule instance) or a source file. It's addressed by a **label**: `//lib/math:math_utils`.
 
 ```python
-package(default_visibility = ["//visibility:public"])
+# MODULE.bazel
+module(name = "my_project", version = "0.1.0")
 
-cc_library(
-    name = "math_utils",
-    srcs = ["math_utils.cc"],
-    hdrs = ["math_utils.h"],
-)
-
-cc_binary(
-    name = "calculator",
-    srcs = ["main.cc"],
-    deps = [
-        ":math_utils",
-    ],
-)
+bazel_dep(name = "rules_cc", version = "0.1.1")      # versions come from the Bazel Central Registry
+bazel_dep(name = "googletest", version = "1.15.2", dev_dependency = True)
 ```
 
-### Bazel's Role in Android (AOSP)
+External dependencies are declared with **Bzlmod** (`MODULE.bazel`), the default since Bazel 7.
+The older `WORKSPACE` file is legacy and is being removed. Old projects and tutorials still use it.
 
-While core AOSP traditionally uses Soong (Android.bp files) combined with Ninja for platform compilation,  
-Bazel plays a crucial role in modern Android development -  
-most notably powering Kleaf, the Bazel-based build framework for building Android kernels starting from Android 13.
+## 3. Everyday commands
 
-## Part 2: How to Compile AOSP (Android Open Source Project)
-
-Compiling the full AOSP source tree requires a heavy-duty Linux workstation, substantial disk space, and patience.
-
-### Step 1: System Requirements & Preparation
-
-+ Operating System: Linux (Ubuntu LTS 20.04/22.04 or compatible distributions are standard).
-+ Hardware:
-  + At least 64GB of RAM (compilation is extremely memory-intensive).
-  + 300 GB to 500 GB of free disk space (preferably on a fast NVMe SSD).
-+ Packages Installation: Install essential build tools (Git, Python, OpenJDK, GNU Make, etc.).
-
-### Step 2: Install the Repo Tool
-
-Google uses **repo** to manage multiple Git repositories within AOSP.
-
-```bash
-mkdir -p ~/.bin
-PATH="${HOME}/.bin:${PATH}"
-curl https://storage.googleapis.com/git-repo-downloads/repo > ~/.bin/repo
-chmod a+rx ~/.bin/repo
+```shell
+bazel build //app:calculator                # build one target
+bazel build //...                           # build everything in the workspace
+bazel run //app:calculator -- --verbose     # build and run (arguments after --)
+bazel test //lib/... --test_output=errors   # run tests below //lib
+bazel query 'deps(//app:calculator)'        # dependency graph
+bazel query 'rdeps(//..., //lib/math:math_utils)'   # who depends on a target
+bazel clean                                 # remove outputs (--expunge: also the cache)
 ```
 
-### Step 3: Download the AOSP Source Tree
++ Outputs go to `bazel-bin/`, `bazel-out/`, ... (symlinks into Bazel's output base, outside the source tree).
++ Use **Bazelisk** as the `bazel` command. It downloads the version named in `.bazelversion`, so everyone builds with the same Bazel.
 
-1. Create a working directory: `mkdir aosp && cd aosp`
-2. Initialize the repository (replace `<branch-name>` with your desired branch,  
-   e.g., main or a specific release tag like android-14.0.0_r20):  
-   `repo init -u https://android.googlesource.com/platform/manifest -b <branch-name>`
-3. Sync the source code (this will download tens of gigabytes and may take hours depending on your internet connection):
-   `repo sync -c -j8`
+## 4. Bazel in Android
 
-### Step 4: Set Up the Build Environment
+| Area | Build system |
+| --- | --- |
+| AOSP platform (system, vendor, apps in the tree) | **Soong** (`Android.bp`) + Ninja. Not Bazel. See [Android_bp_intro.md](Android_bp_intro.md) |
+| Android kernels (GKI and device kernels) | **Kleaf**, Bazel-based, since **Android 13**. `build/build.sh` isn't supported for Android 14 and later |
+| Android apps (Android Studio) | Gradle. Bazel's `rules_android` exists, but it's used mainly in large monorepos |
 
-Initialize the environment variables and target definitions using the built-in envsetup script:  
-`source build/envsetup.sh`
+Earlier plans to migrate the whole AOSP platform build from Soong to Bazel were stopped. `Android.bp` stays.
+Its syntax looks like Bazel's (rule-like module types with `name = ...` attributes), but it is a different tool.
 
-### Step 5: Select a Build Target
+Build the GKI kernel with Kleaf (in an Android Common Kernel checkout, Android 13 or later):
 
-Use the lunch command to choose which device architecture or emulator target you want to build for  
-(e.g., aosp_arm64-userdebug for a generic 64-bit ARM device configuration):  
-`lunch aosp_arm64-userdebug`
+```shell
+tools/bazel run //common:kernel_aarch64_dist -- --destdir=$DIST_DIR
+```
 
-### Step 6: Start Compilation
+`tools/bazel` is the Bazel wrapper that ships with the kernel tree, together with prebuilt toolchains.
+Device kernels and vendor modules (DDK) use the same system.
 
-Trigger the build using the m command. The -j flag tells Make/Soong how many parallel threads to spawn  
-(match this to your CPU core count): `m -j$(nproc)`
+## Related notes
 
-### Step 7: Locate Output Images
++ [Bazel_syntax.md](Bazel_syntax.md): `BUILD` files and Starlark
++ [Android_bp_intro.md](Android_bp_intro.md), [AOSP_build.md](AOSP_build.md), [AOSP_note.md](AOSP_note.md)
 
-Once the build completes successfully, you will find the compiled images  
-(such as boot.img, system.img, and userdata.img) inside the `out/target/product/<device_name>/` directory.  
-You can flash these onto a physical reference device or run them inside the Android Emulator (emulator).
+## Reference
+
++ [Bazel documentation](https://bazel.build/docs)
++ [External dependencies and Bzlmod](https://bazel.build/external/overview)
++ [Building kernels (AOSP, Kleaf)](https://source.android.com/docs/setup/build/building-kernels)
++ [Kleaf documentation (kernel/build)](https://android.googlesource.com/kernel/build/+/refs/heads/main/kleaf/README.md)

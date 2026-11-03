@@ -101,7 +101,7 @@ udevadm info -a -p /sys/class/net/eth0
 
 + [sysfs_leds.md](sysfs_leds.md): the LED class, a typical sysfs-only subsystem
 + [HAL_mmio_vs_sysfs.md](HAL_mmio_vs_sysfs.md): sysfs/chardev vs direct register access
-+ [kernelObject_note.md](kernelObject_note.md): kobjects, which are what sysfs shows
++ [kernel_module.md](kernel_module.md): loadable modules; `/sys/module/` shows the loaded ones
 + [../Android/HAL_sysfsNodes.md](../Android/HAL_sysfsNodes.md): sysfs on Android (ueventd, SELinux labels)
 
 ## Reference

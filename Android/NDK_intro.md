@@ -1,84 +1,91 @@
-# NDK introduction
+# NDK (Native Development Kit)
 
-**NDK stands for Native Development Kit.**  
-It is a toolset provided by Google that  
-allows you to implement parts of your Android app or system components **using native code languages, specifically C and C++**.
+The NDK is the toolset for building **C and C++ code inside Android apps**:
+a Clang/LLVM toolchain, a sysroot with the stable native APIs, and integration with CMake / ndk-build and Gradle.
+The output is a shared library (`libfoo.so`) per ABI, packaged in the APK and loaded into the app's process.
 
-While the standard Android SDK uses Java or Kotlin running inside the Android Runtime (ART/JVM),  
-the NDK lets you bypass the JVM and compile native machine code directly for the device's CPU architecture (e.g., ARM, x86).
+Native code in an app runs with the **same UID, SELinux domain, and permissions as the app's Java/Kotlin code**.
+It doesn't escape the app sandbox and gives no extra hardware access.
 
-## Why Do Developers Use the NDK?
+## 1. NDK vs the AOSP build
 
-1. Performance & Compute Intensity:  
-   For heavy computing tasks like 3D rendering, video encoding/decoding, cryptography, physics simulations, or audio processing,  
-   C/C++ offers raw speed that outperforms managed Java/Kotlin code.
-2. Reusing Existing C/C++ Codebases:  
-   If you have an established cross-platform library written in C or C++ (such as SQLite, OpenCV, or custom game engines),  
-   the NDK allows you to bundle and run it directly inside Android.
-3. Low-Level Hardware Access:  
-   As seen in our pure C++ AIDL example, the NDK allows system developers and hardware vendors to build low-level daemons,  
-   HALs (Hardware Abstraction Layers), and native system services  
-   that communicate directly with the Linux kernel without needing Java wrappers.
+| | NDK (app developers) | AOSP / Soong (platform and vendor developers) |
+| --- | --- | --- |
+| Builds | `.so` libraries inside an APK | Platform and vendor binaries: daemons, HALs, system libraries |
+| Tooling | Android Studio + Gradle + CMake (or ndk-build) | `Android.bp` (`cc_binary`, `cc_library`), the platform's Clang |
+| APIs | Only the **stable NDK APIs** (`libc`, `libm`, `liblog`, `libandroid`, `libbinder_ndk` (limited), AAudio, Vulkan, ...) | Platform libraries; vendor code uses VNDK / LLNDK / NDK-backend stable ABIs |
+| Runs as | The app's process | Its own process with its own UID/domain ([native_daemon.md](native_daemon.md)) |
 
-## How the NDK Fits Into Android Architecture
+The **"NDK backend" of AIDL** (`libbinder_ndk`, `ndk::ScopedAStatus`) is named after the NDK because it is a stable C ABI.
+Vendor HALs use it, but they are built with Soong, not with the NDK download.
+See [AIDL_impl_langs.md](AIDL_impl_langs.md) and [AIDL_HAL_impl.md](AIDL_HAL_impl.md).
 
-+ **Android SDK** (Software Development Kit): Used for standard app development.  
-  Uses Java/Kotlin, provides UI components (Activities, Views), and runs inside the managed JVM sandbox.
-+ **Android NDK** (Native Development Kit): Used for native development.  
-  Compiles directly into native binaries (`.so` shared libraries using clang/LLVM)  
-  that are packaged inside your APK or system image.
+## 2. When an app needs native code
 
-[ Kotlin/ Java App ]  ──(Uses SDK)
-        │
-        v (Optional via JNI or Pure NDK Service)
-[ C/ C++ Native Code ] ──(Compiled via NDK)
-        │
-        v
-[ Linux Kernel / Hardware ]
++ **Reusing C/C++ libraries**: codecs, OpenCV, SQLite extensions, game engines, cross-platform core logic.
++ **CPU-heavy loops** that benefit from SIMD (NEON) or tight memory control: DSP, image processing, physics.
++ **Low-latency graphics and audio**: Vulkan / OpenGL ES, AAudio (via Oboe).
 
-## Key Components Provided by the NDK
+Not good reasons:
 
-When you download the NDK (usually via Android Studio's SDK Manager), it gives you:
++ "Native is faster": ART's JIT/AOT code is fast for normal app logic, and each JNI call has a cost.
++ "Access to hardware": the native code has the app's permissions. Hardware access goes through framework APIs or a system service / HAL.
 
-+ Compilers & Toolchains:  
-  GCC/Clang compilers configured to build binaries for Android's supported ABIs (armeabi-v7a, arm64-v8a, x86, x86_64).
-+ Native Headers & Libraries: Standard C/C++ libraries, plus Android-specific system APIs  
-  (like OpenGL ES for graphics, OpenSL ES/ AAudio for audio, logging via liblog, and Binder/AIDL NDK headers).
-+ Build Integration: Works seamlessly with CMake or ndk-build to compile your native source code alongside your Android project.
+## 3. What the NDK provides
 
-## NDK and JNI
+| Part | Notes |
+| --- | --- |
+| Toolchain | Clang/LLVM only (GCC was removed in NDK r18). libc++ is the C++ standard library |
+| ABIs | `arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86` (see the ABI guide for newer additions) |
+| Stable APIs | Headers + stub libraries per API level. The `minSdk` decides which functions are available |
+| Build systems | CMake (default in Android Studio), ndk-build (`Android.mk`, legacy) |
+| Audio | AAudio (API 26+). **OpenSL ES is deprecated**; use the Oboe library, which wraps AAudio |
 
-While people often mention them together, NDK and JNI solve 2 entirely different problems.  
-Think of it this way:
+Since **Android 7.0**, apps can't dynamically link non-NDK (private) platform libraries.
+A library that links them, even indirectly through a 3rd-party static library, crashes at load time.
 
-+ NDK is the Workshop (The Tools): It gives you the equipment required **to build native C/C++ code for Android.**
-+ JNI is the Doorway (The Bridge): It is the standard communication protocol that **lets Java/Kotlin code talk directly to C/C++ code.**
+## 4. Gradle setup
 
-### Quick Comparison Table
+```kotlin
+// app/build.gradle.kts
+android {
+    ndkVersion = "27.0.12077973"                 // pin the installed NDK (SDK Manager > SDK Tools > NDK)
+    defaultConfig {
+        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+    }
+    externalNativeBuild {
+        cmake { path = file("src/main/cpp/CMakeLists.txt") }
+    }
+}
+```
 
-#### Feature: NDK (Native Development Kit)
+The complete JNI example (CMake, Kotlin, C++) is in [JNI_android_studio.md](JNI_android_studio.md).
 
-+ What is it: A toolset/ software package provided by Google.
-+ What does it do: Provides compilers (Clang), linkers, build tools (CMake),  
-  and header files so you can compile C/C++ for Android architectures.
-+ When do you use it: Whenever you want to write or compile C/C++ code for an Android project.
+**16 KB pages**: devices with 16 KB memory pages are supported since Android 15.
+Native libraries must be built with 16 KB ELF alignment, and Google Play requires this for apps that target Android 15+.
+AGP 8.5.1+ with **NDK r28+** does it by default. Older NDKs need the linker flag `-Wl,-z,max-page-size=16384`.
 
-#### Feature: JNI (Java Native Interface)
+## 5. NDK and JNI
 
-+ What is it: A programming standard/ interface specification.
-+ What does it do: Defines how the Java Virtual Machine (JVM) calls native functions,  
-  translates data types, and shares memory with C/C++.
-+ When do you use it: Whenever Java or Kotlin code needs to directly invoke a C/C++ function within the same process.
+| | NDK | JNI |
+| --- | --- | --- |
+| What | Toolchain + native APIs | The interface between Java/Kotlin and native code in **one process** |
+| Answers | "How do I compile C/C++ for Android?" | "How does Kotlin call my C++ function?" |
 
-### How They Work Together (And When They Don't)
++ App with a C++ library: compile it with the **NDK**, call it through **JNI**.
++ App that is entirely native (`NativeActivity`, games): the NDK only, with minimal JNI glue.
++ Native daemon or HAL: neither the NDK download nor JNI. It's built with Soong and reached through Binder ([native_daemon.md](native_daemon.md)).
 
-You can actually use one without the other, which ties back to the concepts we discussed earlier:
+## Related notes
 
-1. Using NDK with JNI (Traditional Android App):  
-   If you are writing a standard Android app in Kotlin and want to include a custom C++ library,  
-   you use the **NDK** to compile that library into a `.so` file,  
-   and you use **JNI** to let your Kotlin code call functions inside that `.so` file.
-2. **Using NDK without JNI (Pure C++ AIDL Service)**:  
-   In our native daemon example, you used the NDK backend for AIDL.  
-   Because your daemon was written entirely in C++, it didn't use Java, the JVM, or Android Runtime (ART) at all.  
-   Therefore, JNI was completely bypassed, but you still used the NDK toolchain to compile your C++ code.
++ [JNI_intro.md](JNI_intro.md), [JNI_android_studio.md](JNI_android_studio.md), [JNI_C_code.md](JNI_C_code.md)
++ [native_daemon.md](native_daemon.md), [AIDL_impl_langs.md](AIDL_impl_langs.md)
+
+## Reference
+
++ [NDK guides](https://developer.android.com/ndk/guides)
++ [NDK stable APIs](https://developer.android.com/ndk/guides/stable_apis)
++ [ABIs](https://developer.android.com/ndk/guides/abis)
++ [Support 16 KB page sizes](https://developer.android.com/guide/practices/page-sizes)
++ [Android 7.0 behavior change: NDK apps linking to platform libraries](https://developer.android.com/about/versions/nougat/android-7.0-changes)
++ [OpenSL ES (deprecated) and Oboe](https://developer.android.com/ndk/guides/audio/opensl)

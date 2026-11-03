@@ -23,7 +23,7 @@ sensor@48 {                            /* consumer */
 | GPIO | `gpio-controller; #gpio-cells` | **`<name>-gpios`** (e.g. `reset-gpios`, `enable-gpios`); plain `gpios` for unnamed | (the prefix *is* the name) | `devm_gpiod_get(dev, "reset", ...)` |
 | Regulator / power rail | a regulator node | **`<name>-supply`** (e.g. `vdd-supply`, `vmmc-supply`) | (the prefix *is* the name) | `devm_regulator_get(dev, "vdd")` |
 | Clock | `#clock-cells` | **`clocks`** | **`clock-names`** | `devm_clk_get(dev, "bus")` |
-| Reset line | `#reset-cells` | **`resets`** | **`reset-names`** | `devm_reset_control_get(dev, "core")` |
+| Reset line | `#reset-cells` | **`resets`** | **`reset-names`** | `devm_reset_control_get_exclusive(dev, "core")` |
 | Interrupt | `interrupt-controller; #interrupt-cells` | `interrupts` (+ `interrupt-parent`), or `interrupts-extended` | `interrupt-names` | `platform_get_irq_byname()` |
 | PWM | `#pwm-cells` | `pwms` | `pwm-names` | `devm_pwm_get()` |
 | DMA | `#dma-cells` | `dmas` | `dma-names` | `dma_request_chan(dev, "tx")` |

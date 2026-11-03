@@ -75,8 +75,9 @@ It's a list of `"vendor,model"` strings, ordered from **most specific to most ge
 compatible = "fsl,imx6q-uart", "fsl,imx21-uart";
 ```
 
-The kernel tries to bind a driver whose `of_match_table` contains one of these strings.
-The **earliest** string in the list that some driver supports wins.
+Within one driver's `of_match_table`, the kernel picks the entry that matches the **earliest** (most specific) string.
+Across drivers, the first registered driver that matches any string binds.
+So a specific driver and a generic driver should not both claim the same hardware, or the result depends on load order.
 Vendor prefixes are registered in `Documentation/devicetree/bindings/vendor-prefixes.yaml` (`fsl`, `st`, `ti`, `rockchip`, `ns`, ...).
 See [dts_driver.md](dts_driver.md).
 
@@ -170,7 +171,7 @@ dev { interrupt-parent = <&pic>; };   /* dtc writes pic's phandle number here */
 | `/reserved-memory` | Carve-outs: firmware, CMA, ramoops |
 | `/cpus` | CPUs (`device_type = "cpu"`), plus `cpu-map`, idle states, OPP tables |
 
-`device_type` is only for `cpu` and `memory` today; other uses are deprecated.
+`device_type` is deprecated except for `cpu` and `memory` nodes (PCI host bindings still use `device_type = "pci"`).
 
 ## Related notes
 

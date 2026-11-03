@@ -8,7 +8,7 @@ It applies to `.dts`/`.dtsi` files submitted to the kernel, and it's a good defa
 
 | Item | Allowed | Example |
 | --- | --- | --- |
-| Node and property names | `a-z`, `0-9`, `-` (dash) | `led-status`, `reset-gpios` |
+| Node and property names | `a-z`, `0-9`, `-` (dash); plus the `,` of a vendor prefix and the leading `#` of `#...-cells` | `led-status`, `reset-gpios`, `rockchip,pins` |
 | Labels | `a-z`, `0-9`, `_` (underscore) | `gpi_dma2`, `vcc_3v3` |
 | Unit address | lowercase hex, **no** `0x`, **no** leading zeros (unless the bus defines otherwise) | `dma-controller@a00000` |
 | Hex values in properties | lowercase. The address part *may* be zero-padded | `reg = <0x0 0x00a00000 0x0 0x60000>;` |
@@ -35,16 +35,17 @@ These rules are easy to check in review, cause fewer merge conflicts, and make f
 
 ## 3. Order of properties inside a node
 
-1. `compatible`
-2. `reg`
-3. `ranges`
-4. Standard/common properties (no vendor prefix), sorted naturally, for example `clocks`, `clock-names`, `interrupts`, `pinctrl-*`
-5. Vendor-specific properties (`rockchip,...`)
-6. `status` (if needed), after a blank line
-7. Child nodes, each after a blank line
+1. `device_type` (only `cpu`/`memory` nodes)
+2. `compatible`
+3. `reg`
+4. `ranges`
+5. Standard/common properties (no vendor prefix), for example `#dma-cells`, `clocks`, `clock-names`, `interrupts`, `pinctrl-*`
+6. Vendor-specific properties (`rockchip,...`)
+7. `status` (if needed), preceded by a blank line when other properties come before it
+8. Child nodes, each preceded by a blank line
 
 `status = "okay"` is the default, so write it only to **override** a `"disabled"` from a DTSI.
-Within each group, properties are in natural sort order by name.
+Within each group, properties are usually in natural sort order by name, except for logical groups such as supplies.
 
 ## 4. Indentation and layout
 

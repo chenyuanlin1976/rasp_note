@@ -34,12 +34,17 @@ Specification: [devicetree.org](https://www.devicetree.org/specifications/).
 Like C headers, files include each other, so the description of a chip is written once and reused by every board:
 
 ```text
-my-board.dts           board: enables the peripherals it uses, adds LEDs, sensors, regulators
-  #include "my-som.dtsi"        optional: system-on-module parts (PMIC, eMMC)
-    #include "rk3566.dtsi"      SoC: rk3566-specific differences
-      #include "rk356x-base.dtsi"   (named rk356x.dtsi in older kernels) blocks shared by RK3566/RK3568:
-                                    CPUs, interrupt controller, GPIO banks, UARTs, I2C... mostly status = "disabled"
+my-board.dts                       board: enables the peripherals it uses, adds LEDs, sensors, regulators
+  #include "my-som.dtsi"             optional: system-on-module parts (PMIC, eMMC)
+    #include "rk3566.dtsi"           SoC: OPP tables and other RK3566 specifics
+      #include "rk3566-base.dtsi"    RK3566 differences from RK3568
+        #include "rk356x-base.dtsi"  blocks shared by RK3566/RK3568: CPUs, GIC, GPIO banks, UART, I2C, ...
+                                     (mostly status = "disabled")
 ```
+
+That is the **mainline** chain (Linux 6.x; older mainline kernels had a single `rk356x.dtsi`).
+The **Rockchip BSP** kernel (4.19 / 5.10, used by most RK3566 Android SDKs) is simpler:
+`rk3566.dtsi` includes `rk3568.dtsi` directly. Check the `#include` lines of the tree you actually build.
 
 The board file includes the SoC file, then **extends or overrides** nodes by label:
 

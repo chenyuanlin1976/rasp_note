@@ -29,7 +29,7 @@ There are 2 ways to describe it. The recommended one is a **fixed regulator** th
 + **Polarity quirk**: for `regulator-fixed`, the active level comes from **`enable-active-high`**, not from the GPIO flag.
   Without that property the enable pin is treated as **active-low**, whatever `GPIO_ACTIVE_HIGH` says.
   The kernel warns about the mismatch. Keep the two consistent.
-+ Use `gpio` (singular) for this binding, as documented in `fixed-regulator.yaml`.
++ This binding traditionally uses `gpio` (singular); `fixed-regulator.yaml` also accepts `gpios`. Either takes one GPIO.
 + The node name should start with `regulator-`. The label (`vcc3v3_periph:`) is used for references,
   and `regulator-name` is what shows up at runtime.
 
@@ -95,8 +95,15 @@ If you really need user-space control, there are 3 options:
 1. **No kernel consumer**: describe the pin as a plain GPIO (not a regulator) and switch it from a daemon or HAL with libgpiod
    (see [dts_node_leds.md](dts_node_leds.md#2-as-a-plain-gpio) and [../Android/AIDL_impl_gpio_cxx.md](../Android/AIDL_impl_gpio_cxx.md)).
 2. **Kernel `userspace-consumer` regulator driver** (`CONFIG_REGULATOR_USERSPACE_CONSUMER`).
-   A consumer node creates a device with a **writable** `state` attribute that enables or disables its supplies.
-   Check the binding in your kernel version (`regulator-output` in recent kernels).
+   A consumer node creates a device with a **writable** `state` attribute that enables or disables its supply.
+   In current kernels, the node is described as a power output (binding `regulator-output.yaml`):
+
+   ```dts
+   output-periph {
+       compatible = "regulator-output";
+       vout-supply = <&vcc3v3_periph>;
+   };
+   ```
 3. **The device's driver** exposes power control in its own way (runtime PM, rfkill for radios, ...).
 
 On Android, apps never write these files.

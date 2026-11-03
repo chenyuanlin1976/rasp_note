@@ -59,8 +59,8 @@ static struct platform_driver my_i2c_driver = {
 module_platform_driver(my_i2c_driver);
 ```
 
-+ The kernel tries the node's `compatible` strings in order, and the first one with a matching driver wins.
-  That's why a node can list a specific string plus a generic fallback.
++ A node lists a specific string plus generic fallbacks, so that an older kernel without the specific driver still finds one.
+  Within a driver's table, the best (earliest) string is used. Across drivers, the first registered driver that matches binds.
 + `of_device_get_match_data(&pdev->dev)` (or `device_get_match_data()`) returns the `.data` of the entry that matched,
   so one driver can support several chip variants.
 + Without `MODULE_DEVICE_TABLE`, a modular driver doesn't load automatically, even when the DT node is correct.

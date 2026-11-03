@@ -1,39 +1,99 @@
-# android keystore
+# Android Keystore system
 
-[keystore](https://developer.android.com/privacy-and-security/keystore)  
+The **Android Keystore system** lets an app create and use cryptographic keys that **can't be extracted** from the device.
+The app gets a handle to the key, not the key bytes. Operations run in the keystore service, or in secure hardware when the device has it.
 
-The Android Keystore system lets you **store cryptographic keys in a container** to make them more difficult to extract from the device.  
-Once keys are in the keystore, you can use them for cryptographic operations, with the key material remaining non-exportable.  
-Also, the keystore system lets you **restrict when and how keys can be used**,  
-such as requiring user authentication for key use or restricting keys to use only in certain cryptographic modes.  
+This is not the same thing as a keystore **file** (`.jks` / `.p12`) used to sign APKs on a build machine.
+For those, see [keytool_note.md](keytool_note.md) and [sign_apk.md](sign_apk.md).
 
-**Android Keystore System** provides 3 main functions.
+## 1. What it provides
 
-1. generate the keys randomly.
-2. limit the usage of the keys (encrypt, decrypt, varify, ...)
-3. store the keys safely.
++ **Non-extractable keys**: key material never enters the app process. With hardware backing, it never leaves the secure hardware in plain form.
++ **Usage restrictions**, set when the key is created and enforced outside the app:
+  purposes (encrypt, sign, ...), algorithms and modes, validity period, "user must have authenticated within N seconds",
+  "only while the device is unlocked".
++ **Key attestation**: a certificate chain that proves to a server that a key lives in secure hardware on a genuine device.
 
-Usually data is put in these places: **SharedPreferences, SQLite, Internal Storage**  
+APIs:
 
-~~The keystore system is used by the KeyChain API, introduced in Android 4.0 (API level 14),~~  
-as well as **the Android Keystore provider feature, introduced in Android 4.3 (API level 18)**.  
+| API | Since | Use |
+| --- | --- | --- |
+| `KeyChain` | Android 4.0 (API 14) | System-wide credentials (for example client certificates installed by the user or an admin) that apps request with user consent |
+| `AndroidKeyStore` JCA provider | Android 4.3 (API 18) | App-private keys through the standard `KeyStore`, `KeyGenerator`, `KeyPairGenerator`, and `Cipher` / `Signature` classes |
+| `KeyGenParameterSpec` | Android 6.0 (API 23) | Describes a new key and its restrictions |
 
-The Android Keystore system protects key material from unauthorized use in 2 ways.  
+## 2. Where keys live
 
-1. it reduces the risk of unauthorized use of key material from outside the Android device  
-   by preventing the extraction of the key material from application processes and from the Android device as a whole.  
-2. the keystore system reduces the risk of unauthorized use of key material within the Android device  
-   by making apps specify the authorized uses of their keys and then enforcing those restrictions outside of the apps' processes.
+```text
+app (AndroidKeyStore provider) --Binder--> keystore2 daemon --> KeyMint HAL (AIDL) --> KeyMint TA in the TEE (e.g. Trusty)
+                                                                                 \--> StrongBox KeyMint (secure element, optional)
+```
 
-## Hardware-backed Keystore
++ The keystore daemon stores only **encrypted key blobs**, which only the KeyMint trusted app (TA) can use.
++ **KeyMint** (Android 12) replaced the **Keymaster** HAL.
++ **StrongBox** (Android 9+, optional): a separate secure element. Request it with `setIsStrongBoxBacked(true)`.
+  If StrongBox doesn't support the algorithm, you get a `StrongBoxUnavailableException`; retry without it.
++ Check where a key ended up with `KeyInfo.getSecurityLevel()` (API 31+), or `isInsideSecureHardware()` on older releases.
++ The CDD (section 9.11) requires hardware-backed implementations of RSA, AES, ECDSA, and HMAC for the keystore.
 
-[keystore security](https://source.android.com/docs/security/features/keystore)
+## 3. Example: AES-GCM key for app data
 
-## Android Compatibility Definition Document
+```kotlin
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
+import java.security.KeyStore
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 
-[CDD](https://source.android.com/docs/compatibility/cdd)
+private const val ALIAS = "app_data_key"
 
-**MUST** have hardware backed implementations of RSA, AES, ECDSA and HMAC cryptographic algorithms  
-and MD5, SHA1, SHA-2 Family hash functions to properly support the Android Keystore system's supported algorithms.
+fun getOrCreateKey(): SecretKey {
+    val ks = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+    (ks.getEntry(ALIAS, null) as? KeyStore.SecretKeyEntry)?.let { return it.secretKey }
 
-## EncryptedSharedPreferences
+    val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
+    generator.init(
+        KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+            .setKeySize(256)
+            .build()
+    )
+    return generator.generateKey()
+}
+
+fun encrypt(plain: ByteArray): Pair<ByteArray, ByteArray> {
+    val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+    cipher.init(Cipher.ENCRYPT_MODE, getOrCreateKey())   // the keystore picks a random IV
+    return cipher.iv to cipher.doFinal(plain)             // store the IV next to the ciphertext
+}
+
+fun decrypt(iv: ByteArray, data: ByteArray): ByteArray {
+    val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+    cipher.init(Cipher.DECRYPT_MODE, getOrCreateKey(), GCMParameterSpec(128, iv))
+    return cipher.doFinal(data)
+}
+```
+
+The encrypted bytes can go anywhere: a file, SQLite, DataStore. Only the key stays in the keystore.
+
++ Keys are deleted when the app is uninstalled, and they aren't part of backups.
+  Data encrypted with them can't be restored on another device.
++ `EncryptedSharedPreferences` / `EncryptedFile` (`androidx.security:security-crypto`) wrapped this pattern.
+  The library **deprecated all its APIs in 2025** in favour of the platform APIs and direct use of the Android Keystore,
+  so new code should use the pattern above (or a library such as Tink).
+
+## Related notes
+
++ [sign_apk.md](sign_apk.md), [keytool_note.md](keytool_note.md): build-time keystore files, a different topic
++ [Binder_intro.md](Binder_intro.md): how the app reaches the keystore daemon
+
+## Reference
+
++ [Android Keystore system](https://developer.android.com/privacy-and-security/keystore)
++ [Hardware-backed Keystore (AOSP)](https://source.android.com/docs/security/features/keystore)
++ [Key and ID attestation (AOSP)](https://source.android.com/docs/security/features/keystore/attestation)
++ [AndroidX Security release notes (security-crypto deprecation)](https://developer.android.com/jetpack/androidx/releases/security)
++ [Android Compatibility Definition Document](https://source.android.com/docs/compatibility/cdd)

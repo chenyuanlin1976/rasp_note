@@ -1,75 +1,83 @@
-# keytool note
+# keytool
 
-## options: genkey
+`keytool` (part of the JDK) manages Java keystores: private keys with their certificates (`PrivateKeyEntry`),
+and trusted certificates (`trustedCertEntry`).
+For Android, you mainly use it to create the app signing key and to read certificate fingerprints.
+Signing itself is done by `apksigner`; see [sign_apk.md](sign_apk.md).
 
-```bash
-keytool -genkey -noprompt -trustcacerts
-  -keyalg RSA
-  -alias ${cert.alias}
-  -dname  ${dn.name}
-  -keypass ${key.pass}
-  -keystore ${keystore.file}
-  -storepass ${keystore.pass}
+| Command | Older alias | Purpose |
+| --- | --- | --- |
+| `-genkeypair` | `-genkey` | New key pair + self-signed certificate |
+| `-list` | | List entries; `-v` shows details, `-rfc` shows PEM |
+| `-exportcert` | `-export` | Write a certificate to a file |
+| `-importcert` | `-import` | Add a trusted certificate (or a CA reply) |
+| `-importkeystore` | | Copy or convert keystores (JKS ↔ PKCS12) |
+| `-printcert` | | Show a certificate file, a signed JAR / v1 APK, or a TLS server certificate |
+| `-delete`, `-changealias`, `-storepasswd`, `-keypasswd` | | Maintenance |
+
+All examples were run with OpenJDK 21. Since JDK 9, the default keystore type is **PKCS12**.
+
+## 1. Create a key
+
+```shell
+keytool -genkeypair -v \
+    -keystore release.p12 -storetype PKCS12 \
+    -alias release \
+    -keyalg RSA -keysize 3072 -validity 10000 \
+    -dname "CN=Example, O=Example, C=TW"
 ```
 
-```bash
-keytool -genkey
-  -alias keyAlias
-  -keyalg RSA
-  -keypass changeit
-  -storepass changeit
-  -keystore keystore.jks
++ Without `-dname`, keytool asks for the name fields interactively.
+  Without `-storepass` / `-keypass`, it asks for passwords, which is better than putting them on the command line, where they end up in the shell history.
++ For a PKCS12 keystore, the key password is the store password.
+
+## 2. Inspect
+
+```shell
+keytool -list -keystore release.p12                       # aliases, entry type, SHA-256 fingerprint
+keytool -list -v -keystore release.p12 -alias release     # full certificate details
+keytool -printcert -file cert.pem                         # a certificate file (PEM or DER)
+keytool -printcert -jarfile app.apk                       # v1 (JAR) signature only; use "apksigner verify" for APKs
+keytool -printcert -sslserver example.com:443             # certificate chain of a TLS server
 ```
 
-## options: list
+The **SHA-256** fingerprint is what Google APIs (Maps, Firebase, App Links `assetlinks.json`) ask for.
 
-```bash
-keytool -list -v
-  -keystore ${keystore.file}
-  -storepass ${keystore.pass}
+## 3. Export and import certificates
+
+```shell
+keytool -exportcert -rfc -alias release -keystore release.p12 -file release.pem   # -rfc: PEM, otherwise DER
+
+keytool -importcert -noprompt -alias partner -file partner.pem \
+    -keystore truststore.p12 -storetype PKCS12                                     # trusted certificate entry
+
+keytool -list -cacerts                                    # the JDK's own CA truststore (default password: changeit)
 ```
 
-```bash
-keytool -list -v
-  -alias ${cert.alias}
-  -keystore ${keystore.file}
-  -storepass ${keystore.pass}
+## 4. Convert and maintain keystores
+
+```shell
+# JKS -> PKCS12 (keytool warns that JKS is proprietary and suggests this)
+keytool -importkeystore -srckeystore old.jks -destkeystore new.p12 -deststoretype PKCS12
+
+# PKCS12 -> JKS, only if an old tool requires JKS
+keytool -importkeystore -srckeystore new.p12 -destkeystore old.jks -deststoretype JKS
+
+keytool -changealias -alias app -destalias release -keystore release.p12
+keytool -storepasswd -keystore release.p12                # new store password (min. 6 characters)
+keytool -keypasswd -alias release -keystore old.jks       # JKS only; PKCS12 keys use the store password
+keytool -delete -alias partner -keystore truststore.p12
+
+keytool -certreq -alias release -keystore release.p12 -file release.csr   # CSR for a CA-signed certificate
 ```
 
-## options: export
+Converting AOSP `.pk8` + `.x509.pem` keys into a keystore needs `openssl` first; see [sign_apk.md](sign_apk.md#5-sign-an-app-with-the-aosp-platform-key).
 
-```bash
-keytool -export
-  -alias keyAlias
-  -keystore keystore.jks
-  -storepass changeit
-  -file server.cer
-```
+## Related notes
 
-## options: import
++ [sign_apk.md](sign_apk.md), [verify_platformKeys.md](verify_platformKeys.md), [../openssl_note.md](../openssl_note.md)
 
-```bash
-keytool -import -v -trustcacerts
-  -file server.cer
-  -alias keyAlias
-  -keystore cacerts.jks
-  -keypass changeit
-```
+## Reference
 
-```bash
-keytool -import -v -trustcacerts
-  -file server.cer
-  -alias keyAlias
-  -keypass changeit
-  -keystore cacerts.jks
-  -storepass changeit
-```
-
-## options: delete
-
-```bash
-keytool -delete -noprompt
-  -alias ${cert.alias}
-  -keystore ${keystore.file}
-  -storepass ${keystore.pass}
-```
++ [keytool (JDK 21 docs)](https://docs.oracle.com/en/java/javase/21/docs/specs/man/keytool.html)
++ [Sign your app](https://developer.android.com/studio/publish/app-signing)

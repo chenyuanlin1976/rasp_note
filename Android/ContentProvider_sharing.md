@@ -20,6 +20,7 @@ Example names:
 | Authority | `com.example.appa.provider` |
 | Permission | `com.example.appa.permission.READ_SETTINGS` |
 | URI | `content://com.example.appa.provider/settings` |
+| Provider class | `AppSettingsProvider` (not to be confused with Android's own [SettingsProvider](SettingsProvider_intro.md)) |
 
 ## 1. Pattern A: provider protected by a signature permission
 
@@ -34,7 +35,7 @@ Example names:
 
     <application>
         <provider
-            android:name=".SettingsProvider"
+            android:name=".AppSettingsProvider"
             android:authorities="com.example.appa.provider"
             android:exported="true"
             android:readPermission="com.example.appa.permission.READ_SETTINGS" />
@@ -58,7 +59,7 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 
-class SettingsProvider : ContentProvider() {
+class AppSettingsProvider : ContentProvider() {
 
     private val matcher = UriMatcher(UriMatcher.NO_MATCH).apply {
         addURI(AUTHORITY, "settings", SETTINGS)
@@ -104,7 +105,7 @@ class SettingsProvider : ContentProvider() {
 ```xml
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Also declare the permission here, so it works no matter which app is installed first -->
+    <!-- Declare the permission here too (allowed: same signing key), so it is defined whichever app is installed first -->
     <permission
         android:name="com.example.appa.permission.READ_SETTINGS"
         android:protectionLevel="signature" />
@@ -165,7 +166,7 @@ This is how `androidx.core.content.FileProvider` shares files.
 
 ```xml
 <provider
-    android:name=".SettingsProvider"
+    android:name=".AppSettingsProvider"
     android:authorities="com.example.appa.provider"
     android:exported="false"
     android:grantUriPermissions="true" />
@@ -190,9 +191,10 @@ startActivity(intent)
 // context.revokeUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
 ```
 
-+ Use an explicit target. With an implicit Intent, any app that matches the filter could receive the grant.
-+ App B's `ImportActivity` must be `exported="true"`.
-  App A needs `<queries><package android:name="com.example.appb" /></queries>` (API 30+) to see App B.
++ Use an explicit target. With an implicit Intent, any app that matches the filter could receive the grant
+  (with a chooser, the user picks the app, as in [section 3](#3-fileprovider-share-a-file)).
++ App B's `ImportActivity` must be `exported="true"`. Starting another app's activity needs no `<queries>` entry,
+  even on API 30+; if App B isn't installed, `startActivity()` throws `ActivityNotFoundException`.
 
 ### 2.3 App B: read the granted URI
 
@@ -208,17 +210,70 @@ contentResolver.query(uri, null, null, null, null)?.use { c ->
 
 App B needs no `<uses-permission>` and no `<queries>` entry for this. The grant is attached to the Intent.
 
-## 3. Why this is better than sharedUserId
+## 3. FileProvider: share a file
+
+`androidx.core.content.FileProvider` is a ready-made pattern B provider for files.
+Never share a `file://` URI: since Android 7.0 (API 24) it throws `FileUriExposedException` when it leaves the app.
+
+```xml
+<!-- App A: AndroidManifest.xml -->
+<provider
+    android:name="androidx.core.content.FileProvider"
+    android:authorities="${applicationId}.fileprovider"
+    android:exported="false"
+    android:grantUriPermissions="true">
+    <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/file_paths" />
+</provider>
+```
+
+```xml
+<!-- App A: res/xml/file_paths.xml: only these directories can be shared -->
+<paths>
+    <files-path name="exports" path="exports/" />
+</paths>
+```
+
+```kotlin
+// App A: share filesDir/exports/report.csv with an app the user picks
+val file = File(filesDir, "exports/report.csv")
+val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+// -> content://com.example.appa.fileprovider/exports/report.csv
+val send = Intent(Intent.ACTION_SEND).apply {
+    type = "text/csv"
+    putExtra(Intent.EXTRA_STREAM, uri)
+    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+}
+startActivity(Intent.createChooser(send, null))
+```
+
+The receiving app opens it with `contentResolver.openInputStream(uri)`.
+
+## 4. Test from adb
+
+```shell
+adb shell content query --uri content://com.example.appa.provider/settings
+adb shell content query --uri content://com.example.appa.provider/settings --projection key:value --where "key='theme_mode'"
+```
+
+The `content` command runs as the `shell` user. It can read exported providers without a permission,
+but it gets a `SecurityException` from a provider protected by a signature permission (pattern A) or not exported (pattern B).
+That error confirms the protection works.
+
+## 5. Why this is better than sharedUserId
 
 + Each app keeps its own UID, private data directory, and permissions.
-+ The provider exposes only the URIs it chooses, and can reject a caller (`callingPackage`, `Binder.getCallingUid()`).
++ The provider exposes only the URIs it chooses, and can check the caller in each method
+  (`callingPackage`, `Binder.getCallingUid()`) for finer rules than one permission.
 + Access is granted per permission or per URI, and can be revoked, instead of full access to the other app's files.
 
 ## Related notes
 
 + [sharedUserId.md](sharedUserId.md): what `sharedUserId` was, migration, signature permissions
 + [AIDL_binding.md](AIDL_binding.md): the other replacement, a bound service with AIDL
-+ [SettingsProvider_intro.md](SettingsProvider_intro.md)
++ [SettingsProvider_intro.md](SettingsProvider_intro.md): the system's settings provider
++ [adb_shell_cmds.md](adb_shell_cmds.md)
 
 ## Reference
 

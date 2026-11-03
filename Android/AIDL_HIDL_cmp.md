@@ -1,65 +1,59 @@
-# compare HIDL and AIDL
+# Compare HIDL and AIDL
 
-The relationship between HIDL and AIDL is an evolutionary one:  
-**AIDL is the modern successor to HIDL**, designed to unify all Android IPC under a single, streamlined interface language.
+**AIDL is the successor to HIDL.** Android now uses one interface language for every IPC boundary,
+from apps all the way down to HALs.
+Both languages do the same basic job: they define interfaces and generate the code that crosses process boundaries.
+They were built for different layers and different eras of Android.
 
-While both serve the same fundamental purpose:  
-**defining interfaces and generating the boilerplate code needed to communicate across process boundaries,**  
-they were built for different layers of the operating system and different eras of Android architecture.
+## 1. High-level comparison
 
-## 1. High-Level Comparison
+| | HIDL (HAL Interface Definition Language) | AIDL (Android Interface Definition Language) |
+| --- | --- | --- |
+| Introduced | Android 8 (Project Treble) | Android 1.0; HAL support (stable AIDL) since **Android 11** |
+| Domain | HALs only (framework ↔ vendor) | Apps, system services, **and HALs** |
+| Transport | `/dev/hwbinder` + `hwservicemanager` | `/dev/binder` + `servicemanager` (and `/dev/vndbinder` + `vndservicemanager` for vendor ↔ vendor) |
+| File syntax | `.hal`, versioned packages `@1.0` | `.aidl`, versioned with `aidl_interface` `versions` |
+| Languages | C++, Java (binderized HALs only) | Java/Kotlin, C++ (`cpp`, `ndk`), Rust |
+| Status | **Deprecated since Android 10**; no new HIDL HALs | Current standard |
 
-### Feature: HIDL (HAL Interface Definition Language)
+## 2. Why HIDL existed
 
-+ Primary Domain: Hardware Abstraction Layer (**HAL**) and vendor daemons.
-+ Transport Layer: Hardware Binder (`/dev/hwbinder`).
-+ Active Status: Deprecated (phased out starting around Android 11/12).
-+ Supported Languages: C++, Java (limited legacy passthrough).
+Project Treble (Android 8) split the OS framework from vendor code, so the two sides needed a **stable, versioned** IPC contract.
 
-### Feature: AIDL (Android Interface Definition Language)
++ AIDL already had a C++ backend, but it had **no stability guarantees**.
+  Interfaces weren't versioned or frozen, and `libbinder` had no stable ABI.
+  So a framework update could break a vendor HAL built against an older interface.
++ HIDL fixed this with strictly versioned packages (`android.hardware.foo@1.0`)
+  and a separate binder domain (`/dev/hwbinder`) for framework ↔ vendor traffic.
 
-+ Primary Domain: **App-to-app, app-to-system service, and now modern HAL interfaces.**
-+ **Transport Layer: Standard Binder (`/dev/binder`).**
-+ Active Status: Current & Universal (used across the entire OS stack).
-+ Supported Languages: Java, Kotlin, C++, and Rust.
+## 3. Problems of having two languages
 
-## 2. Why HIDL Existed (The Predecessor)
++ **Tooling split**: AIDL for apps and services, HIDL (`.hal`) for hardware.
++ **Feature disparity**: each language had features and types the other did not.
++ **Duplicate runtimes**: 2 binder domains and 2 service managers (`servicemanager` and `hwservicemanager`).
 
-When Google introduced Project Treble in Android 8  
-**to separate the Android OS framework from vendor hardware**,  
-they needed a way for system processes to talk to hardware vendor processes securely via **IPC**.
+## 4. How AIDL replaced HIDL
 
-+ They couldn't use traditional AIDL at the time  
-  because standard AIDL was heavily tied to Java/runtime environments, whereas **low-level vendor code needed pure C++.**
-+ To solve this, Google created HIDL alongside a separate hardware-dedicated binder driver (`/dev/hwbinder`).
++ **Stable AIDL** (Android 10/11): `aidl_interface` with frozen `versions`, API dump checks, and `@VintfStability`,
+  so an interface can safely cross the system/vendor boundary.
++ **NDK backend** (`libbinder_ndk`): a stable C ABI that vendor code can link against.
++ **Rust backend** (Android 12).
++ AIDL HALs are declared in the VINTF manifest with `format="aidl"`, and are registered with the normal `servicemanager`.
 
-## 3. The Problem with Fragmenting the Ecosystem
+Because stable AIDL covers everything HIDL did, HIDL is deprecated, and new HAL interfaces are written in AIDL.
 
-Having 2 entirely separate interface languages created significant maintenance overhead:
+## 5. Summary
 
-+ Tooling Split: Developers had to learn AIDL for writing apps and system services,  
-  but switch to HIDL (and .hal syntax) when writing hardware drivers.
-+ Feature Disparity: AIDL supported rich language features, versioning, and modern types that HIDL lacked or handled differently.
-+ Duplicate Runtimes: The system had to maintain 2 parallel binder infrastructures (`/dev/binder` and `/dev/hwbinder`)  
-  and 2 service managers (`servicemanager` and `hwservicemanager`).
++ HIDL was the Treble-era bridge that brought versioned Binder IPC to the HAL layer.
++ AIDL is now the single interface language, from a Kotlin app calling a system service
+  down to a C++/Rust HAL that talks to hardware.
 
-## 4. The Transition: How AIDL Replaced HIDL
+## Related notes
 
-As Android evolved, Google decided to bring hardware communication back under the standard Binder umbrella.  
-To make this possible, AIDL was heavily upgraded:
++ [HIDL_intro.md](HIDL_intro.md), [Binder_HIDL.md](Binder_HIDL.md)
++ [AIDL_HAL.md](AIDL_HAL.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md)
 
-+ C++ and Rust Support:  
-  **AIDL gained native backends for C++ and Rust**, eliminating the need for a separate language (HIDL) to write low-level system code.
-+ Stable AIDL: AIDL was updated to support stable, versioned interfaces (**stable aidl**),  
-  making it safe for vendors to update hardware components independently without breaking the system framework.
+## Reference
 
-Because standard AIDL can now do everything HIDL used to do  
-plus more, with better performance and unified tooling,  
-HIDL has been officially deprecated.
-
-## Summary of the Evolution
-
-+ HIDL was a transitional bridge used to bring Binder-based IPC down to the hardware layer during Project Treble.
-+ AIDL is the ultimate destination: a single, universal interface language  
-  **that now handles everything from a Kotlin app talking to a system service**,  
-  all the way down to C++/Rust code interacting directly with hardware chips via **the core Binder driver**.
++ [AIDL for HALs](https://source.android.com/docs/core/architecture/aidl/aidl-hals)
++ [HIDL (deprecated)](https://source.android.com/docs/core/architecture/hidl)

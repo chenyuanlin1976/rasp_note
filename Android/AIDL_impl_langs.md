@@ -1,49 +1,54 @@
-# AIDL implement languages
+# AIDL backends (implementation languages)
 
-The Android Interface Definition Language (AIDL) is a tool used in Android  
-to define the programming interface that  
-**a client and service agree upon to communicate via Inter-Process Communication (IPC)**.
+When you compile an `.aidl` file, the AIDL compiler generates **stub code** for one or more **backends**.
+The stub code handles marshalling and Binder transactions.
+There are **4 backends**. Kotlin is **not** a separate backend: it uses the Java backend.
 
-When you define an interface in an `.aidl` file,  
-the AIDL compiler generates **stub code** that handles the underlying marshalling and binder transactions.  
-Android supports 4 primary backend languages to implement and consume AIDL interfaces:
+## 1. Java backend (`java`)
 
-## 1. Java
++ Runtime: the Android framework (`android.os.Binder`).
++ Used by: apps, the framework, `system_server`.
++ Generates an `IFoo.java` with the inner classes `IFoo.Stub` (server) and `IFoo.Stub.Proxy` (client).
++ **Kotlin** code uses the same generated Java classes.
+  You implement `IFoo.Stub` with Kotlin syntax (for example `object : IFoo.Stub() { ... }`).
 
-+ Overview: The traditional and most widely used language for Android application development.
-+ Usage: Commonly used for standard Android apps, framework APIs, and services.  
-  The AIDL compiler automatically generates `.java` interface and **stub** files during the build process.
-+ Developers: App and framework developers.
+## 2. C++ "cpp" backend (`cpp`, library `libbinder`)
 
-## 2. Kotlin
++ The older C++ backend, built on `libbinder` (`android::sp<>`, `android::binder::Status`, `defaultServiceManager()`).
++ `libbinder` does **not** have a stable ABI, so use this backend only for code built with the platform (in the `system` partition).
++ Trap: on the **vendor** partition, `libbinder` talks to `/dev/vndbinder` (`vndservicemanager`) by default,
+  so framework clients can't find the service.
 
-+ Overview: Fully interoperable with Java and modern Android's preferred language.
-+ Usage: While AIDL itself is written in a syntax loosely based on Java,  
-  Kotlin projects consume the generated Java stub classes seamlessly.  
-  You implement the generated **Stub** class and its methods using idiomatic **Kotlin** syntax  
-  (such as object expressions or lambdas).
-+ Developers: Modern Android app developers.
+## 3. C++ "ndk" backend (`ndk`, library `libbinder_ndk`)
 
-## 3. C++
++ The **recommended** C++ backend (`std::shared_ptr`, `ndk::ScopedAStatus`, `AServiceManager_*`).
++ `libbinder_ndk` has a stable C ABI. It is required in practice for **vendor HALs** and APEX modules,
+  and it is in the public NDK (API 29+), so apps can use it too.
++ Generated headers live under `aidl/<package path>/` (for example `<aidl/com/example/IFoo.h>`).
 
-+ Overview: Used for native Android development, system services, and **Hardware Abstraction Layers (HALs)**.
-+ C++ Backends: AIDL provides 2 ways to write C++ implementations:
-  + NDK Backend (`libbinder_ndk`): Highly recommended for stable, unbundled system components and vendor modules. It uses the Native Development Kit.
-  + CPP Backend (`libbinder`): Older/internal framework backend, primarily used deep within the Android platform runtime system.
-+ Developers: Platform, system, and game developers working with native code (NDK).
+## 4. Rust backend (`rust`, library `libbinder_rs`)
 
-## 4. Rust
++ Supported since **Android 12**, for memory-safe system services, daemons, and HALs.
 
-+ Overview: Supported in modern versions of Android (especially starting with Android 13/AOSP developments) for writing memory-safe system components.
-+ Usage: The AIDL compiler generates Rust-idiomatic code (`libbinder_rs`) allowing developers to implement system services,  
-  daemon processes, and low-level modules entirely in Rust.
-+ Developers: Platform and system-level developers.
+## Summary
 
-## Summary Table
+| Backend | Language | Binder library | Typical use | Stable ABI |
+| --- | --- | --- | --- | --- |
+| `java` | Java / Kotlin | `android.os.Binder` | Apps, framework services | n/a |
+| `cpp` | C++ | `libbinder` | Platform-internal native services (system partition) | No |
+| `ndk` | C++ | `libbinder_ndk` | Vendor HALs, APEX, mainline modules, NDK apps | **Yes** |
+| `rust` | Rust | `libbinder_rs` | Memory-safe system services / HALs | Yes (built on NDK) |
 
-| Backend/ Language | Typical Use Case                      | Target Developer           |
-| ----------------- | ------------------------------------- | -------------------------- |
-| Java              | Standard Android Apps & Framework     | App & Framework Developers |
-| Kotlin            | Modern Android Apps                   | App Developers             |
-| C++ (NDK/CPP)     | HALs, Performance-critical NDK apps   | System & NDK Developers    |
-| Rust              | Memory-safe system services & daemons | Platform Developers        |
+In `Android.bp`, backends are enabled per `aidl_interface`. The generated library names are
+`<name>-V<n>-java`, `<name>-V<n>-cpp`, `<name>-V<n>-ndk`, and `<name>-V<n>-rust`.
+For an `unstable: true` interface, there is no version suffix: `<name>-java`, `<name>-ndk`, and so on.
+
+## Related notes
+
++ [AIDL_intro.md](AIDL_intro.md)
++ [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md), [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md): NDK backend examples
++ [AIDL_binding.md](AIDL_binding.md): Java/Kotlin example
+
+## Reference
+
++ [AIDL backends](https://source.android.com/docs/core/architecture/aidl/aidl-backends)

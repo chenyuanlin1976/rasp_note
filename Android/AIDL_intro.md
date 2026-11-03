@@ -1,150 +1,161 @@
 # AIDL (Android Interface Definition Language)
 
-AIDL is a tool used in Android to define the **programming interface** that  
-both a **client** and a **service** agree upon to communicate with each other using **Inter-Process Communication (IPC)**.  
+AIDL is the language Android uses to define the **programming interface** that a **client** and a **service**
+agree on so that they can talk to each other through **Inter-Process Communication (IPC)**.
 
-Because **Android processes run in their own isolated memory spaces**,  
-an object cannot normally access memory in another process.  
-AIDL abstracts away the complex underlying mechanics of **marshalling** objects into primitives,  
-passing them across the kernel via **Android's Binder driver**, and unmarshalling them on the other side.
+Every Android process runs in its own isolated memory space, so process A **cannot** call a method or read memory inside process B.
+AIDL generates the boilerplate that hides this:
 
-+ **Layer**: Application/ Framework
-+ Primary Purpose: Defines the protocol and data structure (methods and types)  
-  that 2 separate processes use to talk to each other.
-+ Scope: App-to-app or app-to-system service communication.
++ **marshalling**: packing the arguments into a `Parcel`
++ sending the `Parcel` through the kernel's **Binder driver**
++ **unmarshalling** it again on the other side
 
-## What it is
+| Item | Description |
+| --- | --- |
+| Layer | Every layer: app ↔ app, app ↔ system service, framework ↔ HAL (stable AIDL) |
+| Purpose | Defines the methods and data types that 2 processes use to talk to each other |
+| Transport | Binder (`/dev/binder`; `/dev/vndbinder` between vendor processes) |
+| Backends | Java (Kotlin uses it), C++ `cpp`, C++ `ndk`, Rust: see [AIDL_impl_langs.md](AIDL_impl_langs.md) |
 
-Because Android processes have their own memory spaces, they cannot directly invoke functions in other processes.  
-AIDL generates the boilerplate code required to marshal objects into primitives that can cross process boundaries via the Binder driver.  
+## 1. How AIDL works
 
-## How it works
+1. **Define the interface**: write an `.aidl` file with a Java-like syntax that lists the methods.
+2. **Code generation**: the build (Gradle or Soong) generates an interface in the backend language.
+   For apps, this is a **Java** file (Kotlin code calls the generated Java classes; the compiler does not emit Kotlin).
+3. **Server side**: the service implements the abstract inner class **`Stub`**.
+4. **Client side**: the client gets an `IBinder` (from `bindService()` or `ServiceManager`)
+   and turns it into the interface with `IYourInterface.Stub.asInterface(binder)`.
 
-1. You create an `.aidl` file defining an interface and its methods.
-2. The Android build tools generate a corresponding Java/Kotlin interface containing an abstract inner class named **Stub**.
-3. The **Service** implements the `Stub`, and the **Client** uses `YourInterface.Stub.asInterface(service)` to communicate with it.
+The generated code contains 2 key classes:
 
-## How AIDL Works
++ **`Stub` (server side)**: an abstract class that **extends `android.os.Binder`** and **implements your interface**.
+  `onTransact()` unmarshals the incoming `Parcel` and calls your implementation.
++ **`Stub.Proxy` (client side)**: implements the same interface.
+  Each method marshals the arguments into a `Parcel`, calls `transact()` across Binder, and unmarshals the reply.
+  If the binder is in the same process, `asInterface()` returns the local `Stub` object directly, with no IPC and no Proxy.
 
-+ The `.aidl` File: You define an **interface** with **method signatures** using a syntax similar to **Java or C++**.  
-+ Code Generation: During compilation, the Android build system parses the `.aidl` file  
-  and automatically generates a matching interface file in Java or C++.  
-+ Stub and Proxy: The generated code includes two primary inner components:  
-  + **Stub (Server-side)**: An abstract Binder class that extends IInterface and listens for incoming transaction requests,  
-    routing them to your service implementation.  
-  + **Proxy (Client-side)**: A wrapper that converts method calls and parameters into a Parcel packet  
-    and sends them across the **Binder driver** to the remote process.  
+The full transaction path is in [AIDL_call_flow.md](AIDL_call_flow.md).
 
-## Supported Data Types
+## 2. Minimal example
 
-+ Primitive Java types (int, long, char, boolean, etc., **except short**)  
-+ String and CharSequence
-+ Arrays and Lists/Maps of supported types (Lists/Maps automatically resolve to ArrayList and HashMap on delivery)
-+ Other AIDL-generated interfaces and custom Parcelable objects.
+```java
+// IMyService.aidl
+package com.example.myapp;
 
-## Common Use Cases
+interface IMyService {
+    int getScore();
+    void updateScore(int newScore);
+}
+```
 
-+ **Bound Services**: Allowing a background service in one application to serve requests from multiple client apps.
-+ **AOSP System Services**: Communicating between Android framework core services and applications  
-  (e.g., interacting with hardware managers, telephony, or media services).  
-+ **HAL (Hardware Abstraction Layer)**: Modern Android architectures utilize stable AIDL interfaces  
-  to communicate reliably between native system processes and hardware drivers.
+```java
+// Server: return the Stub from onBind()
+public class MyService extends Service {
+    private volatile int score = 100;   // binder threads call concurrently -> keep it thread-safe
 
-## marshalling, unmarshalling
+    private final IMyService.Stub binder = new IMyService.Stub() {
+        @Override public int getScore()               { return score; }
+        @Override public void updateScore(int value)  { score = value; }
+    };
 
-**Marshalling** (serialization) and **unmarshalling** (deserialization) refer to the process of  
-*converting an in-memory object into a byte stream (or Parcel)*  
-so it can be passed between components (like Activities or Services) or IPC boundaries,  
-and then reconstructing it back into an object.  
+    @Override
+    public IBinder onBind(Intent intent) { return binder; }
+}
+```
 
-Android provides a specialized mechanism called **Parcelable** specifically optimized  
-for high-performance marshalling, far outperforming standard Java Serializable.  
+```java
+// Client: convert the IBinder inside ServiceConnection
+@Override
+public void onServiceConnected(ComponentName name, IBinder service) {
+    myService = IMyService.Stub.asInterface(service);
+}
+```
 
-## Local/Remote service
+The complete Android Studio walkthrough (Gradle, manifest, client lifecycle) is in [AIDL_binding.md](AIDL_binding.md).
 
-In Android development, the primary difference between a **local** service and a **remote** service  
-comes down to process boundaries and how they handle communication.
+## 3. Supported data types
 
-+ **Package Name Check**: You can determine if a service belongs to your own application package  
-  by inspecting the **ComponentName** passed into your ServiceConnection callback **when binding to it**.
-+ **The Process Nuance** (Same Package != Local):  
-  While checking the package name tells you if the service is internal or external,  
-  it does **NOT** strictly guarantee whether it is local or remote.  
-  In Android, a service inside your own package can still run in a completely separate, isolated process  
-  if its manifest declaration specifies a custom process name.
++ Primitives: `boolean`, `byte`, `char`, `int`, `long`, `float`, `double`. **`short` is not supported.**
++ `String`, `CharSequence` (Java backend only), `IBinder`, `FileDescriptor` / `ParcelFileDescriptor`
++ Arrays of the supported types (`int[]`, `String[]`, ...)
++ `List`: either raw `List` or **generic** `List<T>` (`List<String>`, `List<MyParcelable>`). The receiver always gets an `ArrayList`.
++ `Map`: raw `Map`, or generic `Map<String, V>` in newer AIDL versions. The receiver always gets a `HashMap`.
+  Keys must be `String` for the non-Java backends.
++ Other AIDL interfaces (for callbacks), plus `parcelable` types (structured AIDL parcelables, or Java classes that implement `Parcelable`)
++ Constants (`const int VERSION = 1;`) and `enum` types
 
-  ```XML
-  <!-- This service is in your package, but runs in a remote process -->
-  <service 
-      android:name=".MyRemoteService" 
-      android:process=":remote_process" />
-  ```
+## 4. Constraints and design rules
 
-### Featuresof Local Service
+### 4.1 Things the language does not allow
 
-+ Process Location: **Runs in the same process** as the application or components (like Activities) that start/bind to it.
-+ Communication Mechanism: Uses a standard direct Java method call or a custom lightweight Binder class extended directly in code.
-+ Performance Overhead: Minimal. Objects and data are passed directly via memory references since they share the same heap.
-+ Threading & Safety: Executes synchronously on the calling thread (often the main UI thread if called from an activity, unless explicitly offloaded).
-+ Primary Use Case: Performing background tasks exclusive to your app, such as downloading a file, playing local music, or syncing data for your UI.
++ **Arbitrary classes**: anything you pass must be one of the types above. Other classes must become a `parcelable`.
++ **Fields / static state**: an interface may contain only methods and constants.
++ **`short`** (see above).
++ **Direction tags**: non-primitive parameters need `in`, `out`, or `inout` (e.g. `void fill(out int[] buf)`).
+  Primitives, `String`, and interfaces are always `in`.
 
-### Features of Remote Service
+### 4.2 Design patterns that the AIDL style guide (and `aidl` warnings) flags
 
-+ Process Location: **Runs in a separate, isolated process** (often belonging to a completely different application or system package).
-+ Communication Mechanism: Requires IPC utilizing **AIDL**,  
-  Messenger, or explicit intents.
-+ Performance Overhead: Higher.  
-  Data must undergo marshalling (packing into a Parcel), *traveling across the Linux kernel via the Binder driver*,  
-  and unmarshalling on the receiving side.
-+ Threading & Safety: Dispatches requests from a system-managed Binder thread pool, requiring the implementation to be strictly thread-safe.
-+ Primary Use Case: Exposing features or data to other applications (e.g., a widget provider, a content plugin)  
-  or interfacing with core Android system services.
++ **Mixing `oneway` and normal methods** in one interface (`-Wmixed-oneway`):
+  this makes the threading model hard to understand for both sides.
++ **Returning custom integer status codes**: throw `ServiceSpecificException` (Java)
+  or return `ScopedAStatus::fromServiceSpecificError()` (NDK) instead.
++ **`out` array parameters** (`-Wout-array`): in Java, the caller must pre-allocate the array,
+  so the server cannot choose the size. Return the array instead.
 
-## strict constraints
+### 4.3 Threading
 
-AIDL is used to **define the programming interface**  
-that both **clients** and **service** processes agree upon to communicate via IPC.  
-Because data must be marshalled, packed into parcels, and sent across process boundaries, **AIDL has strict constraints**.
++ Incoming remote calls run on the **binder thread pool**, never on the main/UI thread.
++ Several clients (or one client with several threads) can call at the same time, so the implementation **must be thread-safe**.
++ On the client side, a normal (non-`oneway`) call **blocks** until the reply arrives.
+  Calling from the UI thread can cause an ANR.
 
-### constraints 1: Unsupported Data Types
+## 5. Local vs remote service
 
-AIDL does not allow arbitrary classes or language features.  
-The following are never allowed:
+You need AIDL only if the service runs in **another process**.
 
-+ The short Primitive Type: While int, long, char, boolean, double, and float are fully supported,  
-  **`short` is not allowed as a primitive type in AIDL.**
-+ Arbitrary Objects/ Custom Classes: You cannot pass just any Java or C++ class.  
-  Objects must either be primitive types, String, CharSequence, an IBinder object, an AIDL-generated interface,  
-  or explicitly defined as a Parcelable (or structured AIDL parcelable).
-+ Parameterized/ Generic Maps and Lists: You cannot use generic definitions like `Map<String, String>` or `List<String>`  
-  with full complex inner nesting on the type declaration itself.  
-  AIDL supports List and Map, but all elements must be of supported types,  
-  and the receiver always instantiates them as concrete ArrayList or HashMap types.  
-  (For complex key-value configurations, a Bundle is often recommended instead).
-+ Static Fields: You can define constants (const int VERSION = 1;),  
-  but you cannot expose or share static variables or mutable fields inside an AIDL interface.  
-  Only methods and constants are supported.
+| | Local service | Remote service |
+| --- | --- | --- |
+| Process | Same process as the caller | Separate process (another app, a system service, or your own `android:process=":remote"`) |
+| Communication | Direct method calls: return a plain `Binder` subclass from `onBind()` | Binder IPC through **AIDL** (or `Messenger`) |
+| Data passing | By reference (shared heap) | Marshalled into a `Parcel`, copied by the Binder driver |
+| Threading | Runs on the caller's thread | Runs on a binder thread, so it must be thread-safe |
+| Typical use | App-internal background work | Exposing features to other apps, system services, HALs |
 
-### constraints 2: Forbidden Interface Design Patterns
+The package name does **not** tell you local vs remote.
+A service in your own package still runs in a different process if the manifest says so:
 
-Android's core architecture guidelines explicitly flag several practices as discouraged or heavily restricted:
+```xml
+<!-- Same package, but a remote process -->
+<service
+    android:name=".MyRemoteService"
+    android:process=":remote_process" />
+```
 
-+ Mixing One-Way and Two-Way Methods in the Same Interface:  
-  You should avoid combining oneway methods (asynchronous, non-blocking calls that do not wait for a response)  
-  with regular synchronous methods in the same interface (-Wmixed-oneway).  
-  It severely complicates the threading and execution model for both clients and servers.
-+ Returning Custom Status Codes:
-  AIDL methods have built-in implicit status return codes (such as ServiceSpecificException).  
-  Avoid manually returning custom integer error codes; **use built-in exception handling mechanisms** instead.
-+ Using Array Output Parameters (out arrays):  
-  Methods like void foo(out String[] ret) are generally prohibited or heavily discouraged (-Wout-array)  
-  because the Java backend forces the client to pre-allocate the array size,  
-  preventing the server from dynamically choosing the output size.
+## 6. Marshalling and Parcelable
 
-### constraints 3. Threading and Concurrency Violations
+**Marshalling** (serialization) converts an in-memory object into a flat byte stream (a `Parcel`).
+**Unmarshalling** rebuilds the object on the other side.
+`Parcelable` is Android's IPC-optimized mechanism. It is much faster than Java `Serializable`,
+but it is meant for IPC, not for persistent storage. See also [marshalling.md](marshalling.md).
 
-+ Direct UI-Thread Access from Remote Calls:Calls from a remote process arrive via a binder thread pool managed by the system.  
-  You are never allowed to assume that incoming remote calls execute on your app's main (UI) thread,  
-  nor should you perform heavy blocking operations synchronously on the UI thread without proper asynchronous handling.
-+ Non-Thread-Safe Implementations: Because a service can receive concurrent calls from multiple remote threads simultaneously,  
-  writing thread-unsafe code inside your AIDL service implementation will lead to race conditions and crashes.
+## 7. Stable AIDL
+
+Normal AIDL assumes both sides are built together.
+**Stable AIDL** (`aidl_interface` with `versions` / `stability: "vintf"`) freezes each API version.
+Then the client and server can be updated independently, which is how AIDL replaced HIDL for HALs.
+See [AIDL_HIDL_cmp.md](AIDL_HIDL_cmp.md) and [AIDL_HAL_impl.md](AIDL_HAL_impl.md).
+
+## Related notes
+
++ [AIDL_impl_langs.md](AIDL_impl_langs.md): backends (Java / CPP / NDK / Rust)
++ [AIDL_call_flow.md](AIDL_call_flow.md): what happens during one call
++ [AIDL_binding.md](AIDL_binding.md): app-level bound service, step by step
++ [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md): exposing an AOSP service to 3rd-party apps
++ [AIDL_HAL.md](AIDL_HAL.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md): AIDL HALs
+
+## Reference
+
++ [Android Interface Definition Language (AIDL)](https://developer.android.com/develop/background-work/services/aidl)
++ [AIDL overview (AOSP)](https://source.android.com/docs/core/architecture/aidl)
++ [AIDL style guide](https://source.android.com/docs/core/architecture/aidl/aidl-style-guide)

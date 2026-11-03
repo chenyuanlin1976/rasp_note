@@ -1,163 +1,203 @@
-# AIDL binding
+# AIDL bound service in Android Studio (Kotlin)
 
-To bind or connect to an Android Interface Definition Language (AIDL) service,  
-you need to implement both sides of the connection:  
-the **Client** (which initiates the binding) and the **Service** (which responds and handles the requests).
+This note walks through an app-level AIDL service and its client, end to end, with current Android Studio/AGP (Android 14+, API 34+).
+The **service** answers requests; the **client** binds to it and calls it.
+For the concepts, see [AIDL_intro.md](AIDL_intro.md).
 
-Here is a step-by-step guide and code example on how to bind and connect to an AIDL service in Android.
+## Step 1: Enable AIDL in Gradle
 
-## Step 1: Define the AIDL Interface
+Starting with **AGP 8.0**, AIDL compilation is **off by default**. Enable it in the module's `build.gradle.kts`, then sync Gradle:
 
-First, create an `.aidl` file (e.g., IMyService.aidl) in your project under `src/main/aidl/com/example/myapp/`.
+```kotlin
+android {
+    namespace = "com.example.aidldemo"
+    compileSdk = 34
 
-```java
-// IMyService.aidl
-package com.example.myapp;
+    defaultConfig {
+        applicationId = "com.example.aidldemo"
+        minSdk = 24
+        targetSdk = 34
+    }
 
-interface IMyService {
-    // Define the methods you want to expose
-    int getPid();
-    String basicTypes(int anInt, long aLong, boolean aBoolean, float aFloat, double aDouble, String aString);
+    buildFeatures {
+        aidl = true   // required on AGP 8+
+    }
 }
 ```
 
-After creating this file, rebuild your project (**Build > Make Project**)  
-so Android Studio automatically generates the corresponding `IMyService.Stub` Java/Kotlin interface.
+## Step 2: Create the `.aidl` file
 
-## Step 2: Implement the Service
+Put it under `app/src/main/aidl/`, in a directory that **matches the package name**.
+You can also right-click the module and choose **New > AIDL > AIDL File**.
 
-Create a Service class that extends Service and implements the generated IMyService.Stub binder.
+```java
+// app/src/main/aidl/com/example/aidldemo/IMyAidlInterface.aidl
+package com.example.aidldemo;
+
+interface IMyAidlInterface {
+    int getPid();
+    int add(int a, int b);
+    String getMessage(String name);
+}
+```
+
+Then run **Build > Make Project**. AGP generates the Java file
+`app/build/generated/aidl_source_output_dir/<variant>/out/com/example/aidldemo/IMyAidlInterface.java`.
+It contains `IMyAidlInterface.Stub`.
+
+## Step 3: Implement the service
 
 ```kotlin
-package com.example.myapp
+package com.example.aidldemo
 
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.os.Process
+import android.util.Log
 
 class MyAidlService : Service() {
 
-    // Implement the Stub interface generated from the AIDL
-    private val binder = object : IMyService.Stub() {
-        override fun getPid(): Int {
-            return android.os.Process.myPid()
+    // Runs on binder threads, NOT the main thread -> must be thread-safe
+    private val binder = object : IMyAidlInterface.Stub() {
+        override fun getPid(): Int = Process.myPid()
+
+        override fun add(a: Int, b: Int): Int {
+            Log.d(TAG, "add($a, $b)")
+            return a + b
         }
 
-        override fun basicTypes(
-            anInt: Int,
-            anLong: Long,
-            aBoolean: Boolean,
-            aFloat: Float,
-            aDouble: Double,
-            aString: String?
-        ): String {
-            return "Received: $anInt, $aString"
-        }
+        override fun getMessage(name: String?): String =
+            "Hello from AIDL service, ${name ?: "Guest"}!"
     }
 
-    override fun onBind(intent: Intent): IBinder {
-        // Return the binder instance to the client
-        return binder
-    }
+    override fun onBind(intent: Intent): IBinder = binder
+
+    private companion object { const val TAG = "MyAidlService" }
 }
 ```
 
-Don't forget to declare your service in your AndroidManifest.xml  
-(make sure to export it if it's accessed across different apps):
+## Step 4: Declare the service in `AndroidManifest.xml`
 
 ```xml
-<service 
-    android:name=".MyAidlService"
-    android:exported="true">
-    <intent-filter>
-        <action android:name="com.example.myapp.IMyService" />
-    </intent-filter>
-</service>
+<application ... >
+    <!-- Same-app clients only: exported="false" -->
+    <!-- Other apps must bind: exported="true" + an intent-filter, protected by a permission -->
+    <service
+        android:name=".MyAidlService"
+        android:exported="true"
+        android:permission="com.example.aidldemo.permission.BIND_MY_SERVICE">
+        <intent-filter>
+            <action android:name="com.example.aidldemo.IMyAidlInterface" />
+        </intent-filter>
+    </service>
+</application>
+
+<permission
+    android:name="com.example.aidldemo.permission.BIND_MY_SERVICE"
+    android:protectionLevel="signature" />
 ```
 
-## Step 3: Bind to the Service from the Client
++ Use `exported="false"` if only your own app binds.
++ If `exported="true"`, protect the service with `android:permission`. A `signature` permission allows only apps signed with your key.
+  Otherwise, any app can call your service.
 
-In your Activity or Fragment, use an Intent and a `ServiceConnection` callback to bind to the service asynchronously.
+## Step 5: Bind from a client (Activity)
 
 ```kotlin
-package com.example.myapp
+package com.example.aidldemo
 
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Bundle
 import android.os.IBinder
+import android.os.RemoteException
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
-    private var aidlService: IMyService? = null
+    private var aidlService: IMyAidlInterface? = null
     private var isBound = false
 
-    // Define the ServiceConnection callbacks
     private val connection = object : ServiceConnection {
-        override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            // This is called when the connection with the service has been established
-            aidlService = IMyService.Stub.asInterface(service)
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            aidlService = IMyAidlInterface.Stub.asInterface(service)
             isBound = true
-            Log.d("AIDL", "Service connected successfully")
-
-            // Safe to call AIDL methods here
+            // Note: this callback runs on the MAIN thread. A remote call here blocks the UI
+            // until the server replies, so move slow calls to a background thread / coroutine.
             try {
-                val pid = aidlService?.pid
-                Log.d("AIDL", "Remote Service PID: $pid")
-            } catch (e: Exception) {
-                Log.e("AIDL", "Error calling service method", e)
+                Log.d(TAG, "remote pid=${aidlService?.pid}, 10+20=${aidlService?.add(10, 20)}")
+            } catch (e: RemoteException) {
+                Log.e(TAG, "remote call failed", e)
             }
         }
 
-        override fun onServiceDisconnected(className: ComponentName) {
-            // This is called when the service abruptly crashes or is killed
+        // Called only when the service process crashes / is killed, NOT on unbindService()
+        override fun onServiceDisconnected(name: ComponentName) {
             aidlService = null
             isBound = false
-            Log.d("AIDL", "Service disconnected unexpectedly")
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        // Bind to the service
-        bindAidlService()
-    }
-
-    private fun bindAidlService() {
-        val intent = Intent(this, MyAidlService::class.java).apply {
-            // If connecting to an external app's service, set the action or package name explicitly:
-            // action = "com.example.myapp.IMyService"
-            // package = "com.example.otherapp"
-        }
-        
-        // Bind the service using Context.BIND_AUTO_CREATE
+    override fun onStart() {
+        super.onStart()
+        // Same app: explicit class
+        val intent = Intent(this, MyAidlService::class.java)
+        // Other app: action + package (setPackage is required; implicit service intents are rejected)
+        // val intent = Intent("com.example.aidldemo.IMyAidlInterface").setPackage("com.example.aidldemo")
         bindService(intent, connection, Context.BIND_AUTO_CREATE)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        // Always unbind to prevent memory leaks
+    override fun onStop() {
+        super.onStop()
         if (isBound) {
             unbindService(connection)
             isBound = false
+            aidlService = null
         }
     }
+
+    private companion object { const val TAG = "MainActivity" }
 }
 ```
 
-## Key Best Practices & Tips
+Notes:
 
-+ Cross-App Communication (Android 11+/ API 30+):  
-  If your client app and service app are separate, remember to declare `<queries>` tags in the client's `AndroidManifest.xml`  
-  to satisfy package visibility rules.
-+ Thread Safety: AIDL method calls made from the client block the calling thread until a response is received  
-  (if called from the main thread, it can cause an ANR if the remote service takes too long).  
-  If the service performs heavy lifting, ensure you handle threading properly.
-+ Lifecycle Management: Always unbind your service inside onDestroy()  
-  or when it's no longer needed using unbindService(connection) to avoid memory leaks.
++ Kotlin maps the AIDL method `getPid()` to the property `aidlService?.pid`.
++ Pair `bindService` with `unbindService` in matching lifecycle callbacks (`onStart`/`onStop` or `onCreate`/`onDestroy`).
+  Otherwise the `ServiceConnection` leaks.
+
+## Step 6: Cross-app checklist
+
++ The client app needs its **own copy of the same `.aidl` file**, with the same package and the same signatures.
+  Alternatively, ship a JAR/AAR (see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)).
++ **Package visibility (API 30+)**: the client declares the server package in its manifest:
+
+  ```xml
+  <queries>
+      <package android:name="com.example.aidldemo" />
+  </queries>
+  ```
+
++ The client requests the permission with `<uses-permission android:name="com.example.aidldemo.permission.BIND_MY_SERVICE" />`.
++ On the server, you can also check the caller with `Binder.getCallingUid()` and `packageManager.getPackagesForUid()`.
+
+## Best practices
+
++ **Threading**: server methods run on binder threads, so make them thread-safe.
+  Client calls block, so don't make slow calls on the main thread (ANR risk).
++ **Errors**: every remote call can throw `RemoteException` / `DeadObjectException`. Handle these exceptions.
++ **Background limits (Android 8+ / 14)**: a bound service lives only while clients are bound.
+  If it has to keep running after that, it must become a foreground service with a declared `foregroundServiceType` (required on Android 14).
+
+## Related notes
+
++ [AIDL_intro.md](AIDL_intro.md), [AIDL_call_flow.md](AIDL_call_flow.md)
++ [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)
+
+## Reference
+
++ [AIDL (developer.android.com)](https://developer.android.com/develop/background-work/services/aidl)
++ [Bound services overview](https://developer.android.com/develop/background-work/services/bound-services)

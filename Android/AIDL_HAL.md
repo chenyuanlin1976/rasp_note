@@ -1,148 +1,163 @@
-# AIDL and HAL service
+# AIDL and HAL services
 
-To understand the phrase "AIDL serves as the **public contract** for a **native Hardware Abstraction Layer (HAL) service**",  
-it helps to break down how Android separates different software layers to keep the system secure, modular, and stable.
+"AIDL is the **public contract** for a **native HAL service**." This note explains what that sentence means.
 
-In modern Android, **AIDL is the standard tool used to implement the HAL.**
++ **HAL** is the *layer*: vendor code that hides chip-specific details from the rest of Android.
++ **AIDL** is the *technology* that defines and carries the HAL's interface (since Android 11; earlier HALs used HIDL,
+  see [AIDL_HIDL_cmp.md](AIDL_HIDL_cmp.md)).
 
-Think of it this way:  
+## 1. What a "contract" is
 
-+ **HAL is the concept and layer (the system layer being built.)**,  
-+ while **AIDL is the technology/language used to build it** (how it works today).
+A contract is a strict agreement on how 2 pieces of software talk to each other:
+the method names, the argument types, the return values, and the errors.
+Neither side needs to know how the other side is implemented; both just follow the contract.
+For a HAL, the contract is a **versioned, frozen `.aidl` interface** marked `@VintfStability`.
 
-## How AIDL Creates the HAL
+## 2. What the HAL is
 
-+ **The Contract (`.aidl` file)**: You write an interface definition file (e.g., `IMyCustomHardware.aidl`)  
-  that specifies what functions your hardware supports (like `open()`, `read()`, or `write()`).
-+ The Implementation: You write C++ (or Java) code that implements that AIDL interface. This implementation is your HAL.
-+ The IPC Process: Because it's an AIDL service, your HAL runs as an independent, isolated process.  
-  When the Android framework wants to talk to your hardware, it sends a message across this AIDL/Binder boundary.
+Android runs on many SoCs (Qualcomm, MediaTek, Rockchip, ...), and each one controls hardware differently.
 
-## 1. What is a "Contract"
++ A HAL is usually a **native (C++/Rust) service process** on the **vendor** partition, written by the SoC or device maker.
++ The framework (`system_server`, system services) only wants "turn Wi-Fi power on". It doesn't care which GPIO or register is involved.
 
-+ In software, a contract is a strict agreement on how 2 separate pieces of software will talk to each other.
-+ It specifies the exact function names, inputs (arguments), and outputs (return values).
-+ Neither side needs to know how the other is written internally; they only need to follow the rules of the contract.
+## 3. Why AIDL is the contract
 
-## 2. What is the HAL
++ The framework and the HAL run in **different processes**, on **different partitions**, and are often updated separately (Treble, GSI).
++ Stable AIDL makes the contract:
+  + **versioned and frozen**: the build checks API dumps; a released version can't change, only new versions can be added.
+  + **declared in VINTF**: the device manifest says "I provide `IWifiPowerControl` v1 / default",
+    and the framework compatibility matrix says what it requires.
++ The generated code marshals the data over **Binder**, so a crash in the HAL kills only the HAL process,
+  not `system_server` or apps.
 
-Android devices run on many different chips (Qualcomm, MediaTek, Samsung, etc.).  
-Each chip has different ways of interacting with physical hardware (like how a Wi-Fi chip is powered on).
+**In short**: AIDL is the stable rulebook that lets high-level Android code tell a low-level native HAL what to do,
+across process and partition boundaries.
 
-+ **The HAL is a collection of native (C/C++) services** written by chipmakers or device manufacturers  
-  that hide the messy, hardware-specific details from the rest of Android.
-+ Android's core system and apps shouldn't care how a Wi-Fi chip turns on - they just want a simple command to turn it on.
+## 4. Example: Wi-Fi power HAL
 
-## 3. Why AIDL is the Public Contract
+> Simplified example to show the roles. A full buildable HAL (`Android.bp`, `.rc`, VINTF, SELinux)
+> is in [AIDL_HAL_impl.md](AIDL_HAL_impl.md).
+> Real Wi-Fi power is normally handled by the kernel Wi-Fi driver (rfkill) and the AOSP Wi-Fi HAL.
 
-**Android apps and system services run in different processes (sandboxes) for security.**  
-A Java-based app cannot directly call a C++ function inside a native HAL service.
+### 4.1 The contract (`.aidl`)
 
-+ **AIDL acts as the translator and the official agreement across this process boundary.**
-+ By writing an `.aidl` file (like IWifiPowerControl), you establish a standardized API contract.
-+ The Android build system automatically generates the low-level code needed to pass data safely back  
-  and forth across processes (**via Android's Binder IPC driver**).
-
-**In short**: AIDL is the standardized rulebook that  
-**lets high-level Android software securely tell the low-level C++ hardware driver what to do**,  
-without crashing the system if something goes wrong.
-
-## example: how AIDL work
-
-Here is a concrete, end-to-end example of how this contract works in practice,  
-showing how a high-level caller uses the **AIDL contract** to talk to the **low-level HAL service**.
-
-The Scenario: Turning Wi-Fi Power On: Imagine an Android system app wants to turn on the Wi-Fi hardware.  
-**It cannot talk directly to the Linux kernel or the C++ hardware driver.**  
-Instead, **it relies on the AIDL contract.**
-
-### 1. The Contractual Agreement (.aidl)
-
-Both the app developer and the C++ HAL developer look at the exact same file to agree on the rules:
+`android.hardware.*` packages are reserved for Google-defined HALs. Custom HALs use `vendor.<company>.*`.
 
 ```java
-// File: IWifiPowerControl.aidl
-package android.hardware.wifi.power;
+// vendor/example/hardware/wifipower/aidl/vendor/example/hardware/wifipower/IWifiPowerControl.aidl
+package vendor.example.hardware.wifipower;
 
+@VintfStability
 interface IWifiPowerControl {
-    boolean setWifiPower(boolean enable);
+    /** Turns the Wi-Fi module power on/off. Fails with a service-specific error on GPIO failure. */
+    void setWifiPower(boolean enable);
 }
 ```
 
-+ The Rule: Anyone calling this service must pass a `boolean`, and the service must return a `boolean` indicating success or failure.  
-  No other data formats are allowed.
+Rule of the contract: the caller passes a `boolean`.
+Success is "no error"; failure comes back as an exception or status, not as a `false` return value (see the AIDL style guide).
 
-### 2. The Server Side (The C++ Native HAL)
-
-On the server side of the contract, the C++ HAL service implements that exact rule.  
-Because it honors the contract, it receives the request safely from the app.
+### 4.2 Server side (C++ HAL, NDK backend)
 
 ```c++
-// implementing the service
-binder::Status WifiPowerControl::setWifiPower(bool enable, bool* _aidl_return) {
-    // The contract guaranteed a boolean ('enable') was passed.
-    // Now the HAL uses its low-level tools (like libgpiod) to fulfill it:
-    
-    int value = enable ? 1 : 0;
-    int ret = gpiod_line_set_value(wifi_gpio_line, value);
+#include <aidl/vendor/example/hardware/wifipower/BnWifiPowerControl.h>
+#include <cerrno>
+#include <gpiod.h>   // libgpiod v1 API, as in libgpiod_intro2.md
 
-    // Return the boolean result back across the contract
-    *_aidl_return = (ret == 0);
-    return binder::Status::ok();
-}
+namespace aidl::vendor::example::hardware::wifipower {
+
+class WifiPowerControl : public BnWifiPowerControl {
+  public:
+    explicit WifiPowerControl(gpiod_line* line) : mLine(line) {}   // line requested as output at startup
+
+    ndk::ScopedAStatus setWifiPower(bool enable) override {
+        if (gpiod_line_set_value(mLine, enable ? 1 : 0) < 0) {
+            return ndk::ScopedAStatus::fromServiceSpecificError(errno);
+        }
+        return ndk::ScopedAStatus::ok();
+    }
+
+  private:
+    gpiod_line* mLine;
+};
+
+}  // namespace aidl::vendor::example::hardware::wifipower
 ```
 
-### 3. The Client Side (The Android App/ System Service)
-
-**An Android system service uses the contract to make a request**.  
-It **doesn't** know (or care) that C++ or libgpiod is running underneath; **it only cares about the contract.**
+### 4.3 Client side (framework / privileged Java code)
 
 ```java
-// Java / Kotlin code in an Android System Service
-try {
-    // 1. Get the service using the AIDL interface name
-    IBinder binder = ServiceManager.getService("wifi_power_service");
-    IWifiPowerControl wifiService = IWifiPowerControl.Stub.asInterface(binder);
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.os.ServiceManager;              // @hide: platform code / platform-signed apps only
+import android.os.ServiceSpecificException;
+import vendor.example.hardware.wifipower.IWifiPowerControl;
 
-    // 2. Execute the contract method
-    boolean success = wifiService.setWifiPower(true);
-    if (success) {
-        Log.d("WifiApp", "Wi-Fi power turned on successfully!");
-    }
+// AIDL HAL instance name = "<package>.<Interface>/<instance>"
+String name = IWifiPowerControl.DESCRIPTOR + "/default";
+IBinder binder = ServiceManager.waitForDeclaredService(name);   // null if not declared in VINTF
+IWifiPowerControl hal = IWifiPowerControl.Stub.asInterface(binder);
+
+try {
+    hal.setWifiPower(true);
+} catch (ServiceSpecificException e) {
+    Log.e(TAG, "HAL reported GPIO error " + e.errorCode);
 } catch (RemoteException e) {
-    Log.e("WifiApp", "Failed to communicate with the hardware service", e);
+    Log.e(TAG, "HAL process died / binder failure", e);
 }
 ```
 
-### Why this structure matters
+Normal 3rd-party apps **can't** do this, because vendor HALs are not reachable from apps.
+They go through a framework or system-app API instead (see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)).
 
-+ **Decoupling**: If the chip manufacturer updates the C++ code or changes how libgpiod talks to the kernel,  
-  they don't have to change anything in the Android app.  
-  As long as the C++ code still fulfills the IWifiPowerControl contract, everything works seamlessly.
-+ **Safety**: If the C++ hardware driver crashes due to a low-level kernel error,  
-  Android's process isolation prevents it from crashing the entire operating system or the user's app.
+### 4.4 Why this structure matters
 
-## config in the .dtsi
++ **Decoupling**: the vendor can rewrite the C++ code (for example, switch from libgpiod to a kernel driver).
+  As long as `IWifiPowerControl` v1 is still fulfilled, the framework doesn't change.
++ **Fault isolation**: if the HAL crashes, only the HAL process dies. `init` restarts it, and clients get `DeadObjectException`.
 
-To configure a GPIO pin for a Wi-Fi power enable/disable function in a Device Tree Source Include (`.dtsi`) file,  
-you need to add a pin definition inside your Wi-Fi device node, referencing the correct SoC GPIO controller bank and line.
+## 5. Describing the GPIO in the device tree (`.dtsi`)
 
-### Configuration Steps
+There are 2 different ways to describe the pin, and **they are mutually exclusive**:
 
-1. Locate the GPIO Controller Node:  
-   Find the parent GPIO controller alias or label in your SoC's base `.dtsi` file (e.g., &gpio1 or &pio). You will need its reference handle.
-2. Add the Pin Property to your Device Node:  
-   Inside your device's node block, define your power pin using the standard `-gpios` suffix convention.  
-   Specify the controller reference, the pin index, and the polarity flag.
+### 5.1 A kernel driver owns the pin
 
-   ```ini, DTS
-   wifi_module: wifi@1 {
-      compatible = "vendor,wifi-chip";
-      /* Connects line 12 of gpio1 as an active-high enable pin */
-      wifi-enable-gpios = <&gpio1 12 GPIO_ACTIVE_HIGH>;
-   };
-   ```
+```dts
+wifi_module: wifi@1 {
+    compatible = "vendor,wifi-chip";
+    /* line 12 of gpio1, active-high enable */
+    enable-gpios = <&gpio1 12 GPIO_ACTIVE_HIGH>;
+};
+```
 
-3. Compile and Update the DTB:  
-   Recompile your device tree source into a .dtb file and flash/load it onto your target device.  
-   You can verify the configuration applied successfully by checking if the node and property appear under `/proc/device-tree/` on the running system.
+The driver bound to `vendor,wifi-chip` claims the line with `devm_gpiod_get(dev, "enable", ...)`.
+After that, **user space (libgpiod) gets `EBUSY`** for this line.
+The HAL then controls power through the driver (rfkill or a sysfs attribute), not through libgpiod.
+
+### 5.2 User space (the HAL) owns the pin
+
+No driver claims the line. You only give it a name, so the HAL can find it with `gpiod_chip_find_line()` / `gpioinfo`:
+
+```dts
+&gpio1 {
+    gpio-line-names = "", "", "", "", "", "", "", "", "", "", "", "",
+                      "WIFI_PWR_EN";   /* index 12 */
+};
+```
+
+### 5.3 Build and check
+
+1. Rebuild the `.dtb` (or the `dtbo`) and flash it.
+2. Check that the property is in `/proc/device-tree/...`.
+3. Run `gpioinfo gpiochip1`: the line shows as `"WIFI_PWR_EN" unused` (5.2) or as used by the driver's consumer name (5.1).
+
+## Related notes
+
++ [AIDL_HAL_impl.md](AIDL_HAL_impl.md): complete vendor HAL server and client
++ [HAL_intro.md](HAL_intro.md), [HAL_libgpiod.md](HAL_libgpiod.md), [libgpiod_intro2.md](libgpiod_intro2.md), [DTSI_syntax_fmt.md](DTSI_syntax_fmt.md)
++ [VINTF_AIDL.md](VINTF_AIDL.md)
+
+## Reference
+
++ [AIDL for HALs](https://source.android.com/docs/core/architecture/aidl/aidl-hals)
++ [Stable AIDL](https://source.android.com/docs/core/architecture/aidl/stable-aidl)

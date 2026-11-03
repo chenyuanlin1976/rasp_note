@@ -1,127 +1,164 @@
-# Using Pure C++ AIDL
+# Pure C++ AIDL service (NDK backend): LED control through sysfs
 
-Using Pure C++ AIDL (the **NDK** backend) means you write **both the client and the service entirely in C++**.  
-There is no Java Virtual Machine, no ART, and zero JNI overhead.
+With the **NDK backend** (`libbinder_ndk`), you can write **both the service and the client in C++**.
+There is no JVM/ART and no JNI.
+The `.aidl` file is the same one a Java client would use; only the generated code differs.
 
-Android supports this natively via the NDK backend (ndk), which generates C++ classes and headers directly from your `.aidl` files.
+This example controls an LED through the kernel LED class (`/sys/class/leds/<name>/`).
+For the sysfs side, see [Led_blinking.md](Led_blinking.md) and [HAL_sysfsNodes.md](HAL_sysfsNodes.md).
 
-Here is a complete end-to-end example of implementing a **pure C++ AIDL service** that controls the LED sysfs nodes.
+## Step 1: The AIDL file
 
-## Step 1: The AIDL File (ILedControl.aidl)
-
-The .aidl file remains identical regardless of whether you use Java or C++.
+The path must match the package: `com/example/led/ILedControl.aidl`.
 
 ```java
 package com.example.led;
 
 interface ILedControl {
-    void setLedState(int controlState, int delayOn, int delayOff);
+    const int STATE_OFF   = 0;
+    const int STATE_ON    = 1;
+    const int STATE_BLINK = 2;
+
+    /** delayOn/delayOff (ms) are used only for STATE_BLINK. */
+    void setLedState(int state, int delayOnMs, int delayOffMs);
 }
 ```
 
-## Step 2: The Build File (Android.bp)
+## Step 2: Android.bp
 
-In your AOSP source tree or native module,  
-configure the `Android.bp` file to generate the C++ (NDK) backend bindings:
-
-```json
+```bp
 aidl_interface {
-    name: "ILedControl",
-    srcs: ["ILedControl.aidl"],
-    stability: "vintf", // Optional: use vintf if this is a hardware service / HAL
+    name: "com.example.led",            // = package name; libs become com.example.led-ndk, ...
+    srcs: ["com/example/led/ILedControl.aidl"],
+    unstable: true,                     // client and service are built together in one partition
     backend: {
-        ndk: {
-            enabled: true, // Enables the C++ NDK backend generation
-        },
+        java: { enabled: false },
+        cpp:  { enabled: false },
+        ndk:  { enabled: true },
     },
 }
+
+cc_binary {
+    name: "led_control_service",
+    srcs: ["LedControlService.cpp", "main.cpp"],
+    shared_libs: ["libbinder_ndk", "liblog", "com.example.led-ndk"],
+    init_rc: ["led_control_service.rc"],
+}
 ```
 
-When built, Android's build system automatically generates C++ headers  
-(e.g., `#include <aidl/com/example/led/BnLedControl.h>`).
+About `stability`:
 
-## Step 3: Implement the C++ Service (LedControlService.cpp)
++ `unstable: true` is enough if every user of the interface is built **in the same partition** (for example, all on `system`).
++ If the interface has to cross system ↔ vendor (a real HAL), use `stability: "vintf"` instead.
+  That is **not** an optional extra: it also requires `@VintfStability` on the interface, `vendor_available: true`,
+  a frozen version (`m com.example.led-freeze-api`), and the `-V1-ndk` library name.
+  See [AIDL_HAL_impl.md](AIDL_HAL_impl.md).
 
-Your C++ service inherits directly from the generated C++ base class (`BnLedControl`) and overrides its methods.
+The build generates `<aidl/com/example/led/ILedControl.h>` and `<aidl/com/example/led/BnLedControl.h>`
+in the namespace `aidl::com::example::led`.
+
+## Step 3: The service
+
+### LedControlService.h
 
 ```c++
+#pragma once
+
 #include <aidl/com/example/led/BnLedControl.h>
-#include <android/binder_manager.h>
-#include <android/binder_process.h>
-#include <fstream>
 #include <string>
 
-using aidl::com::example::led::BnLedControl;
-using ndk::ScopedAStatus;
+class LedControlService : public aidl::com::example::led::BnLedControl {
+  public:
+    explicit LedControlService(std::string ledDir) : mDir(std::move(ledDir)) {}
 
-class LedControlService : public BnLedControl {
-public:
-    ScopedAStatus setLedState(int32_t controlState, int32_t delayOn, int32_t delayOff) override {
-        if (controlState == 0) {
-            // OFF
-            writeToFile("/sys/class/leds/sys_led_r/trigger", "none");
-            writeToFile("/sys/class/leds/sys_led_r/brightness", "0");
-        } 
-        else if (controlState == 1) {
-            // ON
-            writeToFile("/sys/class/leds/sys_led_r/trigger", "none");
-            writeToFile("/sys/class/leds/sys_led_r/brightness", "255");
-        } 
-        else if (controlState == 2) {
-            // BLINK (Kernel Timer)
-            writeToFile("/sys/class/leds/sys_led_r/trigger", "timer");
-            writeToFile("/sys/class/leds/sys_led_r/delay_on", std::to_string(delayOn));
-            writeToFile("/sys/class/leds/sys_led_r/delay_off", std::to_string(delayOff));
-        }
-        
-        return ScopedAStatus::ok();
-    }
+    ndk::ScopedAStatus setLedState(int32_t state, int32_t delayOnMs, int32_t delayOffMs) override;
 
-private:
-    void writeToFile(const std::string& path, const std::string& value) {
-        std::ofstream file(path);
-        if (file.is_open()) {
-            file << value;
-        }
-    }
+  private:
+    bool writeAttr(const char* attr, const std::string& value);
+    std::string mDir;   // e.g. "/sys/class/leds/sys_led_r"
 };
 ```
 
-## Step 4: Register and Start the Native Service (main.cpp)
-
-To make your C++ service available to the Android system via **Binder**,  
-you instantiate it and register it with the Android `AServiceManager`:
+### LedControlService.cpp
 
 ```c++
-#include "LedControlService.cpp" // or include your header file
+#define LOG_TAG "LedControlService"
 
-int main() {
-    // Initialize the binder thread pool for handling incoming IPC calls
-    ABinderProcess_setThreadPoolMaxThreadCount(0);
+#include "LedControlService.h"
 
-    // Create an instance of your native service using NDK smart pointers
-    std::shared_ptr<LedControlService> service = ndk::SharedRefBase::make<LedControlService>();
+#include <cerrno>
+#include <fstream>
+#include <log/log.h>
 
-    // Register the service with ServiceManager using the standard descriptor naming convention
-    const std::string instanceName = std::string(LedControlService::descriptor) + "/default";
-    binder_exception_t status = AServiceManager_addService(service->asBinder().get(), instanceName.c_str());
+using ndk::ScopedAStatus;
+using aidl::com::example::led::ILedControl;
 
-    if (status != STATUS_OK) {
-        // Handle registration failure
-        return EXIT_FAILURE;
+bool LedControlService::writeAttr(const char* attr, const std::string& value) {
+    std::ofstream f(mDir + "/" + attr);
+    f << value;
+    f.flush();
+    if (!f) {
+        ALOGE("write %s/%s=%s failed", mDir.c_str(), attr, value.c_str());
+        return false;
     }
+    return true;
+}
 
-    // Join the thread pool so the process stays alive and listens for binder calls
-    ABinderProcess_joinThreadPool();
-    
-    return EXIT_FAILURE; // Should never reach here
+ScopedAStatus LedControlService::setLedState(int32_t state, int32_t delayOnMs, int32_t delayOffMs) {
+    bool ok = false;
+    switch (state) {
+        case ILedControl::STATE_OFF:
+            ok = writeAttr("trigger", "none") && writeAttr("brightness", "0");
+            break;
+        case ILedControl::STATE_ON:
+            ok = writeAttr("trigger", "none") && writeAttr("brightness", "255");   // max_brightness may differ
+            break;
+        case ILedControl::STATE_BLINK:
+            // delay_on/delay_off exist only after trigger=timer, so set the trigger first
+            ok = writeAttr("trigger", "timer") &&
+                 writeAttr("delay_on", std::to_string(delayOnMs)) &&
+                 writeAttr("delay_off", std::to_string(delayOffMs));
+            break;
+        default:
+            return ScopedAStatus::fromExceptionCode(EX_ILLEGAL_ARGUMENT);
+    }
+    return ok ? ScopedAStatus::ok() : ScopedAStatus::fromServiceSpecificError(EIO);
 }
 ```
 
-## Step 5: How a Native C++ Client Calls It
+## Step 4: Register the service (main.cpp)
 
-If another native daemon or process wants to call this service,  
-it doesn't need Kotlin or Java either - it can look it up entirely in C++:
+```c++
+#define LOG_TAG "LedControlMain"
+
+#include "LedControlService.h"
+
+#include <android/binder_manager.h>
+#include <android/binder_process.h>
+#include <log/log.h>
+
+int main() {
+    ABinderProcess_setThreadPoolMaxThreadCount(0);   // single binder thread = main thread (no locking needed)
+
+    auto service = ndk::SharedRefBase::make<LedControlService>("/sys/class/leds/sys_led_r");
+    const std::string instance = std::string(LedControlService::descriptor) + "/default";
+
+    binder_exception_t err = AServiceManager_addService(service->asBinder().get(), instance.c_str());
+    if (err != EX_NONE) {
+        ALOGE("addService(%s) failed: %d", instance.c_str(), err);
+        return EXIT_FAILURE;
+    }
+
+    ABinderProcess_joinThreadPool();
+    return EXIT_FAILURE;   // never reached
+}
+```
+
+`descriptor` here is `"com.example.led.ILedControl"`, so the instance name is `com.example.led.ILedControl/default`.
+That same name must appear in `service_contexts`, and the service needs SELinux rules to write the LED sysfs files
+(see [SELinux_policy.md](SELinux_policy.md)).
+
+## Step 5: A native C++ client
 
 ```c++
 #include <aidl/com/example/led/ILedControl.h>
@@ -129,23 +166,34 @@ it doesn't need Kotlin or Java either - it can look it up entirely in C++:
 
 using aidl::com::example::led::ILedControl;
 
-void triggerBlinkFromNativeCode() {
-    std::string instanceName = std::string(ILedControl::descriptor) + "/default";
-    
-    // Connect to the service via Binder
-    std::shared_ptr<ILedControl> ledService = ILedControl::fromBinder(
-        ndk::SpAIBinder(AServiceManager_checkService(instanceName.c_str()))
-    );
+bool blinkLed() {
+    const std::string instance = std::string(ILedControl::descriptor) + "/default";
 
-    if (ledService != nullptr) {
-        // Directly invoke the method over Binder IPC—no JNI involved!
-        ledService->setLedState(2, 500, 500); // 500ms on, 500ms off blink
-    }
+    // waitForService blocks until registered; checkService returns null immediately if not yet up
+    std::shared_ptr<ILedControl> led = ILedControl::fromBinder(
+            ndk::SpAIBinder(AServiceManager_waitForService(instance.c_str())));
+    if (led == nullptr) return false;
+
+    ndk::ScopedAStatus st = led->setLedState(ILedControl::STATE_BLINK, 500, 500);   // Binder IPC, no JNI
+    return st.isOk();
 }
 ```
 
-## Why Choose Pure C++ AIDL
+The client links `libbinder_ndk` and `com.example.led-ndk`.
 
-+ Zero Overhead: No JVM translation, no JNI type conversion (jstring, jint, etc.), and minimal memory footprint.
-+ Ideal for System Daemons: Perfect for low-level AOSP native services, hardware abstraction layers (HALs),  
-  or vendor daemons that run outside the Android framework runtime.
+## Why pure C++ AIDL
+
++ **No JVM / JNI**: no `jstring`/`jint` conversion, a small memory footprint, and fast startup.
++ **Fits system daemons and HALs** that run outside the Android runtime.
++ **Stable ABI** (NDK backend): the same code works in vendor, APEX, or system modules.
+  The older `cpp` backend (`libbinder`) is limited to platform-internal code; see [AIDL_impl_langs.md](AIDL_impl_langs.md).
+
+## Related notes
+
++ [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md): the same pattern with libgpiod
++ [AIDL_HAL_impl.md](AIDL_HAL_impl.md): turning a service like this into a stable vendor HAL
++ [Led_on_off.md](Led_on_off.md), [Led_blinking.md](Led_blinking.md)
+
+## Reference
+
++ [AIDL backends](https://source.android.com/docs/core/architecture/aidl/aidl-backends)

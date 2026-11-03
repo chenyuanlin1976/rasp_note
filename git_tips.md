@@ -1,60 +1,110 @@
-# git tips
+# Git tips: pull strategies and identity
 
-## git pull command
+Examples were run with Git 2.43.
 
-When you run `git pull`, Git fetches updates from your remote repository and needs to integrate them into your local branch.  
-The fundamental difference between a **Fast-Forward** and a **Rebase** comes down to  
-**whether your local branch has diverged from the remote branch**.
+## 1. `git pull`: fast-forward, merge, or rebase
 
-### Fast-Forward Only (Recommended)
+`git pull` = `git fetch` (download the remote branch) + integrate it into the current branch.
+How it integrates depends on whether the two histories have **diverged**:
 
-A fast-forward is NOT an integration strategy;  
-**it is a shortcut Git uses when no integration is needed.**  
-It happens when you have no new local commits, meaning your local branch is just a few steps behind the remote repository.
+```text
+Behind only (no local commits)      Diverged (both sides have new commits)
 
-+ How it works: Git does not combine code or create a "merge commit".  
-  It simply moves (fast-forwards) your local branch pointer up to match the latest remote commit.
-+ **During a git pull**: If you run `git pull --ff-only`,  
-  Git will successfully update your branch if it can be fast-forwarded.  
-  However, if you have made local commits, the pull will fail and throw an error because the histories have diverged
+origin:  A---B---C                  origin:  A---B---C
+local:   A                          local:   A---X
 
-#### Config Fast-Forward
+fast-forward: local -> C            merge:   A---B---C---M      rebase:  A---B---C---X'
+                                              \         /
+                                               X-------
+```
 
-+ `git config --global pull.ff only`: Apply to all your repositories
-+ `git config pull.ff only`: Apply to the current repository only
-+ `git pull --ff-only`: Overriding the Config Temporarily
++ **Fast-forward** isn't an integration: Git only moves the branch pointer forward. No new commit, no conflicts.
++ When the branches have diverged, Git must **merge** (a merge commit `M` with two parents)
+  or **rebase** (replay the local commits on top of the remote ones as new commits `X'`, with new hashes).
++ If nothing is configured and the branches have diverged, current Git stops with
+  `fatal: Need to specify how to reconcile divergent branches.` Choose a default:
 
-### Rebase
+| Behavior when diverged | One time | Default (`--global` = all repos; without it, this repo only) |
+| --- | --- | --- |
+| Refuse: `fatal: Not possible to fast-forward, aborting.` | `git pull --ff-only` | `git config --global pull.ff only` |
+| Merge commit | `git pull --no-rebase` | `git config --global pull.rebase false` |
+| Rebase local commits | `git pull --rebase` | `git config --global pull.rebase true` |
 
-A rebase is an intentional integration strategy  
-used when both you and the remote repository have new, different commits.
++ A command-line option overrides the configuration: with `pull.ff only` set, `git pull --rebase` still rebases.
++ Don't set both `pull.ff only` and `pull.rebase true`: a plain `git pull` then still refuses diverged branches.
++ A practical default: `pull.ff only`. When it refuses, decide: `git pull --rebase` if the local commits are only yours,
+  or `git pull --no-rebase` to keep them as they are with a merge commit.
 
-+ How it works: Git temporarily takes your unique local commits and lifts them out of the way.  
-  It applies the new incoming remote commits first, and then replays your local commits one by one on top of them.
-+ **During a git pull**: If you run `git pull --rebase`,  
-  Git pulls the remote changes, puts them at the base of your branch, and stacks your local work cleanly on top.  
-  This rewrites your local commit history so it looks like you started working after the remote changes were already made.
+### 1.1 Rebase safely
 
-#### Config rebase
++ Rebase only commits that you haven't pushed or shared. Rebased commits are new commits;
+  others who have the old ones get duplicated history.
++ Rebase refuses to start with uncommitted changes (`error: ... Please commit or stash them.`).
+  `git pull --rebase --autostash`, or `git config --global rebase.autoStash true`, stashes and reapplies them.
++ On a conflict: fix the files, `git add` them, then `git rebase --continue`. Or `git rebase --abort` to return to the state before the pull.
++ Undo a finished rebase: `git reflog` lists the previous positions of `HEAD`; `git reset --hard ORIG_HEAD`
+  (or `HEAD@{n}` from the reflog) moves the branch back. `reset --hard` discards uncommitted changes.
 
-+ `git config --global pull.rebase true`: Global Configuration (All Repositories)
-+ `git config pull.rebase true`: Local Configuration (Current Repository Only)
-+ `git pull --rebase`: One-time override
+```shell
+git fetch && git status                  # "ahead 1, behind 2" = diverged
+git log --oneline --graph --all -20      # see both histories before you choose
+```
 
-## config user.name and Email
+## 2. Identity: `user.name` and `user.email`
 
-Check Current Settings:
+Every commit records an author name and email. They are plain text, not a login:
+authentication to GitHub or Gerrit uses SSH keys or tokens, configured separately.
 
-+ View everything: `git config --list` (Shows all active configuration values)
-+ View current username: `git config user.name`
-+ View current email: `git config user.email`
+| Scope | Option | File | Applies to |
+| --- | --- | --- | --- |
+| System | `--system` | `/etc/gitconfig` | All users |
+| Global | `--global` | `~/.gitconfig` (or `~/.config/git/config`) | All your repositories |
+| Local | `--local` (the default when writing) | `.git/config` | This repository; overrides global |
 
-### Set Globally (For all repositories)
+```shell
+git config --global user.name "Your Name"            # quote names with spaces
+git config --global user.email "you@example.com"
+git config user.email "you@company.example"          # only this repository
+git config user.email                                # the value in effect
+git config --show-origin --show-scope user.email     # and where it comes from
+git config --list --show-origin                      # everything
+```
 
-+ Set Username: `git config --global user.name YourName`
-+ Set Email: `git config --global user.email yourEmail@example.com`
+### 2.1 A different identity per directory
 
-### Set Locally (For a single repository)
+```text
+# ~/.gitconfig
+[user]
+	name = Your Name
+	email = you@example.com
+[includeIf "gitdir:~/work/"]
+	path = ~/.gitconfig-work
 
-+ Set Username: `git config user.name YourName`
-+ Set Email: `git config user.email your.email@example.com`
+# ~/.gitconfig-work
+[user]
+	email = you@company.example
+```
+
+Every repository under `~/work/` uses the work email, without per-repository settings. The trailing `/` matches all subdirectories.
+
+### 2.2 Fix the author of the last commit
+
+```shell
+git config user.email "you@company.example"
+git commit --amend --reset-author --no-edit          # rewrite the last commit with the current identity
+```
+
+Like a rebase, this creates a new commit: do it before pushing.
+For older commits, use an interactive rebase and amend each one.
+
+## Related notes
+
++ [Android/Googles_Repo.md](Android/Googles_Repo.md): `repo`, which runs Git across many repositories
++ [Linux/ssh_login.md](Linux/ssh_login.md)
+
+## Reference
+
++ [git-pull documentation](https://git-scm.com/docs/git-pull)
++ [git-rebase documentation](https://git-scm.com/docs/git-rebase)
++ [git-config documentation (`includeIf`, `pull.*`, `rebase.autoStash`)](https://git-scm.com/docs/git-config)
++ [Pro Git book: Rebasing](https://git-scm.com/book/en/v2/Git-Branching-Rebasing)

@@ -96,7 +96,7 @@ If you still need another interface:
 
 + [sysfs_intro.md](sysfs_intro.md): sysfs in general
 + [HAL_DeviceTree.md](HAL_DeviceTree.md): `gpio-leds` in the device tree, and a C++ HAL over `/sys/class/leds`
-+ [dts_node_leds.md](dts_node_leds.md), [dts_leds_pinctrl.md](dts_leds_pinctrl.md)
++ [dts_node_leds.md](dts_node_leds.md), [dts_conventions.md](dts_conventions.md)
 + [../Android/Led_on_off.md](../Android/Led_on_off.md), [../Android/Led_blinking.md](../Android/Led_blinking.md)
 
 ## Reference

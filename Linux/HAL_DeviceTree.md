@@ -98,7 +98,7 @@ The board `.dts` wires an LED to GPIO1 pin 4, using the generic **`gpio-leds`** 
 
 With `CONFIG_LEDS_GPIO` enabled, the `gpio-leds` driver probes this node at boot and creates `/sys/class/leds/system_status/`
 (with `brightness`, `max_brightness`, `trigger`).
-The pin also has to be muxed as GPIO, which needs a `pinctrl` entry on most SoCs (see [dts_leds_pinctrl.md](dts_leds_pinctrl.md)).
+The pin also has to be muxed as GPIO, which needs a `pinctrl` entry on most SoCs (see [dts_conventions.md](dts_conventions.md)).
 Newer bindings prefer `function = LED_FUNCTION_STATUS;` and `color = <LED_COLOR_ID_GREEN>;` to `label`;
 the kernel then builds the name, for example `green:status`.
 
@@ -202,7 +202,7 @@ or run the HAL as a small privileged daemon.
 
 + [HAL_intro.md](HAL_intro.md): C++ HAL design
 + [HAL_mmio_vs_sysfs.md](HAL_mmio_vs_sysfs.md): why the HAL uses kernel interfaces, not `/dev/mem`
-+ [dts_intro.md](dts_intro.md), [dts_node_leds.md](dts_node_leds.md), [dts_leds_pinctrl.md](dts_leds_pinctrl.md), [linuxDriver_dtsi.md](linuxDriver_dtsi.md)
++ [dts_intro.md](dts_intro.md), [dts_node_leds.md](dts_node_leds.md), [dts_conventions.md](dts_conventions.md), [dts_driver.md](dts_driver.md)
 
 ## Reference
 

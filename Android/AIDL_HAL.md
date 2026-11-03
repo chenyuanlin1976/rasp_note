@@ -154,7 +154,7 @@ No driver claims the line. You only give it a name, so the HAL can find it with 
 ## Related notes
 
 + [AIDL_HAL_impl.md](AIDL_HAL_impl.md): complete vendor HAL server and client
-+ [HAL_intro.md](HAL_intro.md), [HAL_libgpiod.md](HAL_libgpiod.md), [libgpiod_android.md](libgpiod_android.md), [DTSI_syntax_fmt.md](DTSI_syntax_fmt.md)
++ [HAL_intro.md](HAL_intro.md), [HAL_libgpiod.md](HAL_libgpiod.md), [libgpiod_android.md](libgpiod_android.md), [../Linux/dts_intro.md](../Linux/dts_intro.md)
 + [VINTF_AIDL.md](VINTF_AIDL.md)
 
 ## Reference

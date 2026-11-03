@@ -1,65 +1,150 @@
-# device tree node: &leds
+# Device tree: a pin as an LED (`gpio-leds`) vs a plain GPIO (RK3566)
 
-In the context of your Linux kernel source or device tree source (.dts/.dtsi), &leds is a device tree node reference label.
+A pin wired to an LED can be described in 2 ways.
+The choice decides **which kernel subsystem owns the pin**, and therefore how user space and Android services control it.
 
-It points to the main LED controller block (usually defined as `compatible = "gpio-leds"`)  
-so that you can add, configure, or override individual LED definitions (like your sys_led_r) for specific hardware targets.
+| | LED (`gpio-leds`) | Plain GPIO |
+| --- | --- | --- |
+| Kernel owner | `leds-gpio` driver (LED class) | Nobody: free for user space |
+| User-space interface | `/sys/class/leds/<name>/` (`brightness`, `trigger`) | `/dev/gpiochipN` through libgpiod |
+| Blinking / heartbeat | Kernel triggers (`timer`, `heartbeat`, ...); no process needed | Your own process with a timer |
+| Polarity | From the DT flag (`GPIO_ACTIVE_LOW`) | Set per request in user space |
+| Best for | Status, power, and activity LEDs | Relays, enables, signals that a user-space HAL owns |
 
-## What It Controls
+**Recommendation**: if the component is an LED, declare it as **`gpio-leds`** (or `pwm-leds` if it's on a PWM channel).
+You get triggers, a stable sysfs name, and no custom code for blinking.
 
-+ Hardware GPIO Lines: It maps a logical LED name (like `sys_led_r`) to a physical SoC General Purpose Input/Output (GPIO) pin.
-+ Initial and Trigger States: It controls default configurations, such as whether the LED turns on automatically at boot  
-  or stays bound to specific kernel triggers (like heartbeat, timer, or manual user-space control).
+## 1. As an LED: `gpio-leds`
 
-## Troubleshooting Steps for LED Control
+```dts
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/leds/common.h>
+#include <dt-bindings/pinctrl/rockchip.h>
 
-### 1.Check Device Tree Definition
+/ {
+    leds: leds {
+        compatible = "gpio-leds";
+        pinctrl-names = "default";
+        pinctrl-0 = <&led_pins>;                     /* mux the pins as GPIO, set pulls */
 
-+ Locate your board's .dts file and verify that the &leds block correctly references your hardware GPIO pin and has proper polarity.
-+ Verification: Run `adb shell cat /sys/kernel/debug/gpio`  
-  to check if the target GPIO pin assigned to your LED is exported and configured as an output.
+        led-0 {
+            label = "sys_led_r";                     /* -> /sys/class/leds/sys_led_r */
+            gpios = <&gpio4 RK_PD5 GPIO_ACTIVE_HIGH>;
+            default-state = "off";                   /* "on" | "off" | "keep" */
+            linux,default-trigger = "heartbeat";     /* optional: "timer", "default-on", "mmc0", ... */
+        };
 
-### 2.Check Sysfs Node Generation
+        led-1 {
+            color = <LED_COLOR_ID_GREEN>;            /* newer style instead of label: */
+            function = LED_FUNCTION_STATUS;          /* name becomes "green:status" */
+            gpios = <&gpio0 RK_PC0 GPIO_ACTIVE_LOW>; /* LED lights when the pin is LOW */
+        };
+    };
+};
 
-+ Verify that the kernel successfully created the sysfs directory for your LED based on the device tree configuration.
-+ Verification: Run `adb shell ls -l /sys/class/leds/` to confirm sys_led_r appears in the list.
-
-## Blinking
-
-standard gpio-leds device tree nodes do **NOT** include direct configuration properties for `delay_on` or `delay_off`.
-
-The device tree only supports properties like `gpios`, `default-state`, and `linux,default-trigger`.  
-To configure **blinking** behavior with specific delays,  
-you set the `default trigger` to `timer` in the device tree and then configure the delay values dynamically.
-
-### How to Configure Blinking via Device Tree and Init
-
-#### 1.Set the default trigger to timer
-
-+ Add `linux,default-trigger = "timer"` to your LED sub-node in the .dts file:
-+ Verification: Check that the node compiles without errors and the kernel creates the trigger file.
-
-```inicompatible
-leds {
-    compatible = "gpio-leds";
-    sys_led_r {
-        label = "sys_led_r";
-        gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
-        linux,default-trigger = "timer";
-        default-state = "off";
+&pinctrl {
+    leds {
+        led_pins: led-pins {
+            rockchip,pins = <4 RK_PD5 RK_FUNC_GPIO &pcfg_pull_none>,
+                            <0 RK_PC0 RK_FUNC_GPIO &pcfg_pull_none>;
+        };
     };
 };
 ```
 
-#### 2.Configure delay times at boot
++ The container node (`leds`) isn't a hardware controller. It's a node that the `leds-gpio` driver binds to,
+  and each child (`led-*`) is one LED.
+  The label `leds:` is only needed if another file wants to extend it with `&leds { ... }`.
++ Child node names should be `led-<n>` or `led-<name>` (dashes, no underscores; see [dts_codingStyle.md](dts_codingStyle.md)).
+  The sysfs name comes from `label`, or from `color`/`function`.
++ Kernel config: `CONFIG_LEDS_GPIO`, plus `CONFIG_LEDS_TRIGGER_*` for each trigger you use.
 
-Since delays cannot be hardcoded in the device tree,  
-write your desired millisecond values to the sysfs nodes via an `init.rc` script or custom service right after boot:
+### Blinking
 
-```bash
-write /sys/class/leds/sys_led_r/trigger timer
-write /sys/class/leds/sys_led_r/delay_on 500
-write /sys/class/leds/sys_led_r/delay_off 500
+`gpio-leds` has **no** `delay-on`/`delay-off` properties. You have these options:
+
++ `linux,default-trigger = "timer";` blinks at the default rate (500 ms on / 500 ms off) from boot.
++ Set custom delays at runtime, after the timer trigger is active:
+
+  ```text
+  # Android vendor init .rc (on Linux: a systemd unit or udev rule writing the same files)
+  on boot
+      write /sys/class/leds/sys_led_r/trigger timer
+      write /sys/class/leds/sys_led_r/delay_on 100
+      write /sys/class/leds/sys_led_r/delay_off 900
+  ```
+
++ Use the `pattern` trigger (`led-pattern` property / `pattern` file) for arbitrary sequences.
+
+The full list of attributes and triggers is in [sysfs_leds.md](sysfs_leds.md).
+
+## 2. As a plain GPIO
+
+If **no** driver should own the pin (a user-space daemon or Android HAL toggles it), don't put it in any `*-gpios` property.
+Only give it a mux/pull configuration and, optionally, a name:
+
+```dts
+&pinctrl {
+    pinctrl-names = "default";
+    pinctrl-0 = <&relay_en>;            /* "hog": applied when the pin controller probes, since no consumer references it */
+
+    my-board {
+        relay_en: relay-en {
+            rockchip,pins = <4 RK_PD5 RK_FUNC_GPIO &pcfg_pull_down>;
+        };
+    };
+};
+
+&gpio4 {
+    /* one string per line, in offset order: 29 empty names (lines 0-28), then line 29 = RK_PD5 */
+    gpio-line-names = "", "", "", "", "", "", "", "", "", "",
+                      "", "", "", "", "", "", "", "", "", "",
+                      "", "", "", "", "", "", "", "", "",
+                      "RELAY_EN";
+};
 ```
 
-+ Verification: Run adb shell cat /sys/class/leds/sys_led_r/delay_on to verify the value matches what you configured.
+Defining a pin group alone does nothing until something references it, either a consumer's `pinctrl-0` or a hog like the one above.
+Rockchip's GPIO driver also switches the mux to GPIO when the line is requested, but **pull/drive settings** come only from pinctrl.
+
+Then control it from user space through the character device, **not** `/sys/class/gpio`, which is deprecated and often not built:
+
+```shell
+gpioinfo gpiochip4                 # line 29 "RELAY_EN" unused
+gpioset gpiochip4 29=1             # libgpiod v1 (v2: gpioset -c gpiochip4 29=1)
+```
+
+RK3566 pin math: `GPIO<bank>_<group><n>` → `gpiochip<bank>`, offset = group × 8 + n (A=0 … D=3), so GPIO4_D5 = `gpiochip4` line 29.
+See [libgpiod_intro.md](libgpiod_intro.md) and [libgpiod_sysfs_cmp.md](libgpiod_sysfs_cmp.md).
+
+Other choices for non-LED pins: **buttons** belong in `gpio-keys` (input events on `/dev/input/event*`),
+and **power rails** in `regulator-fixed` (see [dts_node_fixedRegulator.md](dts_node_fixedRegulator.md)).
+
+## 3. Checking the result
+
+```shell
+ls /sys/class/leds/                          # sys_led_r, green:status ?
+cat /sys/class/leds/sys_led_r/trigger        # [heartbeat] marks the active trigger
+gpioinfo gpiochip4 | grep -E "29:|used"      # line 29 used by "sys_led_r" (LED case) or unused (GPIO case)
+cat /sys/kernel/debug/gpio                   # alternative (root, debugfs mounted; not on Android user builds)
+cat /sys/kernel/debug/pinctrl/*/pinmux-pins  # which function/owner each pin has
+```
+
+If `/sys/class/leds/<name>` is missing:
+
++ Is the node in the live tree (`/proc/device-tree/leds/`)?
++ Is `CONFIG_LEDS_GPIO` enabled?
++ Does `dmesg | grep -i led` show a GPIO request failure? That happens when another node already uses the pin.
+
+## Related notes
+
++ [sysfs_leds.md](sysfs_leds.md): LED class attributes and triggers
++ [HAL_DeviceTree.md](HAL_DeviceTree.md): from this node to a C++ HAL
++ [dts_conventions.md](dts_conventions.md): pinctrl details
++ [../Android/AIDL_impl_leds_cxx.md](../Android/AIDL_impl_leds_cxx.md), [../Android/HAL_libgpiod.md](../Android/HAL_libgpiod.md)
+
+## Reference
+
++ [gpio-leds binding (leds-gpio.yaml)](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/leds/leds-gpio.yaml)
++ [Common LED properties (common.yaml)](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/leds/common.yaml)
++ [Rockchip pinctrl binding](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/pinctrl/rockchip,pinctrl.yaml)

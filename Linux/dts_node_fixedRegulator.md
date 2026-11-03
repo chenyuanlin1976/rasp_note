@@ -1,108 +1,120 @@
-# device tree node: Fixed Regulator
+# Device tree: a GPIO-switched power rail (`regulator-fixed`)
 
-To configure a power on/off pin for a peripheral chip in a Device Tree (.dtsi),  
-you typically use either a **Fixed Regulator** (best practice for power rails)  
-or a Direct GPIO Enable property (if the driver natively accepts an enable line).
+Suppose a GPIO switches the power of a peripheral, for example through a load switch or an LDO enable pin.
+There are 2 ways to describe it. The recommended one is a **fixed regulator** that the peripheral uses as its `<name>-supply`.
 
-## 1.Define a Fixed Regulator
+## 1. Define a fixed regulator
 
-+ If the pin controls a dedicated power rail (such as VCC or VDD) for the peripheral, define a fixed regulator node in your .dtsi:
-+ Verification: Check that the regulator node compiles correctly and appears under /sys/class/regulator/ after booting the device.
+```dts
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/rockchip.h>   /* RK_PB2 */
 
-```ini
 / {
-    vcc_periph: fixed-regulator-periph {
+    vcc3v3_periph: regulator-vcc3v3-periph {
         compatible = "regulator-fixed";
-        regulator-name = "vcc_periph_en";
-        regulator-min-microvolt = <3300000>; // Set voltage (e.g., 3.3V)
+        regulator-name = "vcc3v3_periph";          /* name in /sys/class/regulator/*/name and in logs */
+        regulator-min-microvolt = <3300000>;       /* fixed: min == max */
         regulator-max-microvolt = <3300000>;
-        gpio = <&gpio1 10 GPIO_ACTIVE_HIGH>; // Replace with your actual GPIO pin
-        startup-delay-us = <1000>;      /* Delay when turning ON */
-        off-on-delay-us = <2000>;       /* Cooldown / delay required after turning OFF */
-        enable-active-high;
-        regulator-boot-on; // Optional: keeps power on during boot
+        gpio = <&gpio1 RK_PB2 GPIO_ACTIVE_HIGH>;   /* enable pin */
+        enable-active-high;                        /* REQUIRED for active-high, see below */
+        startup-delay-us = <1000>;                 /* wait after enabling before consumers use it */
+        off-on-delay-us = <2000>;                  /* minimum off time before re-enabling */
+        vin-supply = <&vcc_sys>;                   /* optional: the rail this switch is fed from */
+        pinctrl-names = "default";
+        pinctrl-0 = <&vcc3v3_periph_en>;           /* optional: mux + pull for the enable pin */
     };
 };
 ```
 
-## 2.Bind the Regulator to the Peripheral Node
++ **Polarity quirk**: for `regulator-fixed`, the active level comes from **`enable-active-high`**, not from the GPIO flag.
+  Without that property the enable pin is treated as **active-low**, whatever `GPIO_ACTIVE_HIGH` says.
+  The kernel warns about the mismatch. Keep the two consistent.
++ Use `gpio` (singular) for this binding, as documented in `fixed-regulator.yaml`.
++ The node name should start with `regulator-`. The label (`vcc3v3_periph:`) is used for references,
+  and `regulator-name` is what shows up at runtime.
 
-+ Reference the newly created regulator inside your peripheral device node so the kernel driver automatically turns it on when `probed`:
-+ Verification: Run `adb shell dmesg | grep regulator` to confirm the driver successfully requests and enables the supply rail.
+### Boot-time behavior
 
-```ini
-&periph_device {
-    vcc-supply = <&vcc_periph>;
+| Property | Effect |
+| --- | --- |
+| *(none)* | Off at boot. Turned on when a consumer calls `regulator_enable()` |
+| `regulator-boot-on` | "The bootloader left it on." The kernel takes over in the on state. If **no consumer** enables it, it's **switched off** about 30 s after boot (`regulator_late_cleanup`) |
+| `regulator-always-on` | Never switched off by the kernel. Use it for rails that must stay up even without a consumer |
+
+## 2. Connect it to the consumer
+
+```dts
+&i2c1 {
+    status = "okay";
+
+    touchscreen@38 {
+        compatible = "edt,edt-ft5406";
+        reg = <0x38>;
+        vcc-supply = <&vcc3v3_periph>;            /* the name ("vcc") is defined by the device's binding */
+    };
 };
 ```
 
-### Alternative: Use enable-gpios Property
+The driver calls `devm_regulator_get(dev, "vcc")` and `regulator_enable()` in `probe()`, and `regulator_disable()` on suspend or remove.
+The framework counts users, so 2 devices on the same rail work correctly. It also applies the delays and turns the GPIO on and off.
 
-If the peripheral driver natively handles an enable/shutdown pin directly through a GPIO rather than the **regulator framework**,  
-add the property directly inside the peripheral node:
+### Alternative: the device's own enable GPIO
 
-```ini
-&periph_device {
-    enable-gpios = <&gpio1 10 GPIO_ACTIVE_HIGH>;
+If the **binding of the device** defines an enable/power-down pin, use that property instead:
+
+```dts
+&i2c1 {
+    camera@3c {
+        compatible = "ovti,ov5640";
+        reg = <0x3c>;
+        powerdown-gpios = <&gpio1 RK_PB2 GPIO_ACTIVE_HIGH>;
+        reset-gpios = <&gpio1 RK_PB3 GPIO_ACTIVE_LOW>;
+    };
 };
 ```
 
-Verification: Run `adb shell cat /sys/kernel/debug/gpio` to verify the assigned GPIO pin is configured as an output and set to the correct active state.
+Use this only when the binding lists such a property. A random `enable-gpios` that the driver doesn't read is silently ignored.
+For a pin that cuts the **power rail** (rather than a chip's enable input), the regulator is the right model.
 
-### Hardware Safety Warning
+## 3. Checking
 
-Always verify the hardware schematic for active-high versus active-low polarity  
-and correct voltage requirements before powering on the chip to prevent permanent hardware damage.
-
-## Android control
-
-Standard third-party Android apps **cannot** directly access or control hardware pins due to Android's strict security sandbox and SELinux policies.  
-To enable or disable a peripheral power pin from an app, you must use a **system app**  
-(signed with platform keys or running with system privileges) that interacts with a designated sysfs node, regulator, or custom system property.
-
-### 1. Grant Permissions to the Control Node
-
-Update your device's `init.rc` script so that your system app has permission to write to the hardware control node  
-(for example, a regulator state or custom sysfs entry):
-
-```bash
-chown system system /sys/class/regulator/regulator.X/state
-chmod 0664 /sys/class/regulator/regulator.X/state
+```shell
+cat /sys/class/regulator/regulator.*/name                 # find vcc3v3_periph
+cat /sys/class/regulator/regulator.N/state                # enabled / disabled (read-only)
+cat /sys/class/regulator/regulator.N/num_users
+cat /sys/kernel/debug/regulator/regulator_summary         # tree of rails, users, enable counts (debugfs)
+dmesg | grep -i vcc3v3_periph
 ```
 
-+ Verification: Run `adb shell ls -l /sys/class/regulator/regulator.X/state` to confirm the owner displays as system with 0664 permissions.
+## 4. Switching it from user space or Android
 
-### 2. Add SELinux Policy Permissions
+The regulator sysfs files, including **`state`, are read-only**: user space **can't** turn a regulator on or off by writing them.
+And it shouldn't: the consumer driver owns the rail.
+If you really need user-space control, there are 3 options:
 
-+ Update your device's SELinux policy (such as `platform_app.te` or a custom policy file)  
-  to allow your app domain to write to the hardware node without triggering security denials.  
-  `allow platform_app sysfs_regulator:file rw_file_perms;`
-+ Verification: Run `adb logcat | grep avc` while operating the app to verify there are no permission denial errors.
+1. **No kernel consumer**: describe the pin as a plain GPIO (not a regulator) and switch it from a daemon or HAL with libgpiod
+   (see [dts_node_leds.md](dts_node_leds.md#2-as-a-plain-gpio) and [../Android/AIDL_impl_gpio_cxx.md](../Android/AIDL_impl_gpio_cxx.md)).
+2. **Kernel `userspace-consumer` regulator driver** (`CONFIG_REGULATOR_USERSPACE_CONSUMER`).
+   A consumer node creates a device with a **writable** `state` attribute that enables or disables its supplies.
+   Check the binding in your kernel version (`regulator-output` in recent kernels).
+3. **The device's driver** exposes power control in its own way (runtime PM, rfkill for radios, ...).
 
-### 3. Implement File Write Logic in the App
+On Android, apps never write these files.
+A vendor HAL or daemon does, with its own SELinux domain and a `genfs_contexts` label for the node.
+The pattern is in [../Android/hw_control_sysfs.md](../Android/hw_control_sysfs.md) and [../Android/neverallow_error.md](../Android/neverallow_error.md).
+Rules such as `allow platform_app sysfs_regulator:file write` are the wrong design.
 
-Inside your system app code, write a routine to update the file state dynamically  
-(e.g., writing "enabled" or "disabled", or "1" and "0").
+### Hardware safety
 
-```java
-try {
-    File file = new File("/sys/class/regulator/regulator.X/state");
-    FileWriter writer = new FileWriter(file);
-    writer.write("enabled");    // Use "disabled" to turn off
-    delay(100)                  // Wait for your specified delay (e.g., 100 milliseconds)
-    writer.close();
-} catch (IOException e) {
-    e.printStackTrace();
-}
-```
+Check the schematic for the enable polarity, the rail voltage, and any power-sequencing requirements (which rails must come up first, and the delays)
+**before** you enable a new rail. A wrong `enable-active-high` can power a chip at the wrong time or keep it on unexpectedly.
 
-Verification: Check the device state by running `adb shell cat /sys/class/regulator/regulator.X/state` immediately after triggering the app action.
+## Related notes
 
-## the label property
++ [dts_conventions.md](dts_conventions.md) (`-supply` convention), [dts_driver.md](dts_driver.md)
++ [dts_node_leds.md](dts_node_leds.md), [dts_syntax.md](dts_syntax.md)
 
-In a device tree node, the label property provides a descriptive string name  
-for a hardware component or resource (such as a power rail, LED, or switch).
+## Reference
 
-+ Purpose: It helps identify the device or regulator in system logs, debugging outputs, or user-space interfaces (like /sys/class/regulator/).
-+ Distinction: It is different from the node's identifier label (the name before the colon, like vdd12_sw_osm:),  
-  which is used internally within the device tree for cross-referencing nodes.
++ [fixed-regulator binding](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/regulator/fixed-regulator.yaml)
++ [Regulator consumer driver interface (kernel docs)](https://docs.kernel.org/power/regulator/consumer.html)

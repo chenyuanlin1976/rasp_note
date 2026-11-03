@@ -86,7 +86,7 @@ Device kernels and vendor modules (DDK) use the same system.
 ## Related notes
 
 + [Bazel_syntax.md](Bazel_syntax.md): `BUILD` files and Starlark
-+ [Android_bp_intro.md](Android_bp_intro.md), [AOSP_build.md](AOSP_build.md), [AOSP_note.md](AOSP_note.md)
++ [Android_bp_intro.md](Android_bp_intro.md), [AOSP_build.md](AOSP_build.md), [AOSP_build_system.md](AOSP_build_system.md)
 
 ## Reference
 

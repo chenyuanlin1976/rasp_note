@@ -1,7 +1,7 @@
 # Download and build AOSP
 
 The steps follow source.android.com (current as of 2026). AOSP is built with Soong (`Android.bp`) and Ninja, not Bazel.
-For the build system itself, see [AOSP_note.md](AOSP_note.md) and [Android_bp_intro.md](Android_bp_intro.md).
+For the build system itself, see [AOSP_build_system.md](AOSP_build_system.md) and [Android_bp_intro.md](Android_bp_intro.md).
 
 ## 1. Requirements
 
@@ -53,7 +53,7 @@ m                                                          # parallel by default
 + The `lunch` target is **`<product>-<release config>-<variant>`** on current releases.
   Older releases used `<product>-<variant>`, for example `aosp_arm64-userdebug`.
   Run `lunch` without arguments to list targets.
-+ Variants: `user` (production), `userdebug` (production-like, with root/debugging), `eng` (development); see [AOSP_note.md](AOSP_note.md).
++ Variants: `user` (production), `userdebug` (production-like, with root/debugging), `eng` (development); see [AOSP_build_system.md](AOSP_build_system.md).
 + `m` already runs as many jobs as there are CPUs. Lower it (`m -j16`) if the machine runs out of memory.
 + Partial builds: `m <module>`, `mm` (current directory), `mmm <dir>`; see [AOSP_build_helplerCmds.md](AOSP_build_helplerCmds.md).
 
@@ -69,7 +69,7 @@ adb reboot bootloader && fastboot flashall -w    # physical device with a matchi
 
 ## Related notes
 
-+ [Googles_Repo.md](Googles_Repo.md), [AOSP_note.md](AOSP_note.md), [AOSP_build_helplerCmds.md](AOSP_build_helplerCmds.md), [Android_bp_intro.md](Android_bp_intro.md)
++ [Googles_Repo.md](Googles_Repo.md), [AOSP_build_system.md](AOSP_build_system.md), [AOSP_build_helplerCmds.md](AOSP_build_helplerCmds.md), [Android_bp_intro.md](Android_bp_intro.md)
 + [Bazel_intro.md](Bazel_intro.md): Bazel/Kleaf for Android kernels
 + [verify_platformKeys.md](verify_platformKeys.md): release-signing the build
 

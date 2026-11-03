@@ -1,61 +1,81 @@
-# Google's Repo
+# repo: managing many Git repositories
 
-Google's Repo is a command-line tool built on top of Git.  
-It was developed by Google primarily to manage the Android Open Source Project (AOSP),  
-which consists of hundreds of individual, decoupled Git repositories working together  
-(ranging from the Linux kernel and hardware drivers to application frameworks and user apps).  
+`repo` is Google's command-line tool (written in Python) that manages a source tree made of **many Git repositories**.
+AOSP has more than a thousand of them: frameworks, HALs, external libraries, toolchains, prebuilts.
+`repo` doesn't replace Git: each project is a normal Git repository, and `repo` runs Git across all of them.
+SoC vendor SDKs (Rockchip, Qualcomm, ...) and kernel trees use it too.
 
-## 1. Why is Repo Needed? (The Problem It Solves)
+Installing `repo` and downloading AOSP: [AOSP_build.md](AOSP_build.md#2-install-repo).
 
-A massive project like Android contains over a thousand separate Git repositories.  
-Managing them purely with standard Git would present major hurdles:
+## 1. The manifest
 
-+ Too many sub-modules/sub-trees: Tracking dependencies and versions across 1,000+ separate repos manually using git submodule  
-  is complex and prone to errors.
-+ Unified State Tracking: Developers need a way to say, "Give me the exact snapshot of all 1,000 repositories  
-  that were tested and verified to work together on Android version X."
+A **manifest** is an XML file that lists every project: its Git repository, its path in the tree, and the revision to check out.
+It lives in its own Git repository (for AOSP: `platform/manifest`), and `repo init -b <branch>` selects a branch of it.
 
-Repo solves this by introducing a Manifest file (manifest.xml).  
-This XML file acts as a blueprint, mapping out which Git repositories belong to the project,  
-where they should be located in your local directory, and which branches or commits they should point to.
+```xml
+<manifest>
+  <remote name="aosp" fetch="https://android.googlesource.com/" />
+  <default remote="aosp" revision="refs/heads/android-latest-release" sync-j="4" />
 
-## 2. How Repo Works
+  <project path="frameworks/base" name="platform/frameworks/base" />
+  <project path="device/myco/myboard" name="myco/device-myboard" remote="myco" revision="main" />
+</manifest>
+```
 
-+ Python Wrapper: Repo itself is a collection of Python scripts that wrap and orchestrate standard Git commands.  
-  It does not replace Git; it automates it.
-+ The Manifest: When you initialize a Repo workspace, you point it to a manifest repository.  
-  Repo reads the manifest.xml and automatically clones, fetches, and syncs all the specified sub-repositories into a structured local workspace.
+```text
+aosp/
+├── .repo/
+│   ├── manifests/            # the manifest repository (default.xml, ...)
+│   ├── local_manifests/      # your own additions (optional, *.xml)
+│   ├── projects/, project-objects/   # the Git data of each project
+│   └── repo/                 # the repo tool itself
+├── frameworks/base/          # checked-out projects
+└── ...
+```
 
-## 3. Common Repo Commands
+**Local manifests** (`.repo/local_manifests/*.xml`) add projects or remotes, or remove projects (`<remove-project>`),
+without changing the official manifest. Use them for a board's device tree, vendor HALs, or private apps.
 
-Working with Repo usually follows a specific lifecycle. Here are the most frequently used commands:
+## 2. Commands
 
-| Command                            | Description                                                                                             |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `repo init -u <URL> [-b <branch>]` | Initializes Repo in the current directory, pointing to a specific manifest URL and branch.              |
-| `repo sync`                        | Downloads new changes and updates all local Git repositories to match the manifest.                     |
-| `repo start <branch-name> --all`   | Creates a new local development branch across all repositories simultaneously.                          |
-| `repo status`                      | Inspects the working tree, showing uncommitted changes or unpushed commits across all repositories.     |
-| `repo diff`                        | Displays changes made across the repositories.                                                          |
-| `repo upload`                      | Automates the code review submission process (often tied with Gerrit code-review systems used in AOSP). |
+| Command | Does |
+| --- | --- |
+| `repo init -u <manifest-url> -b <branch> [--partial-clone] [-g <groups>]` | Set up `.repo/` in the current directory |
+| `repo sync -c -j8` | Fetch and update all projects (`-c`: current branch only) |
+| `repo sync -l` / `repo sync -n` | Only update the working trees from what is already fetched / only fetch |
+| `repo sync --force-sync <project>` | Recover a project whose Git data no longer matches (for example after a manifest change) |
+| `repo start <topic> [--all \| <projects>]` | Create a topic branch for your work (at the manifest revision) |
+| `repo status`, `repo diff` | Changes in all projects |
+| `repo branches`, `repo prune`, `repo abandon <topic>` | List topic branches / delete merged ones / delete one |
+| `repo forall [<projects>] -c '<cmd>'` | Run a command in each project (`$REPO_PROJECT`, `$REPO_PATH`, ... are set) |
+| `repo upload` | Send commits to the Gerrit code-review server named in the manifest |
+| `repo manifest -r -o snapshot.xml` | Write a manifest that pins every project to its current commit |
 
-## 4. Key Benefits
+Examples:
 
-+ Scalability: Effortlessly handles projects split across hundreds of repositories.
-+ Atomic-like Syncing: A single repo sync command updates your entire multi-repository workspace to a consistent state.
-+ Flexibility: Developers can work on a specific feature branch that spans multiple repositories,  
-  and repo start or repo status will track everything cohesively.
+```shell
+repo forall -c 'git log --oneline -1'                  # last commit of every project
+repo forall -p -c 'git status --short'                 # -p: print each project's name
+repo manifest -r -o release-2026-11-03.xml              # record exactly what was built
+repo init -m release-2026-11-03.xml && repo sync        # later: reproduce that tree (file copied into .repo/manifests/)
+```
 
-## Source control workflow
+## 3. Contribution workflow (AOSP / Gerrit)
 
-[Flow](https://source.android.com/docs/setup/create/coding-tasks)
+1. `repo start my-fix frameworks/base` creates a topic branch in the project you'll change.
+2. Edit, `git add`, `git commit`. Commits need a `Change-Id` line; the Gerrit commit-msg hook adds it.
+3. `repo upload` sends the commits to Gerrit for review.
+4. After review, `repo sync` and `repo prune` remove the merged topic branch.
 
-### Flow
+`repo sync` updates the projects one by one. It isn't atomic: if it fails halfway (network, local changes), some projects are new and others old.
+Run it again until it finishes cleanly before you build.
 
-Android development involves the following basic workflow:
+## Related notes
 
-1. Start a new topic branch using repo start.
-1. Edit the files.
-1. Stage changes using git add.
-1. Commit changes using git commit.
-1. Upload changes to the review server using repo upload.
++ [AOSP_build.md](AOSP_build.md), [AOSP_build_system.md](AOSP_build_system.md), [../git_tips.md](../git_tips.md)
+
+## Reference
+
++ [Repo command reference (AOSP)](https://source.android.com/docs/setup/reference/repo)
++ [Source control workflow (AOSP)](https://source.android.com/docs/setup/create/coding-tasks)
++ [Manifest format, local manifests (git-repo)](https://gerrit.googlesource.com/git-repo/+/HEAD/docs/manifest-format.md)

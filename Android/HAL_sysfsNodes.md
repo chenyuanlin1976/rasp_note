@@ -1,66 +1,122 @@
-# HAL and sysfs
+# HAL vs sysfs nodes
 
-To understand the difference between using a HAL (Hardware Abstraction Layer)  
-and reading/writing directly to `/sys/class/...` nodes (`sysfs`),  
-it helps to look at them as 2 different levels of abstraction in a software stack.
+Writing to `/sys/class/...` (sysfs) and calling a HAL are **2 different levels of abstraction**, not 2 alternatives.
 
-In short:  
-Reading/writing to sysfs nodes is a technique that a HAL implementation often uses under the hood.  
-They are not mutually exclusive, but **they serve different layers of architecture**.
++ **sysfs** is a *kernel → user-space* interface: the kernel exposes driver attributes as files.
++ A **HAL** is a *user-space → framework* interface: a standard API, and its implementation often uses sysfs internally.
 
-## 1. What is  sysfs node
+## 1. What sysfs is
 
-**Sysfs node** is a virtual filesystem provided by the Linux kernel.  
-**It exposes kernel objects, device drivers, and their hardware parameters as ordinary text files.**
+**sysfs** is a virtual (RAM-only) filesystem mounted at `/sys`.
+The kernel uses it to export its device model: devices, drivers, buses, and classes.
+Each **sysfs node** (attribute) is a small file.
+Reading it, or writing it, calls the driver's `show()` or `store()` callback **synchronously**.
 
-+ How you use it: Using standard file operations (open, read, write, close) **in C, C++, or even shell scripts**.
-+ Example: To turn on an LED using sysfs on an embedded Linux system, you literally write text into a file:
+```shell
+cat  /sys/class/leds/red_led/max_brightness
+echo 255 > /sys/class/leds/red_led/brightness       # store() -> driver sets the LED
+```
 
-`echo "255" > /sys/class/leds/red_led/brightness`
++ Any language works (C, C++, shell): `open` / `read` / `write` / `close`.
++ Rule of thumb: one value per file, in text format.
++ `/sys/class/<class>/<name>` entries are **symlinks** to the real device path under `/sys/devices/...`.
 
-## 2. What is a HAL?
+## 2. What a HAL is
 
-**A HAL is an API contract**/ software architecture layer that sits above the OS kernel (and above things like `sysfs`).  
-It defines a strict, standardized set of functions that higher-level software (like an Android framework or application service) can call.
+A HAL is a **standard API contract** that the Android framework calls.
+The vendor implements it in user space.
 
-How you use it: By calling a structured function interface (e.g., in C++ or via Binder RPC):
-`module->set_light(module, LIGHT_ID_BACKLIGHT, &state);`
+Legacy `libhardware` Lights HAL (in-process C API, up to Android 7):
 
-## 3. Key Differences: HAL vs. Sysfs Nodes
+```c
+/* the light ID is chosen when the device is opened */
+light_device_t* dev;
+module->methods->open(module, LIGHT_ID_BACKLIGHT, (hw_device_t**)&dev);
+dev->set_light(dev, &state);              /* struct light_state_t: color, flashMode, ... */
+```
 
-### Feature of Sysfs Nodes (/sys/class/...)
+Current AIDL Lights HAL (`android.hardware.light.ILights`, called over Binder):
 
-+ What is it: **A kernel-to-userspace interface** (files and directories).
-+ Where does it live: In the Linux kernel space (**exposed to userspace as files**).
-+ Language/Format: *Text-based file I/O* (open, write, text strings like "255").
-+ Portability: **Low**. Sysfs paths (`/sys/class/leds/...` or naming schemes) change depending on the kernel version, vendor, or device driver.
-+ Access Control: Controlled by standard Linux **file permissions** (e.g., `chmod` on the file).
+```java
+interface ILights {
+    void setLightState(in int id, in HwLightState state);
+    HwLight[] getLights();
+}
+```
 
-### Feature of HAL
+## 3. Comparison
 
-+ What is it: A software API interface (functions, classes, contracts).
-+ Where does it live: In userspace, acting as middleware between apps and the kernel.
-+ Language/Format: Programmatic function calls (struct pointers, strongly typed arguments).
-+ Portability: **High**. The HAL hides those messy paths. Even if the sysfs path changes, the HAL API stays identical.
-+ Access Control: Controlled by platform security models (e.g., **Android Binder permissions, SELinux policies**).
+| | sysfs node (`/sys/...`) | HAL |
+| --- | --- | --- |
+| What it is | Kernel-to-user-space interface (files) | Framework-to-vendor API (functions/methods) |
+| Lives in | Kernel (exposed as files) | User space (a vendor process on modern Android) |
+| Format | Text read/write, one value per file | Typed calls (`int`, structs, parcelables) |
+| Portability | **Low**: paths and names depend on the driver, kernel version, and board | **High**: the framework sees the same interface on every device |
+| Access control | DAC (owner/mode) **and SELinux** labels | Binder + SELinux (`hal_client_domain`), and the HAL's own checks |
 
-## 4. How They Work Together (The Real-World Reality)
+On Android, sysfs access needs both of these:
 
-If you look at the source code of an actual Android HAL implementation  
-(for example, the Android Lights HAL or Backlight HAL),  
-you will **often** find that the HAL itself is just a wrapper around `sysfs` nodes!
++ **DAC**: set the owner and mode at boot with `ueventd.rc`.
+  sysfs attributes go back to their defaults on every boot, so a one-time `chmod` doesn't persist.
 
-When the Android framework calls the HAL function `setLightState(...)`:
+  ```text
+  # ueventd.rc: <sysfs path> <attribute> <mode> <uid> <gid>
+  /sys/class/leds/red_led   brightness   0664   system   system
+  ```
 
-1. The HAL code executes in C++.
-2. The HAL code opens the file descriptor: `open("/sys/class/backlight/panel/brightness", O_WRONLY)`.
-3. The HAL writes the calculated brightness value into that sysfs file.
-4. The Linux kernel driver picks up that write in `sysfs` node and toggles the hardware registers.
++ **SELinux**: label the files with `genfscon` (or `genfs_contexts`), then allow the HAL's domain to use them.
 
-## Summary Analogy
+  ```text
+  # genfs_contexts (path is the real /sys/devices/... path)
+  genfscon sysfs /devices/platform/leds/leds/red_led   u:object_r:sysfs_leds:s0
 
-+ Sysfs node is like the raw wiring and plumbing behind your wall (pipes, valves, wires).  
-  It gets the job done, but it's raw, hardware-dependent, and messy to interact with directly.
-+ The HAL is the modern smart-home wall switch panel.  
-  It gives you a clean, standardized button (Turn On) so you don't have to care about what kind of pipes or wires are hidden inside the wall.  
-  Inside the wall switch, it might pull the physical wires, but to the user, it provides a safe, uniform interface.
+  # hal_light_default.te
+  allow hal_light_default sysfs_leds:dir search;
+  allow hal_light_default sysfs_leds:file rw_file_perms;
+  ```
+
+## 4. How they work together
+
+A real Lights HAL implementation is often just a thin wrapper around sysfs:
+
+```text
+system_server (LightsService)
+    |  Binder: ILights.setLightState(id, state)
+    v
+Lights HAL (vendor process)
+    |  writes "255" to /sys/class/leds/red_led/brightness
+    v
+LED class driver: brightness_set()  ->  GPIO / PWM / PMIC register
+```
+
+1. The framework calls `setLightState()` over Binder.
+2. The HAL maps the light `id` to a sysfs path and converts the ARGB color to a brightness value.
+3. The HAL writes the value to the sysfs file.
+4. The kernel calls the LED driver's `store()` → `brightness_set()`, and the driver programs the hardware.
+
+The AOSP *default* Lights HAL (`hardware/interfaces/light/aidl/default`) is only a stub that logs.
+Device HALs (under `device/<vendor>/...` or `vendor/...`) contain the real sysfs code.
+
+## 5. When do you need a HAL and not plain sysfs?
+
++ **Need a HAL** when the *framework* or other partitions call into vendor code, or when apps are involved.
+  Example: the framework's LightsService must work on any device.
++ **Plain sysfs is fine** inside a single vendor daemon or script that already owns the hardware.
+  Example: a vendor init script that sets an LED trigger at boot.
+
+## 6. Analogy
+
++ **sysfs** is the wiring behind the wall: it works, but it's raw and different in every house.
++ The **HAL** is the standard wall switch: everyone uses the same "on/off", and the electrician (the vendor) wires it to whatever is behind the wall.
+
+## Related notes
+
++ [HAL_intro.md](HAL_intro.md), [hw_control_sysfs.md](hw_control_sysfs.md)
++ [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md): an AIDL service that writes LED sysfs nodes
++ [Led_on_off.md](Led_on_off.md), [Led_blinking.md](Led_blinking.md)
+
+## Reference
+
++ [sysfs (kernel docs)](https://docs.kernel.org/filesystems/sysfs.html)
++ [LED class (kernel docs)](https://docs.kernel.org/leds/leds-class.html)
++ [Lights AIDL interface (hardware/interfaces/light/aidl)](https://android.googlesource.com/platform/hardware/interfaces/+/refs/heads/main/light/aidl/)

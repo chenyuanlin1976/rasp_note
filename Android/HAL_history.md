@@ -1,49 +1,80 @@
-# The HAL history
+# Android HAL history
 
-The history of the Android Hardware Abstraction Layer (HAL) tracks Android's evolution  
-from a fragmented open-source project into a modular, enterprise-grade operating system.
+The history of the Android HAL is the story of separating **vendor hardware code** from the **Android framework**.
+It went in 3 steps: in-process libraries, then HIDL (Project Treble), then stable AIDL.
 
-## 1. The Legacy Era: libhardware_legacy (2008–2009)
+## Summary
 
-In early Android versions (Android 1.0 to 1.5), the HAL was modeled using `libhardware_legacy`.
+| Era | Android versions | Interface | Where the vendor code runs | Main problem solved / left |
+| --- | --- | --- | --- | --- |
+| `libhardware_legacy` | early 1.x | Ad-hoc C/C++ library APIs | Linked into the framework process | No standard module model |
+| `libhardware` (`hw_get_module`) | 1.x – 7.x (still loadable later) | C structs (`hw_module_t`, `hw_device_t`) in `hardware/libhardware/include/hardware/*.h` | `dlopen()`'d **into** the framework process | Standard headers, but no stable ABI between framework and vendor |
+| HIDL (Project Treble) | 8 – 10 (deprecated since 10) | `.hal` files, versioned packages (`@1.0`) | Separate vendor process (**binderized**, `/dev/hwbinder`), or in-process (**passthrough**) | Framework and vendor can be updated independently |
+| Stable AIDL | 11+ | `.aidl` + `@VintfStability`, frozen versions | Separate vendor process over `/dev/binder` | One IPC language for apps, services, and HALs |
 
-+ Design: It closely mirrored traditional embedded Linux software architecture.  
-  Hardware modules were loaded as shared libraries (.so),  
-  and **system services** interacted with them via **direct** function calls.
-+ The Problem: The design was tightly coupled.  
-  Because vendors directly integrated their proprietary driver code and shared libraries into the core system image,  
-  updating the Android OS framework meant rewriting or recompiling large portions of vendor-specific code.  
-  This created massive OS fragmentation and delayed software updates.
+## 1. In-process libraries (`libhardware_legacy` and `libhardware`)
 
-## 2. The Standardization Era: libhardware & hw_get_module (2009–2017)
+From the early open-source releases, 2 styles existed side by side.
 
-To reduce tight coupling, Android introduced `libhardware` (anchored around `hw_get_module`) starting around Android 2.0.
+### `libhardware_legacy`
 
-+ Design: It introduced standard C header files (e.g., lights.h, sensors.h) defining clean function structures,  
-  and used a dynamic loading mechanism via `dlopen()` to discover modules at runtime (`<module>.default.so`).
-+ The Problem: While it cleanly separated interface headers from implementations,  
-  code was still dynamically loaded directly into the memory space of system processes.  
-  Vendors still had to tightly couple their code to specific versions of the Android system framework,  
-  meaning ecosystem fragmentation persisted.
++ Each subsystem (Wi-Fi, power, uevent, ...) had its own library and its own ad-hoc API.
++ Framework code called these functions directly, with no common module model.
 
-## 3. The Modularization Era: Project Treble & HIDL (2017–2020)
+### `libhardware` and `hw_get_module()`
 
-Introduced with Android 8 (Oreo), Project Treble fundamentally restructured Android  
-by separating the Android OS framework from the vendor-specific hardware implementation.
++ A standard C header per HAL type (`lights.h`, `sensors.h`, `gralloc.h`, `camera.h`, `audio.h`, ...).
+  Each header defines a `hw_module_t` and its `hw_device_t` function tables.
++ `hw_get_module(id, &module)` searches `/system/lib/hw/` and `/vendor/lib/hw/` for `<id>.<variant>.so` and `dlopen()`s it.
+  + The variant comes from properties: `ro.hardware.<id>`, `ro.hardware`, `ro.product.board`, `ro.board.platform`, `ro.arch`.
+  + If no variant matches, it falls back to `<id>.default.so` (for example `lights.default.so` or `gralloc.rk30board.so`).
++ The module is loaded **into the framework process** that uses it (`system_server`, `mediaserver`, `surfaceflinger`, ...).
 
-+ Design: Google introduced HIDL (HAL Interface Definition Language).
-  Instead of loading shared libraries locally into system memory,  
-  hardware components were pushed into isolated, dedicated daemon processes residing in the vendor partition.
-+ **IPC via Binder**: Communication between the system framework and the vendor HAL shifted  
-  from direct function calls to **Android Binder IPC** (Binderized HALs).  
-  This allowed Google to update the Android framework independently of vendor silicon drivers.  
+Problems:
 
-## 4. The Modern Era: Stable AIDL (2020–Present)
++ There was **no stable ABI**. Vendor `.so` files were built against a specific framework version,
+  so each Android upgrade needed new vendor code from the SoC maker. That was a major cause of slow updates.
++ A bug in vendor code ran with the **privileges of the framework process**, and a crash took that process down.
 
-Beginning with Android 11 and 12, Google shifted away from HIDL in favor of **Stable AIDL** (Android Interface Definition Language).
+## 2. Project Treble and HIDL (Android 8, 2017)
 
-+ Design: Android unified its IPC language.  
-  AIDL, which was historically used exclusively for **app-to-service** communication,  
-  **was extended to natively support low-level native/C++/Rust HAL interfaces**.
-+ Current State: AIDL provides better type safety, cleaner versioning, backward compatibility, and unified tooling.  
-  HIDL has been officially deprecated, and all modern hardware components in Android rely on stable, **binderized AIDL services**.
+Project Treble split the system image into the **framework** (`/system`) and the **vendor implementation** (`/vendor`).
+Between the 2, it put a versioned, checked interface.
+
++ **HIDL** (HAL Interface Definition Language) defines versioned packages, for example `android.hardware.light@2.0::ILight`.
++ **VINTF** (Vendor Interface Object): the device manifest lists the HALs that the vendor provides,
+  and the compatibility matrices list what the framework needs. Both are checked at build time and on OTA.
++ **VNDK** limits which system libraries vendor code may link against.
++ 2 HAL modes:
+  + **Binderized**: the HAL runs in its own vendor process, and the framework calls it over `/dev/hwbinder` (`hwservicemanager`).
+    This is the default, and required for most HALs on devices launching with Android 8+.
+  + **Passthrough**: a HIDL wrapper around an in-process `.so`.
+    It was used to migrate old `libhardware` modules, and for same-process HALs (SP-HALs) such as the graphics mapper, for performance.
+
+## 3. Stable AIDL (Android 11, 2020 →)
+
++ HIDL was **deprecated in Android 10**. **AIDL HALs** have been supported since **Android 11**.
++ AIDL already existed for apps *and* native system services (the C++ `cpp` backend).
+  What it lacked for HALs was **stability**. Stable AIDL added:
+  + frozen, versioned interfaces (`aidl_interface` with `versions`, API dumps checked by the build)
+  + `@VintfStability`, plus the stable-ABI **NDK backend** (`libbinder_ndk`) for vendor code
+  + `<hal format="aidl">` entries in the VINTF manifest
++ AIDL HALs register with the normal `servicemanager` (`/dev/binder`).
+  Vendor-to-vendor services use `/dev/vndbinder`.
++ Google has been migrating core HALs (lights, power, vibrator, health, camera, audio, ...) to AIDL, and new HAL interfaces must be AIDL.
+  Devices upgraded from older releases may still ship some HIDL HALs.
+  A few performance-critical same-process HALs are still loaded in-process instead of over Binder.
+
+See [AIDL_HIDL_cmp.md](AIDL_HIDL_cmp.md) for a side-by-side comparison of HIDL and AIDL.
+
+## Related notes
+
++ [HAL_intro.md](HAL_intro.md)
++ [HIDL_intro.md](HIDL_intro.md), [AIDL_HIDL_cmp.md](AIDL_HIDL_cmp.md)
++ [VINTF_intro.md](VINTF_intro.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md)
+
+## Reference
+
++ [HAL types (binderized, passthrough, same-process)](https://source.android.com/docs/core/architecture/hal-types)
++ [HAL overview](https://source.android.com/docs/core/architecture/hal)
++ [AIDL for HALs](https://source.android.com/docs/core/architecture/aidl/aidl-hals)

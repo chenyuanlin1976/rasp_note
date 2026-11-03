@@ -1,141 +1,114 @@
 # HAL introduction
 
-## What is a HAL
+## 1. What a HAL is
 
-**HAL stands for Hardware Abstraction Layer.**  
-In computer science and operating systems, it is *a specialized layer of software*  
-that acts as a **bridge** between the physical hardware of a device and the operating system (or higher-level software) running on it.
+**HAL = Hardware Abstraction Layer.**
+A HAL is a layer of software that sits between the hardware and the software above it (the OS, a framework, or an application).
+It hides the **manufacturer-specific** details of a device behind a **standardized interface**.
 
-Its primary goal is portability:  
-**it hides the complex, manufacturer-specific details of hardware components behind a standardized, clean software interface.**
++ **Upper side (the users)** calls a generic operation, such as "read the accelerometer" or "turn the torch on".
++ **Lower side (the vendor implementation)** turns that request into the register accesses,
+  kernel driver calls, or firmware commands that *this particular chip* needs.
 
-## Why Do We Need a HAL
+The goal is **portability**: the same upper-layer code runs on many different chips, and only the HAL implementation changes.
 
-Without a HAL, every time an operating system or application needed to interact with hardware  
-(like reading a sensor, writing to flash storage, or turning on Wi-Fi),  
-developers would have to write custom code for every single unique computer chip, motherboard, or sensor model on the market.
+## 2. The word "HAL" means different things in different places
 
-**The HAL solves this by providing uniform APIs:**
+| Where | What "HAL" is | Runs as | Example |
+| --- | --- | --- | --- |
+| **Android** | A vendor implementation behind a **stable interface** (AIDL; HIDL/libhardware on older devices) | Usually a separate **vendor process**, called over Binder | Camera provider HAL, Lights HAL, Audio HAL |
+| **Microcontrollers** | A vendor C library that wraps the chip's registers | A library compiled into the firmware; plain function calls | STM32 HAL `HAL_GPIO_WritePin()`: see [HAL_STM32_example.md](HAL_STM32_example.md) |
+| **Desktop OS kernels** | The lowest kernel layer that hides motherboard differences | Part of the kernel | Windows `hal.dll` (interrupt controllers, timers, ACPI) |
 
-+ Hardware Independence: The OS asks the HAL to perform a generic task (e.g., "Read the accelerometer data").
-+ Vendor-Specific Implementation: The HAL translates that **generic request** into the exact register reads, memory addresses,  
-  and low-level instructions required by the specific microchip installed on the board.
+Linux has **no single "HAL" layer**. Hardware is abstracted by **kernel driver subsystems**
+(gpiolib, LED class, IIO, V4L2, ...), and hardware is described through **device tree** (ARM) or **ACPI** (x86).
+An Android HAL is a **user-space** layer on top of those drivers.
 
-## Classic Examples of HAL in Action
+## 3. Where the HAL sits in the Android stack
 
-### 1. Android HAL (AOSP)
+| Layer | What it does | How the layer above talks to it | Example |
+| --- | --- | --- | --- |
+| App | UI and business logic (Java/Kotlin) | n/a | Flashlight app |
+| Framework / system services | Public Android APIs, policy, arbitration between apps | **Binder** (AIDL) from the app process | `CameraManager` → `cameraserver` |
+| **HAL** | Vendor-specific implementation of a standard interface | **Binder** (stable AIDL / HIDL) | Camera provider HAL in `/vendor/bin/hw/` |
+| Kernel driver | Owns the hardware, exposes it to user space | System calls: `ioctl()`, sysfs files, char devices | V4L2 flash control, LED class driver |
+| Hardware | Chips, pins, registers | Memory-mapped registers, I2C/SPI, ... | Flash LED driver IC |
 
-Android is a great example because it runs on thousands of different phone models  
-with completely different camera sensors, GPS chips, and audio processors.
+**JNI is not one of these layers.**
+JNI is an *in-process* bridge between Java and native code: a Java class calls a C/C++ function loaded into the **same** process.
+Some framework code uses JNI internally, but the boundaries between app, system service, and HAL are crossed with **Binder IPC**.
+See [JNI_intro.md](JNI_intro.md) and [libgpiod_HAL.md](libgpiod_HAL.md).
 
-+ The Problem: Samsung uses one camera sensor; Google Pixel uses another.  
-  How does Android's camera app work seamlessly on both?
-+ **The Solution: Android defines a standard Camera HAL**.  
-  *Samsung and Google each write a HAL implementation for their respective hardware.*  
-  **Android's framework talks to the standard HAL interface**, completely unaware of which physical camera chip is actually under the hood.
+## 4. Example: turning on the flashlight
 
-### 2. Embedded Systems & Microcontrollers (e.g., STM32, Arduino)
+```text
+[ App (Kotlin) ]           CameraManager.setTorchMode(id, true)
+       |  Binder (AIDL ICameraService)
+       v
+[ cameraserver ]           native system service (/system/bin/cameraserver)
+       |  Binder (camera provider HAL interface: HIDL @2.x on older devices, AIDL on newer ones)
+       v
+[ Camera provider HAL ]    vendor process (/vendor/bin/hw/...), written by the SoC/OEM
+       |  ioctl() / sysfs
+       v
+[ Kernel driver ]          V4L2 flash controls or LED class (flash) driver
+       |  registers, I2C, GPIO
+       v
+[ Flash LED hardware ]
+```
 
-If you program a microcontroller (like an ARM Cortex-M chip),  
-you can manipulate **raw hardware registers directly in C**, or you can use a **vendor-provided HAL** (like ST's STM32 HAL).
-
-+ Instead of writing: `GPIOC->ODR |= (1 << 13);` (setting specific bit flags in a hardware register to toggle an LED),
-+ A HAL allows cleaner, readable code like: `HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);`
-
-### 3. Operating System Kernels (Windows / Linux)
-
-+ Windows: Historically featured a literal `hal.dll` layer  
-  that sat right between the Windows kernel and the motherboard's motherboard chips,  
-  Advanced Configuration and Power Interface (ACPI), and interrupt controllers,  
-  allowing Windows to run on diverse PC hardware configurations.
-+ **Linux: Uses a modular driver architecture and device trees to abstract hardware away from the core kernel.**
-
-## HAL vs. Driver vs. JNI (Putting it in Context)
-
-Since you were just looking at JNI, it helps to understand how a HAL compares to other architectural layers:
-
-| Layer                            | What it does                                        | Example                                          |
-| -------------------------------- | --------------------------------------------------- | ------------------------------------------------ |
-| Application/ JVM                 | Business logic, managed code                        | Java/Kotlin Android App                          |
-| JNI (Java Native Interface)      | Bridges managed code to unmanaged native code       | Calling a C library from Android Java            |
-| HAL (Hardware Abstraction Layer) | Bridges OS software to physical hardware components | Android Camera HAL/ Sensor HAL                   |
-| Hardware (Silicon)               | Physical chips, circuits, and registers             | Qualcomm Snapdragon Chipset / Sony Camera Sensor |
-
-## Example
-
-To see how Java/Kotlin, JNI, and a HAL all work together in the real world,  
-let's look at a classic example: Turning on a smartphone's Flashlight (Torch) on Android.
-
-Android apps are written in Java/Kotlin, but **physical hardware requires low-level C/C++ interaction**.  
-Here is the step-by-step journey of how a single line of app code turns on a physical LED.
-
-## The Journey: From App to Hardware
-
-[Kotlin App]
-     |
-     v
-[Android Framework]
-     |
-     v
-[JNI (Java Native Interface)]
-     |
-     v
-[C/C++ Native Service]
-     |
-     v
-[HAL (Hardware Abstraction Layer)]
-     |
-     v
-[Physical Hardware (LED)]
-
-### Step 1: The App Layer (Kotlin)
-
-A user taps a button in your app to turn on the flashlight.  
-Your Kotlin code calls Android's built-in manager:
+### Step 1: App
 
 ```kotlin
 val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
-cameraManager.setTorchMode("0", true) // Turn on camera flash
+
+// Pick a camera that actually has a flash unit (don't hard-code "0")
+val torchId = cameraManager.cameraIdList.firstOrNull { id ->
+    cameraManager.getCameraCharacteristics(id)
+        .get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
+}
+torchId?.let { cameraManager.setTorchMode(it, true) }
 ```
 
-### Step 2: The Framework & JNI Boundary
+### Step 2: Framework → `cameraserver` (Binder, not JNI)
 
-Android's `CameraManager` isn't written entirely in Java.  
-Under the hood, it crosses the JNI boundary to talk to native C/C++ system services running in the background.
+`CameraManager` is Java code in the app's process.
+It calls the **Binder proxy** of `ICameraService`, and the request runs in the native `cameraserver` process.
+`cameraserver` checks permissions and arbitration (for example, whether the camera is busy).
+Then `CameraProviderManager` forwards the request to the HAL.
 
-+ The Java framework invokes a native method (e.g., `nativeSetTorchMode()`).
-+ JNI converts the Java strings and booleans into C-compatible data types (char*, bool)  
-  and passes them into a native C++ library (`libcamera_client.so`).
+The deprecated `android.hardware.Camera` API went through JNI (`libcamera_client`) inside the app process first,
+but even there the step to `cameraserver` was Binder.
 
-### Step 3: The C/C++ Native Service
+### Step 3: `cameraserver` → camera provider HAL
 
-The native C++ code receives the request.  
-However, it still doesn't know what kind of phone it is running on  
-(whether it's a Google Pixel, a Samsung Galaxy, or a Xiaomi device). This is where the HAL steps in.
+The standard HAL interface (for example `ICameraDevice::setTorchMode()`) is the **contract**.
+`cameraserver` does not know whether the device is a Pixel, a Samsung, or a Rockchip board.
+The vendor's HAL implementation in its own process turns the call into the commands that its kernel driver needs.
 
-### Step 4: The HAL
+### Step 4: Kernel driver → hardware
 
-Android defines a strict, standardized Camera/Lights HAL interface  
-(historically written in C/C++ using HIDL or AIDL).
+The driver programs the flash LED driver IC (over I2C, a GPIO, or a PWM), and the LED turns on.
 
-+ The Android OS says to the HAL: "Hey, set the torch state to ON for camera device 0."
-+ The Vendor HAL Implementation (written specifically by Samsung or Qualcomm for that exact phone model) intercepts this request.
-+ The vendor's C++ code translates that generic command into the specific memory-mapped I/O operations  
-  or kernel driver calls required for their unique camera chip and LED circuit.
+### Why this architecture matters
 
-### Step 5: Physical Hardware
++ **Separation of concerns**: Google maintains the framework and `cameraserver` without knowing the vendor hardware.
++ **Vendor flexibility**: the OEM can change the hardware.
+  If the new HAL implementation still meets the standard interface, the framework and apps don't change.
++ **Independent updates (Project Treble)**: the framework (system partition) and the HAL (vendor partition)
+  are versioned separately, so the OS can be updated without rebuilding vendor code.
++ **Security and stability**: each HAL runs in its **own process and SELinux domain**, with only the privileges it needs.
+  A crashing HAL doesn't take down `system_server` or the app, and apps never get direct access to device nodes.
 
-The kernel driver toggles the electrical pin on the motherboard,  
-sending current to the physical LED flash, and the light turns on.
+## Related notes
 
-### Why this Architecture Matters
++ [HAL_history.md](HAL_history.md): libhardware → HIDL → AIDL
++ [HAL_sysfsNodes.md](HAL_sysfsNodes.md): how a HAL relates to sysfs
++ [HAL_libgpiod.md](HAL_libgpiod.md): GPIO HAL with libgpiod
++ [HAL_STM32_example.md](HAL_STM32_example.md): what a microcontroller "HAL" does
++ [AIDL_HAL.md](AIDL_HAL.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md): writing an AIDL HAL
 
-+ **Separation of Concerns**:  
-  Google writes the Android app framework without needing to know how Samsung's hardware works.
-+ Vendor Flexibility:  
-  Samsung can completely change the internal circuitry of their next phone,  
-  and as long as they write a HAL implementation that matches Android's standard interface,  
-  the Android OS and apps will continue to work seamlessly without changing a single line of Java code.
-+ Security & Performance:  
-  The heavy lifting—communicating with low-level drivers and hardware registers -  
-  is **handled by fast, unmanaged C/C++ code via JNI and the HAL**, away from the JVM's garbage collector.
+## Reference
+
++ [Hardware abstraction layer (HAL) overview](https://source.android.com/docs/core/architecture/hal)
++ [Camera HAL](https://source.android.com/docs/core/camera)

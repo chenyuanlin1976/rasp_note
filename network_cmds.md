@@ -7,7 +7,7 @@
 + `ifconfig`: a legacy Linux utility used to view and adjust the configuration of network interfaces.
 + `iwconfig`: a dedicated Linux command-line tool used to display and configure wireless network interfaces.
 
-## common commnads
+## common commands
 
 + Check IP Addresses & Network Interfaces:
   + Shows all active network interfaces, their link statuses (UP or DOWN), and assigned IPv4/IPv6 addresses: `ip addr`
@@ -21,7 +21,7 @@
   + Traces the path packets take to a target host, helping identify which network router or hop is dropping your connection: `traceroute google.com`
   + Combines ping and traceroute into a real-time, interactive diagnostic interface: `mtr google.com`
 
-## command: ifcofig
+## command: ifconfig
 
 + View active interfaces: `ifconfig`
 + View all interfaces (including down): `ifconfig -a`

@@ -1,114 +1,112 @@
-# Groovy introduction
+# Groovy for reading Gradle scripts
 
-Groovy is a powerful, dynamically typed language for the Java Virtual Machine (JVM).  
-Because it is built on top of Java, any valid Java code is technically valid Groovy code.  
-However, Groovy adds a lot of **syntactic sugar** to make code shorter, cleaner, and much more expressive.
+Groovy is a JVM language with optional typing. Most Java source is also valid Groovy, but not all of it:
+for example, Java array initializers `int[] a = {1, 2}` aren't, and `==` means `equals()` in Groovy.
+Android projects meet Groovy in `build.gradle` / `settings.gradle`.
+New Android Studio projects use the Kotlin DSL (`.gradle.kts`) since Android Studio Giraffe (2023),
+so Groovy matters mainly for older projects and tutorials.
+The side-by-side comparison is in [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md).
 
-Groovy is widely known in the Android ecosystem  
-because it has historically been the primary language used for Gradle build scripts (`build.gradle`).
+## 1. Syntax you need for build scripts
 
-## Key Groovy Syntax Features
+### 1.1 Semicolons, parentheses, `return`
 
-### 1. Optional Semicolons and return
-
-In Groovy, semicolons at the end of lines are completely optional.  
-Furthermore, the `return` keyword is optional for the last expression in a method or closure.
-
-```groovy
-// Java style (also works in Groovy)
-String getGreeting() {
-    return "Hello, World!";
-}
-
-// Groovy style
-String getGreeting() {
-    "Hello, World!"
-}
-```
-
-### 2. Dynamic Typing with `def`
-
-While Groovy supports static typing (like Java),  
-you can use the `def` keyword to let the compiler figure out the data type automatically.
+Semicolons are optional. Parentheses are optional for a top-level method call with arguments.
+The last expression of a method or closure is its return value.
 
 ```groovy
-def name = "Android"   // Inferred as String
-def version = 34       // Inferred as Integer
-def isCool = true      // Inferred as Boolean
+println("hi")
+println "hi"                  // same call
+
+String greeting() { "Hello" } // implicit return
 ```
 
-### 3. String Interpolation (GString)
+So `implementation 'androidx.core:core-ktx:1.13.1'` in Gradle is just the method call `implementation('androidx.core:core-ktx:1.13.1')`.
 
-Groovy introduces double-quoted strings called GStrings,  
-which allow you to embed variables and expressions directly into text using `$`.
+### 1.2 `def` is dynamic typing
 
 ```groovy
-def developer = "Alice"
-def message = "Welcome back, $developer!" 
-println(message) // Output: Welcome back, Alice!
-
-// For expressions, wrap in curly braces:
-println("Next version: ${version + 1}") // Output: Next version: 35
+def version = 34          // static type is Object; the value is an Integer at run time
+version = "thirty-four"   // allowed: the variable has no fixed type
+int sdk = 34              // explicit type, checked when assigned
 ```
 
-### 4. Closures
+`def` doesn't infer a static type (that's Kotlin's `val`). Groovy resolves the type at run time.
 
-A closure is an anonymous block of code that can take arguments, return values, and be assigned to variables or passed to methods.  
-They are heavily used in Groovy and Gradle.
-
-+ If a closure takes a single parameter, Groovy provides an implicit variable named `it`.
+### 1.3 Strings: single vs double quotes
 
 ```groovy
-// Defining a closure
-def sayHello = { name -> "Hello, $name" }
-println(sayHello("Bob")) // Output: Hello, Bob
-
-// Using a closure with a list
-def numbers = [1, 2, 3, 4]
-numbers.each { println(it * 2) } // 'it' represents the current element
+def name = "Alice"
+println 'Hi $name'        // Hi $name     : single quotes are plain java.lang.String
+println "Hi $name"        // Hi Alice     : double quotes are a GString (interpolation)
+println "Next: ${34 + 1}" // Next: 35     : ${} for expressions
+println '''multi
+line'''                   // triple quotes: multi-line strings
 ```
 
-### 5. Simplified Collections (Lists and Maps)
+In Gradle, `"$rootDir/keys"` works but `'$rootDir/keys'` doesn't.
 
-Groovy provides native, concise literal syntax for creating lists and maps without cumbersome factory methods.
+### 1.4 Lists, maps, named arguments
 
 ```groovy
-// List
-def fruits = ['Apple', 'Banana', 'Orange']
-println fruits[1] // Output: Banana
+def abis = ['arm64-v8a', 'x86_64']                // java.util.ArrayList
+def sdk  = [min: 24, target: 34]                  // LinkedHashMap; keys are strings
+println abis[0]                                   // arm64-v8a
+println sdk.min                                   // 24 (same as sdk['min'])
 
-// Map (Dictionary)
-def config = [compileSdk: 34, targetSdk: 34, minSdk: 24]
-println config['compileSdk'] // Output: 34
-println config.minSdk        // Property-style access also works!
+// A map literal as the first argument can be written as named arguments:
+implementation group: 'androidx.core', name: 'core-ktx', version: '1.13.1'
 ```
 
-### 6. Safe Navigation Operator (`?.`)
+### 1.5 Closures and delegates (how Gradle blocks work)
 
-To avoid pesky `NullPointerExceptions` when checking if an object is null, Groovy provides the safe navigation operator.  
-If the object before `?.` is null, it simply returns null instead of crashing.
+A closure is a block of code `{ params -> body }`. A single parameter is available as `it`.
+
+```groovy
+def twice = { x -> x * 2 }
+[1, 2, 3].each { println twice(it) }
+```
+
+`android { ... }` is a method call whose last argument is a closure.
+Gradle sets the closure's **delegate** to the `android` extension object,
+so `compileSdk = 34` inside the closure sets a property of that object.
+This is the Groovy counterpart of Kotlin's "lambda with receiver".
+
+### 1.6 Null safety and Groovy truth
 
 ```groovy
 String user = null
-println(user?.toUpperCase()) // Output: null (instead of crashing)
+println user?.toUpperCase()     // null instead of NullPointerException
+println user ?: 'guest'         // Elvis operator: guest
+if ('') println 'never'         // "Groovy truth": null, 0, '', [] and [:] are false
 ```
 
-## Example: Groovy in Action (Gradle Style)
-
-If you look at an older Android `build.gradle` file,  
-you are looking at Groovy syntax leveraging blocks (closures) and implicit method calls:
+## 2. Property assignment in Gradle
 
 ```groovy
 android {
-    compileSdk 34
+    namespace = 'com.example.myapp'   // preferred: explicit assignment
+    compileSdk = 34
 
     defaultConfig {
-        applicationId "com.example.myapp"
-        minSdk 24
-        targetSdk 34
+        applicationId = 'com.example.myapp'
+        minSdk = 24
+        targetSdk = 34
     }
 }
 ```
 
-Note: While **Android has been transitioning toward Kotlin DSL** (`build.gradle.kts`) for modern projects,  
-understanding Groovy syntax remains essential for maintaining legacy codebases and reading community tutorials.
+Older scripts write `compileSdk 34` (the "space assignment").
+That isn't Groovy syntax: Gradle generates a method `compileSdk(value)` at run time.
+Gradle 8.12 deprecated these generated methods, and they will be removed in Gradle 10, so use `name = value`.
+
+## Related notes
+
++ [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md): the same build script in Groovy and Kotlin DSL
++ [Kotlin_DSL.md](Kotlin_DSL.md), [building_note.md](building_note.md)
+
+## Reference
+
++ [Groovy documentation: syntax, differences with Java](https://groovy-lang.org/documentation.html)
++ [Gradle: Groovy DSL primer](https://docs.gradle.org/current/userguide/groovy_build_script_primer.html)
++ [Gradle 8 upgrade guide: "space assignment" deprecation](https://docs.gradle.org/current/userguide/upgrading_version_8.html)

@@ -1,132 +1,134 @@
-# What is Modbus?
+# Modbus
 
-Modbus is an industrial communication protocol developed in 1979 by Modicon (now Schneider Electric).  
-It acts as a standard language that allows electronic devices  
-(such as Programmable Logic Controllers (PLCs), sensors, actuators, and meters)  
-to communicate with each other and with control computers (like SCADA or HMI systems).
+Modbus is a request/response protocol for industrial devices: PLCs, sensors, power meters, inverters, drives.
+Modicon (now Schneider Electric) published it in 1979. Today the Modbus Organization maintains it,
+and the specifications are free to download and implement without royalties.
 
-Because of its simplicity, reliability, and open-source nature (free to use without licensing fees),  
-Modbus has become the de facto standard for industrial automation.
++ **Client** (formerly "master"): sends requests. A PLC, SCADA/HMI, gateway, or your Linux board.
++ **Server** (formerly "slave"): answers. A server never sends anything on its own, so the client has to **poll**.
 
-## How Modbus Works
+The Modbus Organization switched to client/server terminology in 2020. Serial-line documents and many devices still say master/slave.
 
-Modbus operates on a **Request-Response** (or Client-Server / Master-Slave) architecture.
+## 1. Layers and variants
 
-+ Client: The device that initiates the request (e.g., a computer, SCADA system, or PLC).
-+ Server: The device that processes the request and sends back the requested data or  
-  performs the requested action (e.g., a temperature sensor, power meter, or valve).
+The same **PDU** (function code + data) travels in different envelopes (ADU):
 
-**Key Rule**: Slaves never speak unless spoken to. A slave cannot initiate communication on its own.
+```text
+PDU (≤ 253 bytes):                       [function code][data]
+RTU (serial, binary):        [address][  function code  ][data][CRC-16]           <= 256 bytes
+TCP (port 502):  [MBAP header 7 bytes][  function code  ][data]                   <= 260 bytes
+```
 
-## Common Modbus Variants
+| Variant | Transport | Framing / error check | Notes |
+| --- | --- | --- | --- |
+| **Modbus RTU** | RS-485 (or RS-232) | Silent gaps of 3.5 characters, CRC-16 | The most common serial form; see [Modbus_RTU.md](Modbus_RTU.md) |
+| Modbus ASCII | Serial | `:` ... CR LF, hex characters, LRC | Rare; readable but about 2× slower |
+| **Modbus TCP** | TCP, port 502 | MBAP header; TCP does error checking | No address byte and no CRC: the IP address selects the device |
+| "RTU over TCP" | TCP or UDP socket | The complete RTU frame (address + CRC) inside the socket | Not in the specification, but common in serial-to-Ethernet converters. Both sides must use the same mode |
+| Modbus TCP Security | TLS, port 802 | MBAP over TLS with certificates | Newer; supported by few devices |
 
-As technology evolved, Modbus expanded from traditional serial lines to Ethernet networks.  
-The main variants include:
+### 1.1 Modbus TCP: the MBAP header
 
-1. **Modbus RTU** (Remote Terminal Unit):
-   + Uses serial communication (RS-232, RS-485).
-   + Data is transmitted in binary format for high data density.
-   + Most common variant in factory floors.
-2. Modbus ASCII:
-   + Uses serial communication.
-   + Data is transmitted as human-readable ASCII characters  
-     (making it easier to troubleshoot with a terminal, but slower than RTU).
-3. Modbus TCP (Transmission Control Protocol):
-   + Designed for Ethernet networks.
-   + Encapsulates the Modbus RTU/ASCII packet inside a standard TCP/IP packet (typically using port 502).
-   + Allows multiple masters to query devices over a local network or the internet.
-4. Modbus RTU/IP:
-   + A variation where Modbus RTU packets are transported over an IP network rather than pure TCP.
+| Field | Size | Meaning |
+| --- | --- | --- |
+| Transaction ID | 2 | Chosen by the client, echoed by the server, to pair responses with requests |
+| Protocol ID | 2 | `0` = Modbus |
+| Length | 2 | Number of bytes that follow: Unit ID + PDU |
+| Unit ID | 1 | Serial address of a device **behind a gateway**. For a device addressed directly by IP, usually `0xFF` (or `1`, as the device documents) |
 
-## Advantages and Limitations
+Example: read 2 holding registers starting at offset 0:
 
-### Advantages
+```text
+request:  00 01  00 00  00 06  FF  03  00 00  00 02
+          trans  proto  len    uid fc  start  quantity
+response: 00 01  00 00  00 07  FF  03  04  00 FA  01 2C        (2 registers: 250, 300)
+```
 
-+ Open Standard: Free to implement and use across different manufacturers.
-+ Simple Structure: Easy to learn, deploy, and troubleshoot compared to complex industrial protocols.
-+ Versatile: Works seamlessly over old-school serial cables as well as modern Ethernet infrastructure.
+Several clients can connect to one TCP server at the same time.
+On a serial line, only one client may be active.
 
-### Limitations
+## 2. Data model
 
-+ No Built-in Security: Standard Modbus lacks native authentication or encryption,  
-  making it vulnerable to cyberattacks if exposed to unsecured networks.
-+ Master-Slave Bottleneck: Slaves cannot report alarms or events proactively;  
-  the master must continuously poll them.
-+ Limited Bandwidth: Not ideal for high-speed, high-volume data transmission  
-  (like video or heavy configuration files).
+| Table | Element | Access | Read | Write single / multiple | Typical use |
+| --- | --- | --- | --- | --- | --- |
+| Coils | 1 bit | Read/write | `0x01` | `0x05` / `0x0F` | Relays, run/stop commands |
+| Discrete inputs | 1 bit | Read-only | `0x02` | — | Limit switches, alarms |
+| Input registers | 16 bit | Read-only | `0x04` | — | Measurements |
+| Holding registers | 16 bit | Read/write | `0x03` | `0x06` / `0x10` | Setpoints, configuration, and in practice most data |
 
-## Modbus TCP Frame Structure (MBAP Header + PDU)
+Other useful function codes: `0x17` read/write multiple registers in one transaction, `0x2B`/`0x0E` read device identification,
+`0x08` diagnostics and `0x07`/`0x11` (serial only).
 
-*A Modbus TCP request consists of a 7-byte MBAP Header followed by the PDU* (Protocol Data Unit):
+### 2.1 Addresses: documentation vs wire
 
-+ **Transaction Identifier** (2 bytes): For pairing request and response.
-+ **Protocol Identifier** (2 bytes): 0 for Modbus.
-+ **Length** (2 bytes): Number of remaining bytes in the message.
-+ **Unit Identifier** (1 byte): Slave address (often 0xFF or 1 for TCP).
-+ Function Code (1 byte): e.g., 0x03 for Read Holding Registers.
-+ Data (N bytes): Starting address, quantity of registers, etc.
+Each table has addresses **0–65535** in the PDU (the "offset").
+Manuals often use the old 1-based **reference numbers** with a table prefix instead:
 
-## Modbus: master-slave architecture
+| Reference | Table | Wire offset |
+| --- | --- | --- |
+| `00001`… | Coil | reference − 1 |
+| `10001`… | Discrete input | reference − 10001 |
+| `30001`… | Input register | reference − 30001 |
+| `40001`… | Holding register | reference − 40001 (`40001` → `0x0000`, `40108` → `0x006B`) |
 
-Modbus TCP/RTU use the **master-slave** architecture.  
-(often referred to in modern specifications as **Client-Server**).  
-The underlying data model, function codes, and logical request-response mechanism remain identical across both protocols.  
-The primary difference lies in the underlying transport layer:
+6-digit forms (`400001`) exist for addresses above 9999.
+Some manuals list raw offsets instead, and others are off by one, so check with a known register (for example a serial number).
 
-+ Modbus RTU: Transmits binary data serially over physical cabling like RS-485 or RS-232,  
-  relying on device addresses to route messages between the master and specific slaves.
-+ Modbus TCP: Encapsulates the Modbus data packets inside standard TCP/IP frames, transmitting them over Ethernet networks.  
-  Instead of a serial device address, it uses IP addresses to identify devices on the network,  
-  alongside a Unit Identifier to communicate with sub-devices connected behind a gateway.
+### 2.2 Limits per request
 
-## To define and use Modbus registers for control
+| Function | Max quantity |
+| --- | --- |
+| Read coils / discrete inputs (`0x01`, `0x02`) | 2000 bits |
+| Read holding / input registers (`0x03`, `0x04`) | 125 registers |
+| Write multiple coils (`0x0F`) | 1968 bits |
+| Write multiple registers (`0x10`) | 123 registers |
 
-you must map your data into 4 data types: Coils, Discrete Inputs, Input Registers, and Holding Registers.  
-Each type uses specific function codes and size rules to manage digital and analog values.  
+Read larger blocks in several requests. Many devices allow even less, or don't allow a read across unmapped gaps.
 
-### Coils (0xxxx)
+### 2.3 Values larger than 16 bits
 
-+ Size & Access: 1 bit, Read/Write
-+ Function Codes: Read (01), Write Single (05), Write Multiple (15)
-+ Use for: Binary control actions like starting/stopping a motor or toggling a relay.
+A register is 16 bits, sent **big-endian** (high byte first). Larger values use consecutive registers,
+but the **word order** isn't standardized:
 
-### Discrete Inputs (1xxxx)
+| Value | Registers (most common, "big-endian / ABCD") | Swapped words ("CDAB"), also common |
+| --- | --- | --- |
+| `float32 23.5` = `0x41BC0000` | `0x41BC`, `0x0000` | `0x0000`, `0x41BC` |
+| `uint32 70000` = `0x00011170` | `0x0001`, `0x1170` | `0x1170`, `0x0001` |
 
-+ Size & Access: 1 bit, Read-Only
-+ Function Codes: Read (02)
-+ Use for: Binary status monitoring like safety limit switches or push-button states.
+Scaled integers are also common: `2345` with a documented scale of 0.01 = 23.45 °C.
+SunSpec defines this formally with scale-factor registers ([Modbus_SunSpec.md](Modbus_SunSpec.md)).
 
-### Input Registers (3xxxx)
+## 3. Exceptions
 
-+ Size & Access: 16 bits (2 bytes), Read-Only
-+ Function Codes: Read (04)
-+ Use for: Live analog measurements like temperature, pressure, or sensor values
+On an error, the server answers with the function code + `0x80` and one exception code
+(for example request `0x03` → response `0x83 0x02`):
 
-### Holding Registers (4xxxx)
+| Code | Name | Usual cause |
+| --- | --- | --- |
+| `0x01` | Illegal function | The device doesn't support this function code |
+| `0x02` | Illegal data address | Register not mapped, or the range crosses an unmapped gap |
+| `0x03` | Illegal data value | Quantity out of range, or a value the device rejects |
+| `0x04` | Server device failure | Internal error while executing |
+| `0x05` / `0x06` | Acknowledge / server busy | Long operation started / try again later |
+| `0x0A` / `0x0B` | Gateway path unavailable / target failed to respond | From a gateway: the serial device behind it didn't answer |
 
-+ Size & Access: 16 bits (2 bytes), Read/Write
-+ Function Codes: Read (03), Write Single (06), Write Multiple (16)
-+ Use for: Configurable parameters, target setpoints, and multi-register data like 32-bit floats.
+**No answer at all** (timeout) usually means a wrong address, wrong serial settings, a CRC error, or a broadcast. It's not an exception.
 
-## How to Define and Map Addresses
+## 4. Limitations
 
-+ Documentation vs. Wire Address:  
-  Documentation usually lists human-readable addresses starting with a prefix digit (40001 for the first holding register).  
-  However, the actual Modbus protocol frame uses a zero-based offset (0x0000).  
-  To find the wire address, subtract the leading prefix range (e.g., subtract 40001 to get 0).
-+ Handling Large Data Types (32-bit / Floats):  
-  A standard Modbus register is 16 bits.  
-  To store a 32-bit integer or an IEEE 754 floating-point number, define two consecutive 16-bit registers  
-  (e.g., combining holding registers 40001 and 40002). Ensure both master and slave agree on the byte/word order (endianness)
++ **Polling only**: a server can't report events. The client must read often enough to catch changes.
++ **No security** in classic Modbus: no authentication and no encryption. Anyone who can reach port 502 can write registers.
+  Keep it on isolated networks or behind a firewall or VPN.
+  Modbus/TCP Security (TLS, port 802) exists, but few devices support it.
++ **No standard register map**: every vendor defines its own, except for profiles such as SunSpec.
++ Small payloads (≤ 125 registers per request): fine for process data, unsuitable for files or streams.
 
-## Technical Accuracy and Better Descriptive Clarity
+## Related notes
 
-Beyond social reasons, master/slave is often a vague metaphor for how modern digital systems actually work.  
-Alternative terms frequently provide much better functional descriptions:
++ [Modbus_RTU.md](Modbus_RTU.md): serial framing, timing, CRC, RS-485 wiring, testing tools
++ [Modbus_SunSpec.md](Modbus_SunSpec.md): standardized register maps for solar inverters and DER
++ [IoT_Network.md](IoT_Network.md), [MQTT_intro.md](MQTT_intro.md)
 
-+ **Client/Server**: Accurately describes a cooperative network relationship where  
-  + one component requests a service and  
-  + the other fulfills it (much like a customer and a service provider).  
-+ Initiator/Target or Requester/Responder: Explicitly defines who starts a communication transaction and who answers it,  
-  which fits modern bus architectures (like PCI Express or modern networking protocols) much more logically.
-+ Primary/Secondary or Main/Replica: Clearly outlines hierarchy in database replication or hardware configurations without invoking human social constructs.
+## Reference
+
++ [Modbus Organization: specifications (Application Protocol V1.1b3, Messaging on TCP/IP, Serial Line V1.02)](https://www.modbus.org/specs.php)

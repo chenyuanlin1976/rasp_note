@@ -103,7 +103,7 @@ Gradle 8.12 deprecated these generated methods, and they will be removed in Grad
 ## Related notes
 
 + [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md): the same build script in Groovy and Kotlin DSL
-+ [Kotlin_DSL.md](Kotlin_DSL.md), [building_note.md](building_note.md)
++ [building_note.md](building_note.md)
 
 ## Reference
 

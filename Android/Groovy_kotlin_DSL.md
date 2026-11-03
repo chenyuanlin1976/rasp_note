@@ -4,7 +4,15 @@ The same Android build written in Groovy (`build.gradle`) and in Kotlin DSL (`bu
 Kotlin DSL has been the default for new projects since Android Studio Giraffe.
 Groovy syntax basics are in [Groovy_intro.md](Groovy_intro.md).
 
-## 1. Differences at a glance
+## 1. Why Kotlin DSL
+
++ **Static typing**: a misspelled property or a wrong type is an error in the editor, not a failure during sync or the build.
++ **IDE support**: code completion, navigation to the Gradle and AGP sources, inline docs, and safe refactoring.
++ **One language**: the same Kotlin as the app code. Blocks like `android { }` are lambdas with receiver,
+  the Kotlin counterpart of Groovy's closure delegate.
++ Cost: the first configuration is slower, because the scripts are compiled (later runs are cached).
+
+## 2. Differences at a glance
 
 | Item | Groovy (`build.gradle`) | Kotlin DSL (`build.gradle.kts`) |
 | --- | --- | --- |
@@ -18,7 +26,7 @@ Groovy syntax basics are in [Groovy_intro.md](Groovy_intro.md).
 | Named containers | `release { }` | `release { }` or `getByName("release") { }`; new entries: `create("staging") { }` |
 | Extra properties | `ext.myVer = '1.0'`, then `myVer` | `val myVer by extra("1.0")`, then `rootProject.extra["myVer"]` |
 
-## 2. Plugins and dependencies (with a version catalog)
+## 3. Plugins and dependencies (with a version catalog)
 
 New projects keep versions in `gradle/libs.versions.toml` and refer to them as `libs.*` from both DSLs:
 
@@ -65,7 +73,7 @@ dependencies {
 
 Dashes in the catalog become dots in the accessor: `androidx-core-ktx` is `libs.androidx.core.ktx`.
 
-## 3. The `android { }` block
+## 4. The `android { }` block
 
 ```groovy
 android {
@@ -126,7 +134,7 @@ android {
 }
 ```
 
-## 4. Custom tasks
+## 5. Custom tasks
 
 ```groovy
 tasks.register('printVersion') {
@@ -142,7 +150,7 @@ tasks.register("printVersion") {
 
 Use `tasks.register` (lazy) instead of the old `task printVersion { }` / `tasks.create`.
 
-## 5. Migrating a project to Kotlin DSL
+## 6. Migrating a project to Kotlin DSL
 
 1. Convert `settings.gradle` first, then one module at a time: rename the file to `.kts` and fix the errors that the IDE reports.
    Groovy and Kotlin build files can be mixed in one project.
@@ -151,7 +159,7 @@ Use `tasks.register` (lazy) instead of the old `task printVersion { }` / `tasks.
 
 ## Related notes
 
-+ [Groovy_intro.md](Groovy_intro.md), [Kotlin_DSL.md](Kotlin_DSL.md), [building_note.md](building_note.md)
++ [Groovy_intro.md](Groovy_intro.md), [building_note.md](building_note.md)
 + [sign_apk.md](sign_apk.md): `signingConfigs` in Kotlin DSL
 
 ## Reference

@@ -1,110 +1,106 @@
-# RPi 5 GPIO control
+# Raspberry Pi 5: GPIO control
 
-Controlling GPIOs on the **Raspberry Pi 5** is notably **different** from older models (like the Pi 4 or Pi 3).
+On the Pi 5, the 40-pin header isn't driven by the Broadcom SoC (BCM2712) directly.
+It's driven by **RP1**, Raspberry Pi's own I/O controller, which is connected over PCIe.
+Libraries that `mmap` the old Broadcom GPIO registers therefore **don't work** on the Pi 5:
+`RPi.GPIO` fails with `RuntimeError: Cannot determine SOC peripheral base address`, and `pigpio` isn't supported.
+Use the kernel **GPIO character device** (libgpiod) or libraries built on it (`lgpio`, `gpiozero`).
 
-The Raspberry Pi 5 replaces the traditional Broadcom SoC direct memory mapping with a custom southbridge chip called RP1.  
-Because of this hardware change, legacy libraries like `RPi.GPIO`, `pigpio`, and `WiringPi` do **not** work  
-and will throw errors (such as `RuntimeError`: Cannot determine SOC peripheral base address).
+## 1. Find the chip and line
 
-Instead, modern Raspberry Pi OS relies on `lgpio`, `gpiozero`, or standard `libgpiod` character devices (`/dev/gpiochip4`).
-
-## Method 1: Using gpiozero (Recommended for Python)
-
-`gpiozero` is the official, high-level Python library for Raspberry Pi.  
-It abstracts hardware into clean components (like LED, Button, MotionSensor)  
-and automatically uses `lgpio` as its backend on the Pi 5.
-
-### 1. Installation
-
-`gpiozero` and its backend `lgpio` come pre-installed on Raspberry Pi OS.  
-If you need to install them manually:
-
-```bash
-sudo apt update
-sudo apt install python3-gpiozero python3-lgpio -y
+```shell
+gpiodetect          # look for the chip labeled "pinctrl-rp1"
+gpioinfo | less     # lines are named GPIO0..GPIO27 for the header
 ```
 
-### 2. Example Code (Blinking an LED)
++ The header chip is **`gpiochip4`** on early Bookworm kernels and **`gpiochip0`** on newer ones (kernel updates from 2024).
+  Newer images keep a `gpiochip4` symlink for compatibility. Trust `gpiodetect`.
++ The line offset is the **BCM GPIO number**, for example GPIO17 = header pin 11.
++ Permissions: `/dev/gpiochip*` belongs to group `gpio`, and the default user is in it, so no `sudo` is needed.
 
-Using BCM pin numbering (e.g., GPIO 17, which corresponds to physical Pin 11):
+## 2. Command line
+
+Raspberry Pi OS Bookworm ships **libgpiod v1** tools:
+
+```shell
+gpioget gpiochip0 17
+gpioset --mode=wait gpiochip0 17=1      # drive high and HOLD until Enter; plain "gpioset" releases on exit
+```
+
+`pinctrl` is Raspberry Pi's own tool. It reads and writes the RP1 registers directly, which is handy for inspection:
+
+```shell
+pinctrl get 17                # function, pull, level
+pinctrl set 17 op dh          # output, drive high
+pinctrl set 17 dl             # drive low
+pinctrl set 17 ip pu          # input with pull-up
+```
+
+`pinctrl` bypasses the kernel's line ownership: it can change a pin that a driver is using. Use it for debugging, not in applications.
+
+## 3. Python
+
+**gpiozero** (preinstalled; on the Pi 5 it uses the `lgpio` backend):
 
 ```python
-from gpiozero import LED
-from time import sleep
+from gpiozero import LED, Button
+from signal import pause
 
-# Define LED connected to GPIO 17
-led = LED(17)
-
-while True:
-  led.on()
-  sleep(1)
-  led.off()
-  sleep(1)
+led = LED(17)               # BCM numbering
+button = Button(27)         # pull-up enabled by default
+button.when_pressed = led.toggle
+pause()
 ```
 
-## Method 2: Using lgpio Directly (For Low-Level Control)
-
-If you need precise timing, hardware-timed PWM, or want a lower-level procedural approach,  
-you can call `lgpio` directly in Python.
-
-### 1. Example Code (Blinking with lgpio)
+**lgpio** (lower level; `sudo apt install python3-lgpio`):
 
 ```python
 import time
 import lgpio
 
-# Open the GPIO chip (on Pi 5, chip 0 handles the 40-pin header)
-h = lgpio.gpiochip_open(0)
-
-# Set GPIO 17 as an output
-PIN = 17
-lgpio.gpio_claim_output(h, PIN)
-
+h = lgpio.gpiochip_open(0)          # the RP1 chip number from gpiodetect (0 or 4)
+lgpio.gpio_claim_output(h, 17, 0)   # claim GPIO17 as output, initially low
 try:
-  while True:
-    lgpio.gpio_write(h, PIN, 1)  # Turn ON (High)
-    time.sleep(1)
-    lgpio.gpio_write(h, PIN, 0)  # Turn OFF (Low)
-    time.sleep(1)
+    for _ in range(5):
+        lgpio.gpio_write(h, 17, 1); time.sleep(0.5)
+        lgpio.gpio_write(h, 17, 0); time.sleep(0.5)
 finally:
-  lgpio.gpiochip_close(h)
+    lgpio.gpiochip_close(h)         # releases the line
 ```
 
-## Method 3: Command-Line Tools (pinctrl and gpiod)
+**libgpiod Python bindings**: see [Linux/libgpiod_intro.md](Linux/libgpiod_intro.md). Bookworm's `python3-libgpiod` is v1. The `pip` package `gpiod` is v2.
 
-Raspberry Pi OS includes built-in command-line tools  
-to check and modify pin states directly from the terminal without writing scripts.
+## 4. PWM
 
-### 1. Using pinctrl (Raspberry Pi's Native Tool)
++ `lgpio.tx_pwm()` / `gpiozero.PWMLED` give **software-timed** PWM, which has jitter. That's fine for LEDs but not for servos.
++ For **hardware PWM**, enable an overlay (for example `dtoverlay=pwm-2chan` in `/boot/firmware/config.txt`, for GPIO18/19)
+  and use `/sys/class/pwm/pwmchip*/` or a library such as `rpi-hardware-pwm`.
 
-`pinctrl` is built specifically for modern Pi hardware to inspect and alter pin multiplexing and states.
+## 5. Old `RPi.GPIO` scripts
 
-+ View the state of all 40 pins: `pinctrl get`
-+ Set GPIO 17 as an output and pull it High (1):
+Install the drop-in replacement, which implements the `RPi.GPIO` API on top of lgpio:
 
-```bash
-pinctrl set 17 op
-pinctrl set 17 dh
-```
-
-+ Set GPIO 17 low (0): `pinctrl set 17 dl`
-
-### 2. Using Standard libgpiod Tools (gpioset / gpioget)
-
-The Pi 5 maps the main 40-pin header to `gpiochip4`  
-(or `gpiochip0` depending on the kernel/tool version mapping).
-
-+ Read pin state: `gpioget gpiochip4 17`
-+ Set pin state: `gpioset gpiochip4 17=1`
-
-## Quick Migration Tip for Old Scripts
-
-If you have an old project written entirely for `RPi.GPIO`  
-that you don't want to rewrite line-by-line, you can install the `rpi-lgpio` compatibility layer:
-
-```bash
+```shell
 sudo apt remove python3-rpi.gpio
-pip install rpi-lgpio
+sudo apt install python3-rpi-lgpio       # or, inside a venv: pip install rpi-lgpio
 ```
 
-This translates old import RPi.GPIO commands so they route through lgpio safely on the Pi 5.
+Plain `pip install` into the system Python is blocked on Bookworm (externally managed environment), so use apt or a venv.
+`WiringPi` users need the maintained fork (WiringPi 3.x), which supports the Pi 5.
+
+## 6. Hardware notes
+
++ The header GPIOs are **3.3 V** logic and **not 5 V tolerant**.
++ Many pins have alternate functions (I2C, SPI, UART, PWM) that are enabled by `dtparam`/`dtoverlay` in `config.txt`.
+  A pin that a driver uses shows its consumer in `gpioinfo`, and requesting it fails with `EBUSY`.
+
+## Related notes
+
++ [Linux/libgpiod_intro.md](Linux/libgpiod_intro.md), [Linux/libgpiod_sysfs_cmp.md](Linux/libgpiod_sysfs_cmp.md)
++ [OPi5_gpio_ctrl.md](OPi5_gpio_ctrl.md), [NV_jetson_gpio_ctrl.md](NV_jetson_gpio_ctrl.md)
+
+## Reference
+
++ [Raspberry Pi documentation: GPIO and the 40-pin header](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#gpio)
++ [gpiozero documentation](https://gpiozero.readthedocs.io/)
++ [lgpio](https://abyz.me.uk/lg/py_lgpio.html)

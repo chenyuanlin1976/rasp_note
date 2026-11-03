@@ -1,89 +1,84 @@
-# control GPIO pins on the NVIDIA Jetson Orin Nano
+# NVIDIA Jetson Orin Nano: GPIO control
 
-Controlling GPIO pins on the NVIDIA Jetson Orin Nano (especially on modern JetPack 6.x releases)  
-differs significantly from traditional microcontrollers like Arduino or older single-board computers like Raspberry Pi.  
+Controlling a header GPIO on the Jetson Orin Nano developer kit (JetPack 6.x, Ubuntu 22.04) takes 2 steps:
 
-Because the pins on the Orin Nano's 40-pin expansion header are heavily multiplexed (shared with I2C, SPI, UART, etc.),  
-controlling them requires a 2-step process: pin configuration (Pinmux) and runtime control using libgpiod (or the Python wrapper).
+1. **Pinmux**: make the pin a GPIO. Most header pins default to special functions (I2C, SPI, UART, I2S).
+2. **Runtime control** through the GPIO character device: libgpiod tools, or the `Jetson.GPIO` Python library.
 
-## Step 1: Configure the Pin via jetson-io
+## 1. Configure the pin with jetson-io
 
-By default, expansion header pins might be assigned to special functions (like a serial port or SPI) rather than generic GPIO.  
-You must tell the system to use them as GPIOs first.
-
-1. Run NVIDIA's built-in pin configuration tool:  
-   `sudo /opt/nvidia/jetson-io/jetson-io.py`
-2. Select Configure Jetson 40Pin Header.
-3. Find the pin you want to use (e.g., Pin 7/ GPIO09) and change its configuration function to GPIO.
-4. Choose Save and reboot to apply the Device Tree overlay and restart the board.
-
-## Step 2: Identify and Control GPIOs via Command Line (libgpiod)
-
-Modern JetPack versions use the modern Linux `libgpiod` character-device framework (`/dev/gpiochipN`)  
-instead of the deprecated `sysfs` interface.
-
-1. Inspect the Available Chips and Lines:  
-   Run `gpioinfo` to list all GPIO controllers and lines: `gpioinfo`  
-   You can also locate a specific named pin using: `gpiofind "GPIO_PIN_NAME"`
-2. Read a Pin State (gpioget):  
-   To read the logic level (0 or 1) of a specific line on a chip (e.g., gpiochip0, line 232):
-   `gpioget gpiochip0 232`
-3. Set a Pin Output (gpioset):  
-   To drive a pin high (1) or low (0):
-
-```bash
-# Set line 232 high (3.3V)
-sudo gpioset gpiochip0 232=1
-
-# Set line 232 low (0V)
-sudo gpioset gpiochip0 232=0
+```shell
+sudo /opt/nvidia/jetson-io/jetson-io.py
 ```
 
-### Step 3: Controlling GPIOs with Python
+1. Choose **Configure Jetson 40pin Header** → **Configure header pins manually**.
+2. Select the functions you need. The tool generates a device-tree overlay.
+   Pins that aren't assigned to a special function stay GPIOs.
+3. **Save and reboot**.
 
-NVIDIA provides support through Python (**Jetson.GPIO**)  
-which interacts cleanly with the underlying character devices, or you can use native python bindings for `libgpiod`.
+Some pins (for example header pin 7, `GPIO09`) are GPIOs by default. jetson-io shows the current assignment.
 
-Using the official `Jetson.GPIO` library (which mirrors standard Raspberry Pi RPi.GPIO syntax):
+## 2. Command line (libgpiod)
 
-1. Install or verify the library: `sudo pip install Jetson.GPIO`
-2. Ensure your user is added to the gpio group so you don't always need `sudo`:
+Tegra GPIO lines are **named by SoC port**, such as `PAC.06`, so you can look them up by name instead of guessing offsets:
 
-```bash
+```shell
+gpiodetect                       # tegra234-gpio (main, ~164 lines) and tegra234-gpio-aon
+gpioinfo | grep -E "PAC.06|PQ.05"
+gpiofind PAC.06                  # -> e.g. "gpiochip0 144" (libgpiod v1 on Ubuntu 22.04)
+
+gpioget $(gpiofind PAC.06)
+sudo gpioset --mode=wait $(gpiofind PAC.06)=1      # hold high until Enter
+```
+
++ The header-pin → Tegra-port mapping is in the developer kit's pinmux spreadsheet or carrier board spec.
+  For example, pin 7 = GPIO09 = `PAC.06`.
+  The line numbers differ between JetPack releases, so look them up on your system.
++ A plain v1 `gpioset` **releases** the line when it exits, and the pin may return to its previous state.
+  To keep a level, hold the line (`--mode=wait|signal`) or control it from a running program.
+
+## 3. Python: Jetson.GPIO
+
+`Jetson.GPIO` comes with JetPack. It has an `RPi.GPIO`-style API on top of the character device.
+
+```shell
 sudo groupadd -f -r gpio
-sudo usermod -a -G gpio $USER
+sudo usermod -a -G gpio $USER     # then log out/in
+# if Jetson.GPIO was installed with pip, also install its udev rules (99-gpio.rules) as its README describes
 ```
-
-3. Run a basic Python script (e.g., blink.py) using BOARD mode (physical pin numbers 1-40):
 
 ```python
 import time
 import Jetson.GPIO as GPIO
 
-# Use physical board pin numbers (e.g., Pin 7)
-PIN_T = 7
+PIN = 7                       # physical header pin (BOARD mode)
 
-# Setup channel
 GPIO.setmode(GPIO.BOARD)
-GPIO.setup(PIN_T, GPIO.OUT)
-
-print("Blinking pin 7. Press CTRL+C to stop.")
-
+GPIO.setup(PIN, GPIO.OUT, initial=GPIO.LOW)
 try:
-  while True:
-    GPIO.output(PIN_T, GPIO.HIGH)
-    time.sleep(1)
-    GPIO.output(PIN_T, GPIO.LOW)
-    time.sleep(1)
-except KeyboardInterrupt:
-  # Clean up states on exit
-  GPIO.cleanup()
+    for _ in range(5):
+        GPIO.output(PIN, GPIO.HIGH); time.sleep(0.5)
+        GPIO.output(PIN, GPIO.LOW);  time.sleep(0.5)
+finally:
+    GPIO.cleanup()            # release the pins
 ```
 
-## Important Hardware Notes for Jetson Orin Nano
+The libgpiod Python bindings (`python3-libgpiod`, v1) also work; see [Linux/libgpiod_intro.md](Linux/libgpiod_intro.md).
 
-1. Voltage Levels: The 40-pin header on the Orin Nano operates at **1.8V logic by default** on some pins, or switchable,  
-   but standard carrier boards route 3.3V/1.8V compatible rails.  
-   **Always verify your external peripheral requirements to prevent damage.**
-2. Transient States: Setting a pin via command line (gpioset) is temporary and resets when the command or script terminates,  
-   unless held or controlled continuously via a running daemon/script.
+## 4. Hardware notes
+
++ The SoC's pins are **1.8 V**. On the developer kit carrier board, the 40-pin header is level-shifted to **3.3 V**.
+  Many header lines go through bidirectional, weak level shifters, so they drive only small loads.
+  Use a buffer or transistor for LEDs or relays.
+  Custom carrier boards may expose 1.8 V. Check your board's design guide.
++ Pins that a pinmux/overlay assigns to I2C/SPI/UART are owned by those drivers. Requesting them as GPIO fails with `EBUSY`.
+
+## Related notes
+
++ [Linux/libgpiod_intro.md](Linux/libgpiod_intro.md), [Linux/libgpiod_sysfs_cmp.md](Linux/libgpiod_sysfs_cmp.md)
++ [RPi5_gpio_ctrl.md](RPi5_gpio_ctrl.md), [OPi5_gpio_ctrl.md](OPi5_gpio_ctrl.md)
+
+## Reference
+
++ [Jetson.GPIO (GitHub)](https://github.com/NVIDIA/jetson-gpio)
++ Jetson Linux Developer Guide (docs.nvidia.com/jetson), section "Configuring the Jetson Expansion Headers" for your JetPack release

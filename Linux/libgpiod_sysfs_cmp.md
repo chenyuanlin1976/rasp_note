@@ -1,84 +1,104 @@
+# GPIO from user space: sysfs (`/sys/class/gpio`) vs character device (`/dev/gpiochipN`)
 
-On Linux-based systems like Android (running on an RK3566),  
-the difference between `/dev/gpiochip*` and `/sys/class/gpio/gpiochip*` represents an evolution in the Linux kernel architecture.
+Linux has 2 user-space interfaces to GPIO lines. Both are front ends to the same in-kernel **gpiolib**:
 
-+ `/sys/class/gpio/gpiochip*` is the legacy sysfs interface (now deprecated),  
-+ `/dev/gpiochip*` is the modern character device interface managed by `libgpiod`.
++ **`/sys/class/gpio/`**: the legacy sysfs interface, **deprecated since Linux 4.8** (2016).
+  Its ABI is listed under `Documentation/ABI/obsolete/sysfs-gpio`.
++ **`/dev/gpiochipN`**: the **GPIO character device**, available since 4.8.
+  Its uAPI v2 arrived in 5.10, and v1 is now deprecated too.
+  It's used through **libgpiod** (C library + `gpiodetect`/`gpioinfo`/`gpioget`/`gpioset`/`gpiomon` tools).
 
-## 1. /sys/class/gpio/gpiochip* (The Legacy Sysfs Interface)
+The kernel owns `/dev/gpiochipN`. libgpiod is just a user-space wrapper around its ioctls.
+The examples use an RK3566 pin, **GPIO4_D5** (bank 4, group D = 3, pin 5 → offset 3 × 8 + 5 = 29).
 
-This is an older **text-based file** system interface  
-that exposes individual GPIO pins as directories and files.
+## 1. Legacy sysfs interface
 
-### How it looks/works
+```shell
+# Global GPIO number = chip base + offset. With the classic Rockchip base (bank * 32): 4*32 + 29 = 157
+cat /sys/class/gpio/gpiochip*/base /sys/class/gpio/gpiochip*/label   # find the real bases first
 
-You interact with it by "exporting" a global GPIO pin number into a control file:
-
-```bash
-echo 157 > /sys/class/gpio/export
-echo out > /sys/class/gpio/gpio157/direction
-echo 1 > /sys/class/gpio/gpio157/value
+echo 157  | sudo tee /sys/class/gpio/export          # creates /sys/class/gpio/gpio157/
+echo high | sudo tee /sys/class/gpio/gpio157/direction   # output, initially high ("out" = output low)
+echo 0    | sudo tee /sys/class/gpio/gpio157/value
+echo 157  | sudo tee /sys/class/gpio/unexport
 ```
 
-### Key Characteristics
+How it works:
 
-+ Deprecated: The Linux kernel community officially deprecated the `sysfs` GPIO interface  
-  because it is slow, prone to race conditions, awkward to handle multi-pin operations,  
-  and uses messy global integer math (e.g., calculating `bank * 32 + index`).
-+ Text-heavy: Every read or write involves parsing text strings ("out", "in", "1", "0"),  
-  which introduces unnecessary overhead.
-+ Removal: Depending on how modern your Android kernel version is (Linux 5.10+ / 6.x),  
-  the `CONFIG_GPIO_SYSFS` option might be completely turned off.
++ Writing to `export` makes gpiolib **request** the line, the same as a kernel consumer would.
+  For a controller with `gpio-ranges`, that request goes through **pinctrl**, which switches the pin's mux to the GPIO function.
+  So sysfs does *not* bypass pinctrl. But it can't apply pull-ups or drive strength;
+  those must come from the device tree's pinctrl configuration.
++ If a kernel driver already owns the line (for example `leds-gpio`, or a driver using `*-gpios` through `gpiod_get()`), the export fails with **`EBUSY`**.
 
-## 2. /dev/gpiochip* (The Modern Character Device API)
+Problems, and the reasons it's deprecated:
 
-This is the modern, robust, and recommended kernel API for controlling GPIOs, accessed via the `libgpiod` toolset  
-(`gpiodetect`, `gpioinfo`, `gpioset`, `gpioget`).
++ **Global numbers**: you need the chip's base address, and that isn't stable.
+  Newer kernels allocate bases dynamically (often starting at 512), so `bank * 32 + offset` breaks.
++ **No ownership**: an exported line stays exported after the process exits or crashes.
+  Nothing tracks who uses it, and any process with write access can change it.
++ **One line per file write**: you can't change several lines atomically, and every operation is open/write/close of a text file.
++ **Polarity and settings from the device tree aren't applied**: there's only a manual `active_low` file. Bias, open-drain, and debounce can't be set.
++ **Events**: `poll()` on `value` with an `edge` file. Edges can be lost, and there are no timestamps.
++ Many current kernels, including Android GKI configs, ship with **`CONFIG_GPIO_SYSFS` disabled**, and then `/sys/class/gpio` doesn't exist.
 
-### How it looks/works
+## 2. Character device (`/dev/gpiochipN`) with libgpiod
 
-Instead of individual files for every pin,  
-the system exposes entire GPIO banks/controllers as **character device files**  
-(e.g., `/dev/gpiochip0`, `/dev/gpiochip1`, etc., matching the RK3566's hardware **banks**).
+```shell
+gpiodetect                       # gpiochip4 [gpio4] (32 lines)  <- label shows the bank
+gpioinfo gpiochip4               # line names, direction, and "used"/consumer per line
 
-```bash
-# Check available chips and lines
-gpiodetect
-gpioinfo
+# libgpiod v1 tools
+gpioset gpiochip4 29=1           # sets the line, then EXITS and releases it
+gpioget gpiochip4 29
 
-# Set a line directly using libgpiod tools (e.g., chip 4, line 29 to high)
-gpioset gpiochip4 29=1
+# libgpiod v2 tools (different syntax)
+gpioset -c gpiochip4 29=1        # holds the line until killed (Ctrl-C); add -z/--daemonize to background it
+gpioget -c gpiochip4 29
+gpiomon -c gpiochip4 29          # wait for edge events (with timestamps)
 ```
 
-### Key Characteristics
+After a line is released (v1 `gpioset` exiting, or a process dying), the kernel no longer guarantees its value.
+For an output that must stay set, keep a process holding it: v2 `gpioset`, or your own daemon.
 
-+ Performance & Safety: Uses fast ioctl system calls instead of text I/O.  
-  It handles multiple lines atomically and provides proper ownership tracking  
-  (preventing 2 apps from accidentally fighting over the same pin).
-+ Hardware-aligned: It maps directly to the SoC's architecture  
-  (e.g., Rockchip's gpio0 through gpio4 map cleanly to gpiochip0 through gpiochip4).
-+ Android/ Native Support: Modern Android native daemons and HALs prefer using `libgpiod`  
-  (or direct C/C++ API wrappers around `/dev/gpiochip*`) rather than legacy file paths.
+Advantages:
 
-## Quick Comparison Summary
++ **Chip + offset addressing**, or **by name** with the device tree's `gpio-line-names` (`gpiofind`/`gpioinfo`),
+  so it doesn't depend on global numbers.
+  On Rockchip, `gpiochipN` usually matches bank `gpioN`. Check `gpiodetect`'s label rather than assuming the probe order.
++ **Ownership**: a request belongs to the file descriptor, shows a consumer name, and is released automatically when the process exits.
+  Two processes can't request the same line.
++ **Atomic multi-line** get/set in one request.
++ **Line settings**: active-low, bias (pull-up/pull-down/disable), drive (push-pull/open-drain/open-source), and debounce (uAPI v2).
++ **Edge events**: queued in the kernel, with timestamps, so none are missed.
++ Uses binary ioctls instead of text parsing.
+  Speed is rarely the deciding factor, though: correctness and ownership are.
 
-### Feature: /sys/class/gpio/ (Legacy)
+## 3. Comparison
 
-+ Interface Type: Virtual File System (`Sysfs`)
-+ Status: Deprecated by the Linux kernel
-+ Naming Convention: Flat global numbers (gpio157)
-+ Performance: Slow (string-based parsing)
-+ Safety/ Locking: Poor (easy to cause race conditions)
+| | `/sys/class/gpio` (legacy) | `/dev/gpiochipN` (current) |
+| --- | --- | --- |
+| Kernel status | Deprecated (4.8), often not built | Standard; uAPI v2 since 5.10 |
+| Addressing | Global number (`gpio157`) | Chip + offset (`gpiochip4 29`) or line name |
+| Ownership / cleanup | None; stays exported after a crash | Per file descriptor; released on exit |
+| Multiple lines | One at a time | Atomic |
+| Bias / drive / debounce | No | Yes (v2) |
+| Edge events | `poll()` on `value`, can miss edges | Queued, timestamped |
+| Interface | Text files | ioctl through libgpiod (C, C++, Python bindings) |
 
-### Feature: /dev/gpiochip* (Modern)
+## 4. Recommendation
 
-+ Interface Type: Character Device / ioctl (`libgpiod`)
-+ Status: Standard / Current Best Practice
-+ Naming Convention: Controller + Line offset (`gpiochip4 29`)
-+ Performance: Fast (binary ioctl calls)
-+ Safety/ Locking: Robust (kernel-enforced line tracking)
+Use **`/dev/gpiochipN` + libgpiod** for scripts, daemons, and HALs. That includes RK3566 Linux and Android builds.
+Use `/sys/class/gpio` only on old kernels or for quick throwaway tests where it's still enabled.
+On Android, the HAL design is in [../Android/HAL_libgpiod.md](../Android/HAL_libgpiod.md) and [../Android/AIDL_impl_gpio_cxx.md](../Android/AIDL_impl_gpio_cxx.md).
 
-## Recommendation for RK3566 Android Development
+## Related notes
 
-If you are writing scripts, native services, or HAL modules for an RK3566 Android image, avoid `/sys/class/gpio`.  
-Use the `libgpiod` libraries and utilities targeting `/dev/gpiochip*` to ensure compatibility with newer kernels and cleaner execution.
++ [libgpiod_intro.md](libgpiod_intro.md), [sysfs_intro.md](sysfs_intro.md), [HAL_mmio_vs_sysfs.md](HAL_mmio_vs_sysfs.md)
++ [../Android/hw_control_sysfs.md](../Android/hw_control_sysfs.md): sysfs GPIO on Android (permissions, SELinux)
+
+## Reference
+
++ [GPIO character device uAPI (kernel docs)](https://docs.kernel.org/userspace-api/gpio/chardev.html)
++ [Sysfs GPIO interface, obsolete (kernel docs)](https://docs.kernel.org/userspace-api/gpio/sysfs.html)
++ [libgpiod](https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git/about/)

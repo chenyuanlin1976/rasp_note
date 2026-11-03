@@ -1,87 +1,111 @@
 # sysfs introduction
 
-## What is sysfs in Linux?
+**sysfs** is a virtual (RAM-only) filesystem that the Linux kernel mounts at **`/sys`**.
+The kernel uses it to export its **device model** (devices, drivers, buses, classes, modules) to user space as directories and small files.
 
-`sysfs` is a pseudo-file system provided by the Linux kernel.  
-It serves as a **bridge** between the **kernel** (which talks to hardware and drivers)  
-and **user space** (applications, scripts, and system administrators).
++ Nothing in `/sys` is stored on disk.
+  The kernel creates the directories when objects register (for example, a driver probes a device) and removes them when they go away.
++ Each file is an **attribute** of a kernel object.
+  Reading it calls the driver's `show()` function, and writing it calls `store()`.
+  The value is produced (or acted on) right then. It may come from a cached field or from a real hardware access, depending on the driver.
 
-Unlike traditional files on your hard drive (like documents or photos), `sysfs` files do not take up storage space on a disk.  
-Instead, they are generated dynamically in RAM by the Linux kernel.  
-When you read or write to them, you are interacting directly with live kernel data structures,  
-device drivers, and hardware parameters in real time.
+## 1. The directory tree
 
-By default, `sysfs` is mounted at `/sys`.
+| Path | Contents |
+| --- | --- |
+| `/sys/devices/` | The **real** device tree: every device, organized by its parent bus/controller (`platform/`, `pci0000:00/`, ...), plus `virtual/` for devices without hardware |
+| `/sys/class/<class>/` | Devices grouped by **function** (`net`, `leds`, `backlight`, `thermal`, `hwmon`, `input`, `tty`, ...). The entries are **symlinks** into `/sys/devices` |
+| `/sys/bus/<bus>/` | Per bus type (`platform`, `i2c`, `spi`, `usb`, `pci`): `devices/` (symlinks) and `drivers/` (with `bind`/`unbind` files) |
+| `/sys/block/` | Block devices (symlinks; also reachable through `/sys/class/block`) |
+| `/sys/module/<name>/` | Loaded modules and built-in code: `parameters/` (module parameters), `refcnt`, ... |
+| `/sys/firmware/` | Firmware data: `devicetree/base/` (the live device tree, also at `/proc/device-tree`), `acpi/`, ... |
+| `/sys/kernel/` | Kernel-wide knobs: `debug/` (debugfs mount point), `tracing/`, `mm/`, `security/` |
+| `/sys/power/` | System sleep: `state`, `mem_sleep`, `wakeup_count` |
+| `/sys/fs/` | Filesystem-specific knobs and mount points: `cgroup/`, `bpf/`, `selinux/`, `ext4/`, `pstore/` |
 
-## How Sysfs Works: The Directory Tree
+`/sys/class` is usually the easiest place to look.
+`readlink -f /sys/class/leds/<name>` shows where the device really lives under `/sys/devices`.
+On Android, SELinux labels (`genfs_contexts`) use that real path.
 
-When you explore `/sys`, you are looking at an organized hierarchy of directories  
-that mirrors **how the kernel views your hardware and device drivers**:
+## 2. Hands-on
 
-+ `/sys/devices/`: The master directory containing a hierarchical tree of every physical device and bus connected to the system.
-+ `/sys/class/`: Groups devices by their functional category  
-  (e.g., net for network interfaces, block for storage drives, leds for status lights, hwmon for hardware monitoring/temperature sensors).  
-  This is usually the easiest place for humans to find things.
-+ `/sys/bus/`: Organizes devices by the bus type they use (e.g., pci, usb, i2c).
-+ `/sys/module/`: Contains parameters and states for currently loaded kernel modules.
+Reading needs no special rights for most attributes. **Writing usually needs root**.
+Note that `sudo echo X > file` doesn't work, because the redirection runs in your unprivileged shell. Use `tee`:
 
-## Working with Sysfs: A Hands-On Example
+```shell
+# Temperature: millidegrees Celsius (45000 = 45.0 °C)
+cat /sys/class/thermal/thermal_zone0/type /sys/class/thermal/thermal_zone0/temp
 
-Because `sysfs` nodes are presented as **ordinary text files**,  
-you can interact with them using standard command-line tools like `cat` and `echo`,  
-or file I/O operations (`open`, `read`, `write`) in C, Python, or Java.
+# Backlight
+cat /sys/class/backlight/intel_backlight/max_brightness           # e.g. 937
+echo 500 | sudo tee /sys/class/backlight/intel_backlight/brightness
 
-### Example: Checking CPU Temperature
+# Network interface state and MAC
+cat /sys/class/net/eth0/operstate /sys/class/net/eth0/address
 
-If you want to read a temperature sensor on a Linux machine, you might find a `sysfs` node like this:  
-`cat /sys/class/thermal/thermal_zone0/temp`  
-Output: 45000 (meaning 45.000 C).
+# Which driver is bound to a device, and the module's parameters
+readlink /sys/bus/platform/devices/<dev>/driver
+ls /sys/module/<module>/parameters/
 
-### Example: Controlling an LED or Backlight
-
-If your embedded Linux device has an adjustable screen backlight,  
-you can change its brightness by writing a text string to its `sysfs` node:
-
-```bash
-# Check the maximum possible brightness
-cat /sys/class/backlight/intel_backlight/max_brightness
-# Output: 937
-
-# Set the brightness to 500
-echo 500 > /sys/class/backlight/intel_backlight/brightness
+# All attributes of a device, plus the udev view of it
+udevadm info -a -p /sys/class/net/eth0
 ```
 
-## Why does Sysfs Exist? (The Philosophy)
+## 3. Why sysfs exists
 
-Before `sysfs` (and its older cousin procfs),  
-communicating with kernel drivers required complex, platform-specific system calls or custom command-line utilities.
++ Before Linux 2.6 (2003), drivers put device information into **procfs** (`/proc`), each in its own format.
+  `/proc` was meant for **processes**, and it became a dumping ground. Driver control often went through custom `ioctl`s.
++ sysfs came with the **2.6 unified driver model** (kobjects).
+  It gives every device one place in a single tree, with a consistent layout.
++ It feeds **hotplug**. When a device appears, the kernel creates its sysfs directory and sends a **uevent**.
+  `udev` (or `ueventd` on Android) reacts by creating `/dev` nodes, setting permissions, and loading firmware or modules.
++ It follows "everything is a file", so you can inspect and tune hardware with `cat`/`echo`, shell scripts, or Python, without special tools.
 
-`Sysfs` revolutionized Linux systems configuration by adhering to the Unix philosophy: "**Everything is a file.**"
+## 4. Rules for sysfs attributes (from the kernel docs)
 
-1. **Human-Readable & Scriptable**:  
-   Because values are exposed as plain text strings,  
-   you can easily inspect and modify hardware states using basic shell scripts, bash, cron jobs, or Python  
-   without needing specialized compilers or libraries.
-2. **Unified Interface**:  
-   It standardizes how userspace interacts with hardware.  
-   Whether you are on a Raspberry Pi, an Intel server, or an Android phone,  
-   interacting with things like GPIOs, batteries, and touchscreens follows the same file-reading paradigms.
-3. **Dynamic Hot-Plugging**:  
-   When you plug in a USB device, the kernel dynamically creates the corresponding files in `/sys/bus/usb/` or `/sys/class/`.  
-   When you unplug it, the kernel removes them instantly.
++ **One value per file**, as ASCII text (or an array of values of the *same* type).
+  Don't put several fields in one file, like `/proc` does.
++ An attribute's output is limited to **one page** (`PAGE_SIZE`, usually 4 KB).
+  Large or binary data uses **binary attributes** (e.g. `eeprom`, a PCI `config`), or a different interface entirely.
++ Attributes are **ABI**.
+  Stable ones are documented in `Documentation/ABI/` (`stable/`, `testing/`, `obsolete/`, `removed/`).
+  Once user space relies on one, it shouldn't change.
++ sysfs is for **configuration and status**, not for streaming data or high-rate I/O.
+  Use a character device (`read`/`write`/`ioctl`/`mmap`) or netlink for those.
+  That's why GPIO moved from `/sys/class/gpio` to `/dev/gpiochipN`
+  (see [libgpiod_sysfs_cmp.md](libgpiod_sysfs_cmp.md)), and why input devices use `/dev/input/event*`.
++ Permissions come from the driver (often `0644`: root may write, everyone may read).
+  To let a non-root service write an attribute, use a **udev rule**, or `ueventd.rc` on Android.
 
-## Summary: Sysfs vs. Regular Files
+## 5. sysfs vs other kernel pseudo-filesystems
 
-### Feature of Regular File (on ext4/NTFS)
+| Filesystem | Mount point | Purpose |
+| --- | --- | --- |
+| **sysfs** | `/sys` | Device model: devices, drivers, attributes (stable ABI) |
+| **procfs** | `/proc` | Processes (`/proc/<pid>/`), plus legacy system info (`/proc/cpuinfo`, `/proc/meminfo`) and `/proc/sys` tunables (sysctl) |
+| **debugfs** | `/sys/kernel/debug` | Free-form debug data for developers; **no ABI promise**; root only; often disabled or locked down in production (and on Android user builds) |
+| **configfs** | `/sys/kernel/config` | User space **creates** kernel objects with `mkdir` (USB gadget functions, device-tree overlays on some kernels) |
+| **devtmpfs** | `/dev` | Device nodes for character and block devices |
 
-+ StorageStored: persistently on an HDD/SSD.
-+ Purpose: To store data, code, or user documents.
-+ Reading: Fetches stored bytes from disk.
-+ Writing: Modifies data saved on disk.
+## 6. sysfs files vs regular files
 
-### Feature of Sysfs Node (in /sys)
+| | Regular file (ext4, ...) | sysfs attribute |
+| --- | --- | --- |
+| Storage | Persistent on disk | None (generated by the kernel, and gone after reboot) |
+| Size reported by `ls -l` | Real size | Usually 4096 or 0, whatever the content |
+| Read | Returns stored bytes | Calls the driver's `show()` |
+| Write | Stores bytes | Calls `store()`, which may change hardware state or fail with `EINVAL`/`EBUSY`/`EPERM` |
+| Survives reboot | Yes | **No**: settings must be reapplied at boot (udev rule, systemd unit, init script, device tree default) |
 
-+ StorageStored: Exists only in RAM, managed by the kernel.
-+ Purpose: To expose kernel/hardware status and controls.
-+ Reading: Triggers kernel code to query hardware in real time.
-+ Writing: Triggers kernel drivers to execute a command or change a register.
+## Related notes
+
++ [sysfs_leds.md](sysfs_leds.md): the LED class, a typical sysfs-only subsystem
++ [HAL_mmio_vs_sysfs.md](HAL_mmio_vs_sysfs.md): sysfs/chardev vs direct register access
++ [kernelObject_note.md](kernelObject_note.md): kobjects, which are what sysfs shows
++ [../Android/HAL_sysfsNodes.md](../Android/HAL_sysfsNodes.md): sysfs on Android (ueventd, SELinux labels)
+
+## Reference
+
++ [sysfs: the filesystem for exporting kernel objects (kernel docs)](https://docs.kernel.org/filesystems/sysfs.html)
++ [Rules on how to access information in sysfs (kernel docs)](https://docs.kernel.org/admin-guide/sysfs-rules.html)
++ [ABI documentation (kernel docs)](https://docs.kernel.org/admin-guide/abi.html)

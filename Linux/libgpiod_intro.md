@@ -1,75 +1,198 @@
 # libgpiod introduction
 
-`libgpiod` is the modern, standard C library and toolkit used to interact with GPIO (General Purpose Input/Output) pins on Linux systems.  
-It was created to replace the legacy `sysfs` GPIO interface (`/sys/class/gpio`),  
-which has been officially deprecated by the Linux kernel since version 4.8.
+**libgpiod** is the user-space C library and command-line toolkit for the Linux **GPIO character device** (`/dev/gpiochipN`).
+The kernel provides the character device, and libgpiod wraps its `ioctl` interface.
+It replaced the deprecated sysfs interface (`/sys/class/gpio`); see [libgpiod_sysfs_cmp.md](libgpiod_sysfs_cmp.md) for that comparison.
 
-## Why libgpiod Replaced sysfs
+## 1. Versions
 
-+ The Legacy `sysfs` Flaws:  
-  The old `sysfs` interface treated GPIOs as a collection of files and directories.  
-  This caused race conditions, struggled heavily with multi-pin operations, lacked robust event handling,  
-  and left orphaned configurations if a program crashed.
-+ The **Character Device Approach** (`libgpiod`):  
-  Linux introduced a character device interface (`/dev/gpiochipN`) managed via `ioctl` calls.  
-  `libgpiod` wraps these complex `ioctl` operations into clean, safe, and easy-to-use APIs.
+There are 2 incompatible generations. Check which one you have first: `gpiodetect --version`, or `pkg-config --modversion libgpiod`.
 
-## Core Components of libgpiod
+| | libgpiod **v1.x** (1.6.x is the last) | libgpiod **v2.x** |
+| --- | --- | --- |
+| Kernel uAPI | GPIO chardev v1 (`CONFIG_GPIO_CDEV_V1`, deprecated) | chardev **v2** (Linux **5.10+**) |
+| Core C objects | `gpiod_chip`, `gpiod_line` | `gpiod_chip`, `gpiod_line_settings`, `gpiod_line_config`, `gpiod_request_config`, `gpiod_line_request` |
+| Python module | `gpiod` 1.x (`python3-libgpiod` on Debian 12 / Raspberry Pi OS Bookworm) | `gpiod` 2.x (`pip install gpiod`, newer distros) |
+| Typical in | Debian 12, Ubuntu 22.04, older Yocto/Buildroot | Debian 13, Ubuntu 24.04+, Fedora, current Yocto/Buildroot |
 
-`libgpiod` is divided into 2 primary parts:
+The other notes in this repo use the **v1** C API (for example [../Android/AIDL_impl_gpio_cxx.md](../Android/AIDL_impl_gpio_cxx.md)).
 
-1. The Library (`libgpiod`):  
-   + Written in C (with a C++ wrapper).
-   + Provides bindings for high-level languages like Python.
-   + Guarantees proper resource cleanup when file descriptors are closed (preventing kernel-level pin leaks).
-2. Command-Line Tools (`gpiod` utilities):  
-   A helpful suite of command-line applications for debugging and quick scripting without writing code:
-   + `gpiodetect`: Lists all GPIO chips present on the system and their line counts.
-   + `gpioinfo`: Displays detailed information about all lines on a specific chip  
-     (e.g., whether they are inputs, outputs, current values, or actively claimed by a driver).
-   + `gpioget`: Reads the logic level (0 or 1) of specified GPIO lines.
-   + `gpioset`: Sets the logic level of specified GPIO lines.
-   + `gpiomon`: Monitors GPIO lines for events (like rising or falling edges, e.g., button presses) and prints event details to the terminal.
+## 2. What's in the package
 
-## Key Advantages
++ **Library**: `libgpiod` (C), with C++ (`libgpiodcxx`) and Python bindings. v2 adds GLib bindings and a D-Bus daemon (`gpio-manager`, 2.2+).
+  Rust bindings live in a separate crate (`libgpiod`/`gpiod` on crates.io).
++ **Tools**:
 
-+ Atomic Multi-line Operations:  
-  You can request and change the values of multiple GPIO lines simultaneously,  
-  which is critical for parallel buses or tightly timed hardware interfaces.
-+ Event Notification:  
-  Built on efficient polling mechanisms (epoll),  
-  making it trivial to wait for hardware interrupts (button presses, sensor triggers) with low latency.
-+ No Kernel Modules Required:  
-  Operates strictly through user-space character devices provided the user/process has appropriate permissions (gpio group or root).
+| Tool | Purpose |
+| --- | --- |
+| `gpiodetect` | List chips: name, label (e.g. `gpio4`, `pinctrl-rp1`), number of lines |
+| `gpioinfo` | Per line: offset, name (from `gpio-line-names`), direction, active-low, and **consumer** if it's in use. It does **not** show values |
+| `gpioget` | Read line values (the line is requested as input unless `--as-is`/v2 options say otherwise) |
+| `gpioset` | Drive lines as outputs |
+| `gpiomon` | Wait for edge events (rising/falling), with timestamps |
+| `gpiofind` | **v1 only**: find a line by name (`gpiofind WIFI_PWR_EN` → `gpiochip1 12`). v2 tools take names directly |
+| `gpionotify` | **v2 only**: watch line-info changes (requested/released/reconfigured by others) |
 
-## Quick Example: Python Usage
+## 3. Tool syntax: v1 vs v2
 
-Because `libgpiod` has native bindings, using it in Python is straightforward (using version 2+ object-oriented style):
+```shell
+gpiodetect                                   # same in both
+
+# --- v1 ---
+gpioinfo gpiochip4
+gpioget  gpiochip4 29
+gpioset  gpiochip4 29=1                      # sets, then EXITS and releases the line
+gpioset  --mode=signal gpiochip4 29=1        # holds the line until Ctrl-C / SIGTERM
+gpiomon  --rising-edge gpiochip4 5
+
+# --- v2 ---
+gpioinfo -c gpiochip4                        # or: gpioinfo WIFI_PWR_EN
+gpioget  -c gpiochip4 29                     # or: gpioget WIFI_PWR_EN
+gpioset  -c gpiochip4 29=1                   # HOLDS the line until killed; -z to daemonize
+gpioset  -t 500ms -c gpiochip4 29=1          # toggle every 500 ms (blink)
+gpiomon  -e rising -c gpiochip4 5
+```
+
+A released line's value is no longer guaranteed: the kernel or driver may keep it or reset it.
+Anything that must **stay** driven needs a process that keeps holding the line, such as v2 `gpioset`, `gpioset --mode=signal` (v1), or your daemon.
+
+## 4. C API
+
+### 4.1 v1
+
+```c
+#include <gpiod.h>
+
+int blink_v1(void)
+{
+    struct gpiod_chip *chip = gpiod_chip_open_by_name("gpiochip4");   /* or gpiod_chip_open("/dev/gpiochip4") */
+    if (!chip) return -1;
+
+    struct gpiod_line *line = gpiod_chip_get_line(chip, 29);
+    if (!line || gpiod_line_request_output(line, "blink", 0) < 0) {  /* EBUSY: a driver/another process owns it */
+        gpiod_chip_close(chip);
+        return -1;
+    }
+
+    gpiod_line_set_value(line, 1);
+    gpiod_line_set_value(line, 0);
+
+    gpiod_line_release(line);
+    gpiod_chip_close(chip);
+    return 0;
+}
+```
+
+### 4.2 v2
+
+```c
+#include <gpiod.h>
+
+int blink_v2(void)
+{
+    unsigned int offset = 29;
+    int ret = -1;
+
+    struct gpiod_chip *chip = gpiod_chip_open("/dev/gpiochip4");      /* v2 opens by path only */
+    struct gpiod_line_settings *ls = gpiod_line_settings_new();
+    struct gpiod_line_config *lc = gpiod_line_config_new();
+    struct gpiod_request_config *rc = gpiod_request_config_new();
+    struct gpiod_line_request *req = NULL;
+    if (!chip || !ls || !lc || !rc) goto out;
+
+    gpiod_line_settings_set_direction(ls, GPIOD_LINE_DIRECTION_OUTPUT);
+    gpiod_line_settings_set_output_value(ls, GPIOD_LINE_VALUE_INACTIVE);
+    gpiod_line_config_add_line_settings(lc, &offset, 1, ls);
+    gpiod_request_config_set_consumer(rc, "blink");
+
+    req = gpiod_chip_request_lines(chip, rc, lc);
+    if (!req) goto out;
+
+    gpiod_line_request_set_value(req, offset, GPIOD_LINE_VALUE_ACTIVE);
+    gpiod_line_request_set_value(req, offset, GPIOD_LINE_VALUE_INACTIVE);
+    ret = 0;
+
+out:
+    if (req) gpiod_line_request_release(req);
+    gpiod_request_config_free(rc);
+    gpiod_line_config_free(lc);
+    gpiod_line_settings_free(ls);
+    if (chip) gpiod_chip_close(chip);
+    return ret;
+}
+```
+
+Build with `gcc blink.c -lgpiod`, or `pkg-config --cflags --libs libgpiod`.
+
+## 5. Python
+
+v2 (`pip install gpiod`, libgpiod ≥ 2.0):
+
+```python
+import time
+import gpiod
+from gpiod.line import Direction, Value
+
+with gpiod.request_lines(
+    "/dev/gpiochip0",
+    consumer="blink",
+    config={17: gpiod.LineSettings(direction=Direction.OUTPUT, output_value=Value.INACTIVE)},
+) as req:
+    for _ in range(5):
+        req.set_value(17, Value.ACTIVE)
+        time.sleep(0.5)
+        req.set_value(17, Value.INACTIVE)
+        time.sleep(0.5)
+# the line is released when the "with" block exits
+```
+
+v1 (`python3-libgpiod` 1.x, e.g. Debian 12 / Raspberry Pi OS Bookworm):
 
 ```python
 import gpiod
 
-# Find the gpiochip (e.g., chip 0) and configure a line as output
-chip_path = "/dev/gpiochip0"
-line_offset = 17  # GPIO pin number
-
-# Request the line as output
-with gpiod.request_lines(
-    chip_path,
-    consumer="my-led-script",
-    config={line_offset: gpiod.LineSettings(direction=gpiod.line.DIRECTION_OUTPUT)},
-) as request:
-
-  # Turn LED on
-  request.set_value(line_offset, gpiod.line.VALUE_ACTIVE)
-
-  # Turn LED off
-  request.set_value(line_offset, gpiod.line.VALUE_INACTIVE)
+chip = gpiod.Chip("gpiochip0")
+line = chip.get_line(17)
+line.request(consumer="blink", type=gpiod.LINE_REQ_DIR_OUT, default_val=0)
+line.set_value(1)
+line.set_value(0)
+line.release()
 ```
 
-## When should you use it?
+Raspberry Pi 5: the 40-pin header is on the RP1 chip, labeled `pinctrl-rp1`.
+Depending on the kernel version it is `gpiochip4` (early Bookworm kernels) or `gpiochip0` (newer kernels). Check with `gpiodetect`.
+The offset is the **BCM GPIO number** (17 = header pin 11), not the physical pin number.
 
-If you are developing embedded Linux applications  
-(such as on Raspberry Pi, BeagleBone, or custom industrial boards running modern Linux kernels)  
-and need to read sensors, blink LEDs, or handle hardware interrupts via GPIO,  
-`libgpiod` is the mandatory toolset to use.
+## 6. Features worth knowing
+
++ **Ownership**: a request belongs to the file descriptor and shows the consumer name in `gpioinfo`.
+  It is **released automatically** when the process exits. A second request for the same line fails with `EBUSY`.
++ **Multiple lines in one request**: values are set together.
+  The update is truly simultaneous only on the same chip, and only if its driver implements `set_multiple`.
+  This is a convenience, not a timing guarantee.
++ **Line settings** (v2 / uAPI v2): active-low, bias (pull-up / pull-down / disabled), drive (push-pull / open-drain / open-source), and debounce.
++ **Edge events**: the kernel queues them with timestamps, and the request's file descriptor can be used with `poll`/`epoll`.
+  Latency is still that of Linux user space: µs to ms, not real time.
++ **Names**: if the device tree has `gpio-line-names`, tools and code can use names (`WIFI_PWR_EN`) instead of numbers.
+
+## 7. Requirements and permissions
+
++ Kernel: `CONFIG_GPIO_CDEV=y`, plus `CONFIG_GPIO_CDEV_V1=y` if you use libgpiod v1.
++ The pin must be muxed as GPIO (pinctrl in the device tree) and **not claimed** by a kernel driver (`leds-gpio`, `*-gpios` consumers).
+  Otherwise the request fails with `EBUSY`; `gpioinfo` shows the owner.
++ `/dev/gpiochipN` is `root:root 0600` by default.
+  Distributions or udev rules may grant a group (Raspberry Pi OS: `gpio`).
+  To give your own service access: `SUBSYSTEM=="gpio", KERNEL=="gpiochip*", GROUP="gpio", MODE="0660"`.
++ No kernel module of your own is needed. It's pure user space on top of the chardev.
+
+## Related notes
+
++ [libgpiod_sysfs_cmp.md](libgpiod_sysfs_cmp.md): chardev vs legacy sysfs GPIO
++ [HAL_mmio_vs_sysfs.md](HAL_mmio_vs_sysfs.md), [HAL_intro.md](HAL_intro.md): a C++ HAL on top of libgpiod
++ [../Android/libgpiod_android.md](../Android/libgpiod_android.md): libgpiod on Android (build, test, HAL)
+
+## Reference
+
++ [libgpiod (git, README, docs)](https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git/about/)
++ [libgpiod API documentation](https://libgpiod.readthedocs.io/)
++ [GPIO character device uAPI (kernel docs)](https://docs.kernel.org/userspace-api/gpio/chardev.html)

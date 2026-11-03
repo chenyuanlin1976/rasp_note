@@ -27,12 +27,61 @@ SoC GPIO controller -> pin
 
 + Each arrow between processes is **Binder IPC**. You don't need JNI in this path:
   AIDL generates the Java proxy and the C++ stub.
-  JNI is needed only if a Java class must call a native library **in its own process**
-  (see [libgpiod_HAL.md](libgpiod_HAL.md)).
+  JNI is needed only if a Java class must call a native library **in its own process** (see section 2).
 + Third-party apps can't call a vendor HAL directly. They go through a system app;
   see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md).
 
-## 2. The 2 kernel interfaces for GPIO
+## 2. Do I need JNI? Native AIDL HAL vs JNI
+
+Usually **no**. The 2 mechanisms solve different problems:
+
++ **JNI** lets Java call a native library **loaded into the same process**.
+  The native code then has exactly that process's UID and SELinux domain.
++ **AIDL / Binder** lets one process call **another**. The Java proxy and the C++ stub are generated, so you write no JNI.
+
+### 2.1 Native AIDL HAL (recommended)
+
+```text
+Java/Kotlin (system app / framework) --Binder--> C++ GPIO HAL --libgpiod--> /dev/gpiochipN
+```
+
+Only the HAL's SELinux domain can open `/dev/gpiochip*`.
+Clients only get permission to *call the HAL* (`hal_client_domain`).
+Full example: [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md).
+
+### 2.2 JNI wrapper (legacy; blocked for vendor hardware on Android 8+)
+
+```text
+Java class --JNI--> libmygpio_jni.so --libgpiod--> /dev/gpiochipN     (all inside ONE process)
+```
+
+The **calling process itself** must be able to open the device node:
+
++ **In an app**: app domains can't access device nodes. `neverallow` rules forbid it, so adding such rules fails CTS.
++ **In `system_server`** (the pre-Treble style): Treble `neverallow` rules stop core system domains
+  from using vendor-specific device nodes. It would also put vendor code back into the system image.
+
+So for vendor hardware such as GPIO, use 2.1.
+JNI is still the right tool for in-app native **computation** (codecs, math, game engines); see [JNI_intro.md](JNI_intro.md).
+
+### 2.3 Which Binder device
+
+| Device | Service manager | Used between |
+| --- | --- | --- |
+| `/dev/binder` | `servicemanager` | apps ↔ framework, and **framework ↔ AIDL HALs** (this GPIO HAL) |
+| `/dev/vndbinder` | `vndservicemanager` | vendor process ↔ vendor process only |
+| `/dev/hwbinder` | `hwservicemanager` | framework ↔ HIDL HALs (legacy) |
+
+### 2.4 Summary
+
+| Goal | Use |
+| --- | --- |
+| Framework or system app controls vendor GPIO | Native AIDL HAL (2.1); no JNI |
+| A vendor daemon uses GPIO only for itself | Link libgpiod directly in that daemon; no IPC needed |
+| A 3rd-party app controls GPIO | A system app with a bound service in front of the HAL: [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md) |
+| An app needs native code for computation, without hardware | JNI / NDK |
+
+## 3. The 2 kernel interfaces for GPIO
 
 | | sysfs GPIO (`/sys/class/gpio`) | GPIO character device (`/dev/gpiochipN`) |
 | --- | --- | --- |
@@ -51,12 +100,12 @@ It is also **not** a kernel feature: the kernel provides `/dev/gpiochipN`, and l
 libgpiod has 2 incompatible API generations:
 
 + **v1.x**: `gpiod_chip_get_line()`, `gpiod_line_request_output()`, `gpiod_line_set_value()`.
-  The other notes here use this one ([libgpiod_intro2.md](libgpiod_intro2.md)).
+  The other notes here use this one (see [../Linux/libgpiod_intro.md](../Linux/libgpiod_intro.md)).
 + **v2.x** (2022+): `gpiod_line_settings`, `gpiod_line_config`, `gpiod_chip_request_lines()`, `gpiod_line_request_set_value()`.
 
-## 3. The same "set a pin high" in both interfaces
+## 4. The same "set a pin high" in both interfaces
 
-### 3.1 sysfs (legacy; only if the kernel still has `CONFIG_GPIO_SYSFS`)
+### 4.1 sysfs (legacy; only if the kernel still has `CONFIG_GPIO_SYSFS`)
 
 ```c++
 #include <fcntl.h>
@@ -85,7 +134,7 @@ bool sysfsGpioSet(int gpio, bool high) {
 }
 ```
 
-### 3.2 Character device with libgpiod (v1 API)
+### 4.2 Character device with libgpiod (v1 API)
 
 ```c++
 #include <gpiod.h>
@@ -108,7 +157,7 @@ gpiod_line* requestOutput(int chip, unsigned offset, bool high) {
 A line that's requested and then immediately released no longer has a guaranteed state.
 A long-running HAL should keep its output lines requested.
 
-## 4. Building a GPIO HAL in AOSP: checklist
+## 5. Building a GPIO HAL in AOSP: checklist
 
 Every item is shown in full in [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md).
 
@@ -138,7 +187,7 @@ adb logcat | grep avc       # SELinux denials
 ls -lZ /dev/gpiochip*       # owner, mode, and SELinux label
 ```
 
-## 5. Historical note: Android Things
+## 6. Historical note: Android Things
 
 Android Things, Google's IoT variant of Android (discontinued in 2022), had a Java **Peripheral I/O API** (`PeripheralManager`) for GPIO, I2C, SPI, and UART.
 Standard AOSP has **no** public GPIO API. You build your own vendor HAL plus a system service or app, as above.
@@ -146,7 +195,7 @@ Standard AOSP has **no** public GPIO API. You build your own vendor HAL plus a s
 ## Related notes
 
 + [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md): full AIDL + libgpiod GPIO HAL
-+ [libgpiod_intro.md](libgpiod_intro.md), [libgpiod_intro2.md](libgpiod_intro2.md), [libgpiod_HAL.md](libgpiod_HAL.md)
++ [../Linux/libgpiod_intro.md](../Linux/libgpiod_intro.md), [libgpiod_android.md](libgpiod_android.md), [JNI_intro.md](JNI_intro.md)
 + [hw_control_sysfs.md](hw_control_sysfs.md), [gpio_control.md](gpio_control.md), [gpio_export.md](gpio_export.md)
 + [HAL_intro.md](HAL_intro.md), [HAL_sysfsNodes.md](HAL_sysfsNodes.md)
 

@@ -121,7 +121,7 @@ Conclusions:
 ## Related notes
 
 + [JNI_intro.md](JNI_intro.md), [JNI_android_studio.md](JNI_android_studio.md)
-+ [libgpiod_HAL.md](libgpiod_HAL.md): JNI vs a native AIDL HAL for libgpiod
++ [HAL_libgpiod.md](HAL_libgpiod.md#2-do-i-need-jni-native-aidl-hal-vs-jni): JNI vs a native AIDL HAL for libgpiod
 + [HAL_libgpiod.md](HAL_libgpiod.md), [hw_control_sysfs.md](hw_control_sysfs.md), [SELinux_intro.md](SELinux_intro.md)
 
 ## Reference

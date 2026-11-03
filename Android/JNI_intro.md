@@ -92,7 +92,7 @@ App (Kotlin) --Binder/AIDL--> system app / service --Binder/stable AIDL--> nativ
 The AIDL compiler generates both the Java proxy and the C++ stub, so no hand-written JNI bridge is involved.
 JNI shows up only where Java code must call a native library **in its own process**.
 Pre-Treble framework services (for example the old LightsService, which loaded `libhardware` modules into `system_server`) worked that way.
-See [libgpiod_HAL.md](libgpiod_HAL.md) and [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md).
+See [HAL_libgpiod.md](HAL_libgpiod.md#2-do-i-need-jni-native-aidl-hal-vs-jni) and [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md).
 
 ## 6. Alternatives to hand-written JNI
 

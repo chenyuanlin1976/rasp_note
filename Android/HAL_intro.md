@@ -37,7 +37,7 @@ An Android HAL is a **user-space** layer on top of those drivers.
 **JNI is not one of these layers.**
 JNI is an *in-process* bridge between Java and native code: a Java class calls a C/C++ function loaded into the **same** process.
 Some framework code uses JNI internally, but the boundaries between app, system service, and HAL are crossed with **Binder IPC**.
-See [JNI_intro.md](JNI_intro.md) and [libgpiod_HAL.md](libgpiod_HAL.md).
+See [JNI_intro.md](JNI_intro.md) and [HAL_libgpiod.md](HAL_libgpiod.md#2-do-i-need-jni-native-aidl-hal-vs-jni).
 
 ## 4. Example: turning on the flashlight
 

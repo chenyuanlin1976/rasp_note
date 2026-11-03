@@ -62,7 +62,7 @@ Success is "no error"; failure comes back as an exception or status, not as a `f
 ```c++
 #include <aidl/vendor/example/hardware/wifipower/BnWifiPowerControl.h>
 #include <cerrno>
-#include <gpiod.h>   // libgpiod v1 API, as in libgpiod_intro2.md
+#include <gpiod.h>   // libgpiod v1 API, see ../Linux/libgpiod_intro.md
 
 namespace aidl::vendor::example::hardware::wifipower {
 
@@ -154,7 +154,7 @@ No driver claims the line. You only give it a name, so the HAL can find it with 
 ## Related notes
 
 + [AIDL_HAL_impl.md](AIDL_HAL_impl.md): complete vendor HAL server and client
-+ [HAL_intro.md](HAL_intro.md), [HAL_libgpiod.md](HAL_libgpiod.md), [libgpiod_intro2.md](libgpiod_intro2.md), [DTSI_syntax_fmt.md](DTSI_syntax_fmt.md)
++ [HAL_intro.md](HAL_intro.md), [HAL_libgpiod.md](HAL_libgpiod.md), [libgpiod_android.md](libgpiod_android.md), [DTSI_syntax_fmt.md](DTSI_syntax_fmt.md)
 + [VINTF_AIDL.md](VINTF_AIDL.md)
 
 ## Reference

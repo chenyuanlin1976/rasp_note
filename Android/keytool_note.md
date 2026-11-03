@@ -41,7 +41,16 @@ keytool -printcert -jarfile app.apk                       # v1 (JAR) signature o
 keytool -printcert -sslserver example.com:443             # certificate chain of a TLS server
 ```
 
-The **SHA-256** fingerprint is what Google APIs (Maps, Firebase, App Links `assetlinks.json`) ask for.
+Which fingerprint services ask for:
+
+| Service | Fingerprint |
+| --- | --- |
+| Google Maps / Google Cloud API key restriction | SHA-1 |
+| Firebase app registration | SHA-1 and/or SHA-256 |
+| Android App Links (`assetlinks.json`) | SHA-256 |
+
+With **Play App Signing**, users get the APK signed with Google's **app signing key**, not your upload key.
+Register the app signing key's fingerprints (Play Console → *App integrity*) as well as your upload or debug key's.
 
 ## 3. Export and import certificates
 
@@ -65,7 +74,7 @@ keytool -importkeystore -srckeystore new.p12 -destkeystore old.jks -deststoretyp
 
 keytool -changealias -alias app -destalias release -keystore release.p12
 keytool -storepasswd -keystore release.p12                # new store password (min. 6 characters)
-keytool -keypasswd -alias release -keystore old.jks       # JKS only; PKCS12 keys use the store password
+keytool -keypasswd -alias release -keystore old.jks       # JKS only; on PKCS12: "-keypasswd commands not supported"
 keytool -delete -alias partner -keystore truststore.p12
 
 keytool -certreq -alias release -keystore release.p12 -file release.csr   # CSR for a CA-signed certificate

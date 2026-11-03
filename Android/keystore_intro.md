@@ -12,7 +12,7 @@ For those, see [keytool_note.md](keytool_note.md) and [sign_apk.md](sign_apk.md)
 + **Usage restrictions**, set when the key is created and enforced outside the app:
   purposes (encrypt, sign, ...), algorithms and modes, validity period, "user must have authenticated within N seconds",
   "only while the device is unlocked".
-+ **Key attestation**: a certificate chain that proves to a server that a key lives in secure hardware on a genuine device.
++ **Key attestation** (Android 7.0+): a certificate chain that proves to a server that a key lives in secure hardware on a genuine device.
 
 APIs:
 
@@ -29,12 +29,15 @@ app (AndroidKeyStore provider) --Binder--> keystore2 daemon --> KeyMint HAL (AID
                                                                                  \--> StrongBox KeyMint (secure element, optional)
 ```
 
-+ The keystore daemon stores only **encrypted key blobs**, which only the KeyMint trusted app (TA) can use.
++ The keystore daemon (`keystore2` since Android 12, `keystore` before) stores only **encrypted key blobs**,
+  which only the KeyMint trusted app (TA) can use.
 + **KeyMint** (Android 12) replaced the **Keymaster** HAL.
 + **StrongBox** (Android 9+, optional): a separate secure element. Request it with `setIsStrongBoxBacked(true)`.
   If StrongBox doesn't support the algorithm, you get a `StrongBoxUnavailableException`; retry without it.
 + Check where a key ended up with `KeyInfo.getSecurityLevel()` (API 31+), or `isInsideSecureHardware()` on older releases.
-+ The CDD (section 9.11) requires hardware-backed implementations of RSA, AES, ECDSA, and HMAC for the keystore.
++ CDD §9.11: a device with a **secure lock screen** must back the keystore with an isolated execution environment (TEE),
+  and implement RSA, AES, ECDSA, ECDH (with KeyMint), 3DES, HMAC, MD5, SHA-1, and SHA-2 there.
+  Every device must allow at least 8,192 keys.
 
 ## 3. Example: AES-GCM key for app data
 

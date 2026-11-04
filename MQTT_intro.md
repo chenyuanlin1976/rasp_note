@@ -1,149 +1,261 @@
-# MQTT (Message Queuing Telemetry Transport)
+# MQTT
 
-MQTT is a lightweight, open messaging protocol designed for constrained devices and low-bandwidth, high-latency, or unreliable networks. 
-It is the de facto standard protocol for the Internet of Things (IoT).
+MQTT is a lightweight publish/subscribe messaging protocol for constrained devices and unreliable or low-bandwidth networks.
+It runs over TCP (or WebSockets), and it is one of the most widely used protocols for sending IoT telemetry to a server.
+The name originally stood for "MQ Telemetry Transport"; the OASIS standard now treats MQTT as a name, not an acronym.
+The current versions are MQTT 3.1.1 (2014) and MQTT 5.0 (2019).
 
-## Popular Free Public Brokers (For Testing Only)
+## 1. Publish/subscribe with a broker
 
-+ EMQX: Host broker.emqx.io, Port 1883 (TCP) or 8883 (SSL/TLS)
-+ HiveMQ: Host broker.hivemq.com, Port 1883 (TCP)
-+ Mosquitto: Host test.mosquitto.org, Port 1883 (TCP)
+HTTP is request/response: the client asks a specific server. In MQTT, clients never talk to each other directly. Every client connects to a **broker**:
 
-## common Ports
+```text
+ sensor ──PUBLISH home/livingroom/temperature "23.5"──▶ broker ──▶ dashboard (subscribed to home/+/temperature)
+                                                              └──▶ logger    (subscribed to home/#)
+```
 
-+ The standard and most common ports used for MQTT communication are:
-  + 1883 – The default unencrypted port for MQTT (TCP).
-  + 8883 – The default encrypted port for MQTT over SSL/TLS (MQTTS).
-+ Additional Common Ports:
-  + 8083 – Default port for MQTT over unencrypted WebSockets.
-  + 8084 – Default port for MQTT over secure WebSockets (WSS)
++ **Publisher**: sends a message to the broker under a **topic**.
++ **Subscriber**: tells the broker which topics it wants and receives matching messages.
++ **Broker**: receives every message and forwards it to all clients with a matching subscription.
++ A client can be a publisher and a subscriber at the same time. Publisher and subscriber don't need to know each other's address, or be online at the same time (with persistent sessions).
 
-## How MQTT Works (Pub/Sub Architecture)
+## 2. Core concepts
 
-Unlike traditional web communication (like HTTP) which relies on a request-response model,  
-**MQTT uses a Publish/Subscribe (Pub/Sub) model**.
++ **Topic**: a hierarchical UTF-8 string, levels separated by `/`, e.g. `home/livingroom/temperature`. Topics are not created in advance; publishing to one is enough.
++ **Wildcards** (in subscriptions only):
+  - `+` matches exactly one level: `home/+/temperature`
+  - `#` matches any number of levels and must be last: `home/#`
+  - Topics starting with `$` (e.g. `$SYS/...` broker statistics) are not matched by a leading `#` or `+`.
++ **QoS**: the delivery guarantee (section 3).
++ **Retained message**: the broker keeps the last retained message per topic and sends it immediately to every new subscriber. Useful for state such as "light is on".
++ **Last Will and Testament (LWT)**: a message the client registers when it connects. If the client disconnects without a proper DISCONNECT (crash, network loss),
+  the broker publishes it, e.g. `devices/plug1/status` = `offline`.
++ **Keep alive**: the client sends PINGREQ if it has nothing else to send, so the broker can detect a dead connection.
++ **Clean session / persistent session**: with a persistent session the broker remembers the client's subscriptions and queues QoS 1/2 messages while it is offline.
+  (MQTT 5 replaces the clean-session flag with Clean Start plus a Session Expiry Interval.)
++ **Client ID**: must be unique per broker. A second client with the same ID disconnects the first one.
 
-Clients do not communicate directly with each other.  
-Instead, they interact through a central coordinator called a **Broker**.
+## 3. QoS levels
 
-+ **Publisher**: A device/sensor that gathers data and sends (publishes) it to the broker under a specific topic.
-+ **Subscriber**: An application or device that is interested in a topic and receives messages from the broker.
-+ **Broker**: The server responsible for filtering all incoming messages and distributing them to the correct subscribed clients.
+| QoS | Guarantee | Packets | Cost | Use for |
+| --- | --- | --- | --- | --- |
+| 0 | At most once ("fire and forget"); may be lost | PUBLISH | Lowest | Frequent telemetry where a missed sample doesn't matter |
+| 1 | At least once; may be duplicated | PUBLISH, PUBACK | Medium | Most events; the receiver must tolerate duplicates |
+| 2 | Exactly once | PUBLISH, PUBREC, PUBREL, PUBCOMP | Highest | Commands where a duplicate would cause harm (e.g. "dispense one item") |
 
-## Core Concepts & Terminology
++ QoS applies to each hop separately: publisher → broker, and broker → subscriber.
+  A subscriber receives a message at the **lower** of the publish QoS and its subscription QoS.
++ QoS is about delivery, not security. Security comes from TLS and authentication (section 4).
 
-+ **Topics**: A hierarchical string used by the broker to *filter messages* for each client  
-  (structured like a file path, e.g., home/living-room/temperature).
-+ **Quality of Service (QoS)**: An agreement between the sender and receiver on the guarantee of message delivery.  
-+ **Retained Messages**: A flag a publisher can set so the broker saves the last known good message for a topic.  
-  When a new client subscribes, it immediately receives this message without waiting for a new publication.
-+ **Last Will and Testament (LWT)**: A notification message registered with the broker by a client.  
-  If the client disconnects unexpectedly, the broker automatically publishes the LWT message to alert other devices.
+## 4. Ports and security
 
-## The 3 QoS Levels
+| Port | Transport | Notes |
+| --- | --- | --- |
+| 1883 | MQTT over TCP | IANA-registered, unencrypted |
+| 8883 | MQTT over TLS | IANA-registered |
+| 8083 / 8084 | MQTT over WebSocket / secure WebSocket | Common broker defaults (e.g. EMQX), not standardized; check the broker's configuration |
 
-+ QoS 0 (At Most Once): Fire and forget. No confirmation is sent (fastest, but messages can be lost).
-  + Sent once with no confirmation or response expected.
-  + Fast and lightweight, but messages can be lost if the network drops.
-  + Best for rapid telemetry or sensor data where missing a single update does not matter
-+ QoS 1 (At Least Once): Guarantees that the message arrives **at least once**, but duplicates may occur.
-  + Guarantees the message arrives, using a **PUBACK** response packet.
-  + If confirmation is delayed, the sender re-transmits the message (potentially causing duplicates).
-  + Best for general events where delivery is crucial but duplicate handling is acceptable.
-+ QoS 2 (Exactly Once): Guarantees the message arrives exactly one time using a four-step handshake (slowest, most secure).
-  + Uses a strict four-step handshake (**PUBLISH, PUBREC, PUBREL, PUBCOMP**) to prevent loss or duplication.
-  + Highest overhead and slowest speed.Best for financial transactions or vital command systems where duplicates cause severe errors.
++ Plain port 1883 sends user names, passwords, and payloads in clear text. Use TLS (8883) outside a trusted LAN.
++ Authenticate clients (user name/password or client certificates) and restrict topics per user with ACLs.
 
-## Key Benefits of MQTT
+## 5. Why MQTT for IoT
 
-+ Extremely Lightweight: Features a very small fixed header (as small as 2 bytes), minimizing network traffic and overhead.
-+ Low Power Consumption: Designed to conserve battery life on remote IoT sensors.
-+ Reliable over Poor Networks: Built-in features like persistent sessions and QoS levels handle intermittent network connectivity well.
-+ Scalable: A single broker can manage thousands of connected clients seamlessly.
++ **Small overhead**: the fixed header is 2 bytes; a small PUBLISH is only a few bytes more than its topic and payload.
++ **One outgoing connection**: the device connects out to the broker, so it works behind NAT and firewalls without opening ports.
++ **Handles poor networks**: keep alive, LWT, QoS, and persistent sessions deal with dropped connections.
++ **Decoupling and fan-out**: one sensor message can reach many consumers; new consumers can subscribe without changing the device.
++ **Scalable**: brokers handle thousands of clients; clustered brokers handle far more.
 
-## Common Use Cases
+Typical uses: smart home (Home Assistant, Zigbee2MQTT), industrial telemetry, vehicle telematics, and cloud IoT platforms (AWS IoT Core, Azure IoT Hub, both MQTT-based).
 
-+ Smart Home Systems: Connecting devices like lights, thermostats, and smart locks to hubs or apps (e.g., Home Assistant, AWS IoT).
-+ Industrial IoT (IIoT): Monitoring factory machinery, tracking remote pipeline metrics, and automating logistics.
-+ Automotive: Telematics and vehicle-to-cloud communication.
-+ Healthcare: Remote patient monitoring devices that transmit vital signs continuously.
+## 6. Mosquitto broker
 
-## To publish MQTT messages in C
+Eclipse Mosquitto is a small open-source broker (MQTT 5.0, 3.1.1, 3.1) that runs well on a Raspberry Pi.
 
-the industry standard is to use the Eclipse **Paho MQTT C client library**.  
-It provides clean, reliable functions to handle connections, message creation, and delivery tracking.
+```shell
+sudo apt update
+sudo apt install mosquitto mosquitto-clients
+sudo systemctl enable --now mosquitto
+```
 
-### Prerequisites
+Test with the command-line clients (in two terminals):
 
-Before compiling the code, you need to install the Paho C library on your system.
+```shell
+mosquitto_sub -h localhost -t "home/#" -v                          # -v prints the topic too
+mosquitto_pub -h localhost -t "home/livingroom/temperature" -m "23.5"
+mosquitto_pub -h localhost -t "devices/plug1/status" -m "online" -r -q 1   # retained, QoS 1
+```
 
-+ `sudo apt-get update`  
-+ `sudo apt-get install libpaho-mqtt-dev`
+Since Mosquitto 2.0, a broker without a listener configuration accepts connections **from localhost only**.
+To allow other devices, add a listener and authentication, for example in `/etc/mosquitto/conf.d/local.conf`:
 
-### keys for Publisher
+```text
+listener 1883
+allow_anonymous false
+password_file /etc/mosquitto/passwd
+```
 
-+ `MQTTClient_create()`: Allocates memory for your client interface and targets the network address.
-+ `MQTTClient_connect()`: Performs the synchronous handshaking network call to link up with the broker.
-+ `MQTTClient_message_initializer`: A helpful macro that assigns necessary default structures to the payload data.
-+ `MQTTClient_publishMessage()`: Packages the message buffer and attempts transmission over the active TCP connection socket.
-+ `MQTTClient_waitForCompletion()`: A blocking fallback checking mechanism that prevents thread ending  
-  before receiving explicit confirmation (QoS 1) from the broker host.
+```shell
+sudo mosquitto_passwd -c /etc/mosquitto/passwd myuser   # -c creates the file; omit it when adding more users
+sudo chown root:mosquitto /etc/mosquitto/passwd && sudo chmod 640 /etc/mosquitto/passwd
+sudo systemctl restart mosquitto
+mosquitto_sub -h <broker-ip> -u myuser -P <password> -t "home/#" -v
+```
 
-## To subscribe to an MQTT topic and receive messages in C
+Public test brokers (no privacy, anyone can read your topics; never use them for real data):
 
-You can use the asynchronous model of the Eclipse **Paho MQTT C client library**.  
-This approach uses a callback system, meaning the library automatically triggers a specific function in your code whenever a new message arrives.
++ `test.mosquitto.org`, port 1883 (TCP) and 8883 (TLS)
++ `broker.emqx.io`, port 1883 (TCP) and 8883 (TLS)
++ `broker.hivemq.com`, port 1883 (TCP)
 
-### Key Concepts for Subscribers
+## 7. C client: Eclipse Paho (publisher)
 
-+ `MQTTClient_setCallbacks()`: Registers your custom C functions to handle background events.  
-  You must call this after creating the client but before calling connect.
-+ `messageArrived` Handler: This is your message processor.  
-  It provides the topic name and the MQTTClient_message structure, which contains the `.payload` and `.payloadlen`.
-+ Memory Management: Inside the callback, you must free the topicName and the message using `MQTTClient_free()` and `MQTTClient_freeMessage()`.  
-  Forgetting this will cause a critical memory leak in continuous applications.
-+ Return Value: The `messageArrived` function must return 1 (true) to indicate that the message was successfully handled.
+The Eclipse Paho C library has two APIs: **MQTTClient** (synchronous, `libpaho-mqtt3c`, used here) and **MQTTAsync** (fully asynchronous, `libpaho-mqtt3a`).
+The `...s` variants (`libpaho-mqtt3cs`, `libpaho-mqtt3as`) add TLS.
 
-## build an MQTT broker 
+```shell
+sudo apt install libpaho-mqtt-dev
+gcc pub.c -o pub -lpaho-mqtt3c
+```
 
-+ Installing an MQTT Broker: `sudo apt update && sudo apt install mosquitto mosquitto-clients`
-+ Start the broker service:`sudo systemctl start mosquitto`
-+ Connect your Paho C application to your local broker using the address `tcp://localhost:1883`
+```c
+#include <stdio.h>
+#include <string.h>
+#include <MQTTClient.h>
 
-## Mosquitto
+#define ADDRESS  "tcp://localhost:1883"
+#define CLIENTID "pub-demo"
+#define TOPIC    "home/livingroom/temperature"
 
-Eclipse Mosquitto is a lightweight, open-source message broker that implements the MQTT protocol (versions 5.0, 3.1.1, and 3.1),  
-perfect for Internet of Things (IoT) messaging and small home automation projects.
+int main(void)
+{
+    MQTTClient client;
+    MQTTClient_connectOptions opts = MQTTClient_connectOptions_initializer;
+    MQTTClient_message msg = MQTTClient_message_initializer;
+    MQTTClient_deliveryToken token;
+    const char *payload = "23.5";
+    int rc;
 
-### Install Mosquitto
+    MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
+    opts.keepAliveInterval = 20;
+    opts.cleansession = 1;
 
-+ `sudo apt-get update`  
-+ Mosquitto Broker service: `sudo apt install mosquitto`
-+ Publisher and Subscriber: `sudo apt-get install libmosquitto-dev mosquitto-clients`  
+    rc = MQTTClient_connect(client, &opts);
+    if (rc != MQTTCLIENT_SUCCESS) {
+        fprintf(stderr, "connect failed: %d\n", rc);
+        MQTTClient_destroy(&client);
+        return 1;
+    }
 
-### Key Features
+    msg.payload = (void *)payload;
+    msg.payloadlen = (int)strlen(payload);
+    msg.qos = 1;
+    msg.retained = 0;
 
-+ Uses a publish/subscribe model to route messages via topics.
-+ Runs on tiny devices like a Raspberry Pi or full computer servers.
-+ Includes simple command-line tools (`mosquitto_pub` and `mosquitto_sub`) to send and test messages.
+    MQTTClient_publishMessage(client, TOPIC, &msg, &token);
+    rc = MQTTClient_waitForCompletion(client, token, 10000L);   /* wait up to 10 s for PUBACK */
+    printf("delivered: %s\n", rc == MQTTCLIENT_SUCCESS ? "yes" : "no");
 
-### Basic Commands
+    MQTTClient_disconnect(client, 10000);
+    MQTTClient_destroy(&client);
+    return 0;
+}
+```
 
-+ Subscribe to a topic:`mosquitto_sub -h localhost -t "my/topic"`
-+ Publish a message:`mosquitto_pub -h localhost -t "my/topic" -m "Hello"`
++ `MQTTClient_create()`: creates the client handle for a broker URI and client ID. It does not connect yet.
++ `MQTTClient_connect()`: connects and blocks until CONNACK.
++ `MQTTClient_publishMessage()`: sends the message and returns a delivery token.
++ `MQTTClient_waitForCompletion()`: blocks until the message with that token is acknowledged (QoS 1/2) or the timeout expires.
 
-### Core API Architecture Explained
+**Receiving with Paho**: call `MQTTClient_setCallbacks()` after `MQTTClient_create()` and before `MQTTClient_connect()`.
+This is still the synchronous MQTTClient API; the library calls your callbacks from a background thread.
 
-+ `mosquitto_lib_init()`: Configures global network states. Must be executed exactly once per program lifecycle.
-+ `mosquitto_new()`: Instantiates the internal state tracker context object.
-+ `mosquitto_loop_start()`: Spawns an internal worker thread so network acknowledgments (CONNACK, PUBACK) resolve safely  
-  without pausing your primary application execution timeline.
-+ `mosquitto_publish()`: Packages your payload data into an outward MQTT packet frame.
-+ `mosquitto_subscribe()`: Sends a request packet to the broker indicating interest in specific data streams.
-+ `mosquitto_connect_callback_set()`: Registers your on_connect function.  
-   This executes as soon as the broker evaluates your credentials and responds with a CONNACK packet.
-+ `mosquitto_message_callback_set()`: Registers your on_message function. 
-  The library executes this whenever the broker routes an incoming packet matching your criteria to this client.
-+ `mosquitto_loop_forever()`: Unlike the publisher which uses loop_start() to open a background thread and proceed,  
-  a standard subscriber blocks the current execution thread right here to continuously poll for incoming TCP data packets.  
-  It automatically handles ping requests to maintain the connection.
++ The `messageArrived(context, topicName, topicLen, message)` callback gets the payload in `message->payload` / `message->payloadlen`.
+  The payload is not NUL-terminated.
++ Free both with `MQTTClient_freeMessage(&message)` and `MQTTClient_free(topicName)`, then return `1`.
+  Returning `0` tells the library the message wasn't handled, and it calls the callback again.
+
+## 8. C client: libmosquitto (subscriber)
+
+```shell
+sudo apt install libmosquitto-dev
+gcc sub.c -o sub -lmosquitto
+```
+
+```c
+#include <stdio.h>
+#include <mosquitto.h>
+
+static void on_connect(struct mosquitto *mosq, void *obj, int rc)
+{
+    (void)obj;
+    if (rc == 0)
+        mosquitto_subscribe(mosq, NULL, "home/+/temperature", 1);   /* (re)subscribe on every connect */
+    else
+        fprintf(stderr, "connect refused: %s\n", mosquitto_connack_string(rc));
+}
+
+static void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto_message *msg)
+{
+    (void)mosq;
+    (void)obj;
+    printf("%s: %.*s\n", msg->topic, msg->payloadlen, (const char *)msg->payload);
+}
+
+int main(void)
+{
+    struct mosquitto *mosq;
+    int rc;
+
+    mosquitto_lib_init();
+
+    mosq = mosquitto_new("sub-demo", true, NULL);   /* true = clean session */
+    if (mosq == NULL) {
+        fprintf(stderr, "mosquitto_new failed\n");
+        mosquitto_lib_cleanup();
+        return 1;
+    }
+
+    mosquitto_connect_callback_set(mosq, on_connect);
+    mosquitto_message_callback_set(mosq, on_message);
+
+    rc = mosquitto_connect(mosq, "localhost", 1883, 60);   /* keep alive 60 s */
+    if (rc != MOSQ_ERR_SUCCESS) {
+        fprintf(stderr, "connect failed: %s\n", mosquitto_strerror(rc));
+        mosquitto_destroy(mosq);
+        mosquitto_lib_cleanup();
+        return 1;
+    }
+
+    mosquitto_loop_forever(mosq, -1, 1);   /* blocks; handles keep alive and reconnects */
+
+    mosquitto_destroy(mosq);
+    mosquitto_lib_cleanup();
+    return 0;
+}
+```
+
++ `mosquitto_lib_init()` / `mosquitto_lib_cleanup()`: call once per program, at start and end.
++ `mosquitto_new()`: creates a client instance (client ID, clean session flag, user data pointer).
++ `mosquitto_connect_callback_set()`: the callback runs when CONNACK arrives. Subscribing there means subscriptions are restored after a reconnect.
++ `mosquitto_message_callback_set()`: the callback runs for every received message. The message is freed by the library after the callback returns; copy what you need.
++ Network loop, pick one:
+  - `mosquitto_loop_forever()`: blocks the calling thread. Typical for a pure subscriber.
+  - `mosquitto_loop_start()`: starts a background thread and returns, so the main thread can do other work (e.g. read sensors and `mosquitto_publish()`). Stop it with `mosquitto_loop_stop()`.
+  - `mosquitto_loop()`: one iteration, for integrating with your own event loop.
+
+## Related notes
+
++ [IoT_Network.md](IoT_Network.md): the network links MQTT runs over, and other IoT application protocols
++ [Modbus_intro.md](Modbus_intro.md): polling industrial devices; gateways often forward Modbus data to MQTT
++ [BLE_intro.md](BLE_intro.md): BLE sensors behind an MQTT gateway
++ [Linux/socket_intro.md](Linux/socket_intro.md): TCP sockets underneath MQTT
++ [network_cmds.md](network_cmds.md): network troubleshooting commands
+
+## Reference
+
++ MQTT specifications (OASIS): <https://mqtt.org/mqtt-specification/>
++ Eclipse Mosquitto: <https://mosquitto.org/>
++ Mosquitto configuration (`mosquitto.conf`): <https://mosquitto.org/man/mosquitto-conf-5.html>
++ libmosquitto API: <https://mosquitto.org/api/>
++ Eclipse Paho: <https://eclipse.dev/paho/>

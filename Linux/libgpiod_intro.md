@@ -3,8 +3,35 @@
 **libgpiod** is the user-space C library and command-line toolkit for the Linux **GPIO character device** (`/dev/gpiochipN`).
 The kernel provides the character device, and libgpiod wraps its `ioctl` interface.
 It replaced the deprecated sysfs interface (`/sys/class/gpio`); see [libgpiod_sysfs_cmp.md](libgpiod_sysfs_cmp.md) for that comparison.
+Use it to read inputs (buttons, sensors), drive outputs (LEDs, relays, enable pins), and wait for edge events.
 
-## 1. Versions
+## 1. The GPIO character device
+
+Linux exposes most hardware as device files, in 2 main kinds:
+
+| | Block device | Character device |
+| --- | --- | --- |
+| Data unit | Fixed-size blocks, through the page cache | Byte stream, no block cache |
+| Access | Random (seekable) | Usually sequential, or control through `ioctl` |
+| Examples | `/dev/sda`, `/dev/mmcblk0` | `/dev/ttyS0`, `/dev/input/event0`, `/dev/gpiochip0` |
+| `ls -l` type | `b` | `c` |
+
+Each GPIO controller (one bank of the SoC, or an I/O expander) registers one character device, `/dev/gpiochipN`.
+User space doesn't read or write pin values as text. It works on the file descriptor:
+
+```text
+open("/dev/gpiochip0")                          -> chip fd
+ioctl(chip fd, GPIO_GET_CHIPINFO_IOCTL)         -> name, label, number of lines
+ioctl(chip fd, GPIO_V2_GET_LINE_IOCTL, offsets) -> request fd (owns the lines)
+ioctl(request fd, GPIO_V2_LINE_SET_VALUES_IOCTL / GET_VALUES_IOCTL)
+poll() + read(request fd)                       -> edge events with timestamps
+close(request fd)                               -> lines released
+```
+
+These are the uAPI v2 ioctl names; v1 has `GPIO_GET_LINEHANDLE_IOCTL` and `GPIO_GET_LINEEVENT_IOCTL` instead.
+libgpiod hides these calls behind its C API and tools.
+
+## 2. Versions
 
 There are 2 incompatible generations. Check which one you have first: `gpiodetect --version`, or `pkg-config --modversion libgpiod`.
 
@@ -17,7 +44,7 @@ There are 2 incompatible generations. Check which one you have first: `gpiodetec
 
 The other notes in this repo use the **v1** C API (for example [../Android/AIDL_impl_gpio_cxx.md](../Android/AIDL_impl_gpio_cxx.md)).
 
-## 2. What's in the package
+## 3. What's in the package
 
 + **Library**: `libgpiod` (C), with C++ (`libgpiodcxx`) and Python bindings. v2 adds GLib bindings and a D-Bus daemon (`gpio-manager`, 2.2+).
   Rust bindings live in a separate crate (`libgpiod`/`gpiod` on crates.io).
@@ -33,7 +60,7 @@ The other notes in this repo use the **v1** C API (for example [../Android/AIDL_
 | `gpiofind` | **v1 only**: find a line by name (`gpiofind WIFI_PWR_EN` → `gpiochip1 12`). v2 tools take names directly |
 | `gpionotify` | **v2 only**: watch line-info changes (requested/released/reconfigured by others) |
 
-## 3. Tool syntax: v1 vs v2
+## 4. Tool syntax: v1 vs v2
 
 ```shell
 gpiodetect                                   # same in both
@@ -56,9 +83,9 @@ gpiomon  -e rising -c gpiochip4 5
 A released line's value is no longer guaranteed: the kernel or driver may keep it or reset it.
 Anything that must **stay** driven needs a process that keeps holding the line, such as v2 `gpioset`, `gpioset --mode=signal` (v1), or your daemon.
 
-## 4. C API
+## 5. C API
 
-### 4.1 v1
+### 5.1 v1
 
 ```c
 #include <gpiod.h>
@@ -83,7 +110,7 @@ int blink_v1(void)
 }
 ```
 
-### 4.2 v2
+### 5.2 v2
 
 ```c
 #include <gpiod.h>
@@ -124,7 +151,7 @@ out:
 
 Build with `gcc blink.c -lgpiod`, or `pkg-config --cflags --libs libgpiod`.
 
-## 5. Python
+## 6. Python
 
 v2 (`pip install gpiod`, libgpiod ≥ 2.0):
 
@@ -163,7 +190,7 @@ Raspberry Pi 5: the 40-pin header is on the RP1 chip, labeled `pinctrl-rp1`.
 Depending on the kernel version it is `gpiochip4` (early Bookworm kernels) or `gpiochip0` (newer kernels). Check with `gpiodetect`.
 The offset is the **BCM GPIO number** (17 = header pin 11), not the physical pin number.
 
-## 6. Features worth knowing
+## 7. Features worth knowing
 
 + **Ownership**: a request belongs to the file descriptor and shows the consumer name in `gpioinfo`.
   It is **released automatically** when the process exits. A second request for the same line fails with `EBUSY`.
@@ -175,7 +202,7 @@ The offset is the **BCM GPIO number** (17 = header pin 11), not the physical pin
   Latency is still that of Linux user space: µs to ms, not real time.
 + **Names**: if the device tree has `gpio-line-names`, tools and code can use names (`WIFI_PWR_EN`) instead of numbers.
 
-## 7. Requirements and permissions
+## 8. Requirements and permissions
 
 + Kernel: `CONFIG_GPIO_CDEV=y`, plus `CONFIG_GPIO_CDEV_V1=y` if you use libgpiod v1.
 + The pin must be muxed as GPIO (pinctrl in the device tree) and **not claimed** by a kernel driver (`leds-gpio`, `*-gpios` consumers).

@@ -42,6 +42,7 @@ cc_binary {
 + `cc_binary`/ `cc_library`: For compiling C/C++ executables and shared/static libraries.
 + `android_app`: For building APKs.
 + `java_library`: For building Java/Kotlin JAR libraries.
++ `android_library`: For building Android libraries with resources and a manifest (the Soong counterpart of an AAR, see [jar_aar_intro.md](jar_aar_intro.md)).
 + `filegroup`/ `genrule`: For grouping specific source files or running custom generation scripts.
 
 ## 3. Core Features & Syntax Rules

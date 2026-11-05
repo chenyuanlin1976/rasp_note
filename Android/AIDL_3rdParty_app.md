@@ -149,9 +149,9 @@ Such a rule would let **every** app touch the hardware. It also violates AOSP `n
 ### Option 2: ship a JAR / AAR
 
 1. Build a library module that contains the `.aidl` file. AGP generates Java into `build/generated/aidl_source_output_dir/`.
-2. Package it as:
-   + **JAR**: only the generated interface classes and plain Java parcelables
-   + **AAR**: if you also ship resources, a manifest (with the `<uses-permission>` and `<queries>` entries), or Android-dependent helper code
+2. Package it as (details in [jar_aar_intro.md](jar_aar_intro.md)):
+   + **JAR**: the generated interface classes, parcelables, and helper code (a JAR may use Android APIs such as `Context`)
+   + **AAR**: if you also ship resources, native `.so` files, or a manifest (with the `<uses-permission>` and `<queries>` entries)
 3. **Best practice**: add a wrapper (for example `GpioManager`) that does the binding, reconnects,
    and converts `RemoteException` into normal errors.
    Then the app calls `gpioManager.setPinState(...)` and never sees `IBinder`.

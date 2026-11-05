@@ -1,83 +1,139 @@
-# The Raspberry Pi Pico C/C++ SDK
+# Raspberry Pi Pico C/C++ SDK
 
-The Raspberry Pi Pico C/C++ SDK (Software Development Kit) provides the low-level headers, libraries,  
-and build system needed to write high-performance C or C++ programs for the RP2040 and RP2350 microcontrollers.  
-Unlike MicroPython, which interprets code line-by-line,  
-the C/C++ SDK compiles your code directly into machine language, unlocking the absolute maximum speed and control over the hardware.
+The Pico SDK provides the headers, libraries, and CMake build system for writing C and C++ programs for the
+RP2040 (Pico, Pico W) and RP2350 (Pico 2, Pico 2 W) microcontrollers. Programs are compiled to native machine code and run without an operating system.
 
-[pico-sdk](https://github.com/raspberrypi/pico-sdk)
+Source: <https://github.com/raspberrypi/pico-sdk> (examples: <https://github.com/raspberrypi/pico-examples>)
 
-## Why Use the C/C++ SDK?
+## 1. C/C++ SDK vs MicroPython
 
-+ Maximum Performance: Executes code significantly faster than MicroPython.
-+ Predictable Timing: Critical for precise motor control or high-speed communication.
-+ Low Memory Footprint: Leaves almost the entire RAM free for your data.
-+ Full Feature Access: Gives you unrestricted control over every internal register and peripheral.
+| | C/C++ SDK | MicroPython |
+| --- | --- | --- |
+| Execution | Compiled to native code | Python compiled to bytecode on the board, then interpreted |
+| Speed and timing | Fast and predictable | Much slower; garbage collection can add pauses |
+| Memory | Only what your program uses | The interpreter and heap take a large part of the RAM |
+| Hardware access | Every peripheral and register, PIO, DMA, both cores | Most peripherals through the `machine` and `rp2` modules |
+| Workflow | Edit, build, flash | Edit and run immediately over the REPL |
 
-## Core Components of the SDK
+Use the SDK for tight timing (motor control, fast protocols), maximum throughput, or full control. MicroPython is quicker for prototyping.
 
-The SDK is divided into two main layers to make coding easier:
+## 2. Library layers
 
-1. High-Level Libraries (`pico_stdlib`):  
-   This layer provides high-level, human-readable functions for everyday tasks.  
-   It groups common hardware functions together so you do not have to write boilerplate code.  
-   + `pico_stdlib`: Automatically bundles basic functions for GPIO, UART, and time tracking.
-   + Standard I/O: Maps functions like `printf()` directly to the USB or UART serial output.  
-2. Low-Level Hardware Drivers (`hardware_`)  
-   This layer interfaces directly with the silicon registers.  
-   You use these libraries when you need precise control over specific hardware modules.  
-   + `hardware_gpio`: Detailed control of input/output pins.
-   + `hardware_pio`: Program the unique Programmable I/O blocks for custom protocols.
-   + `hardware_dma`: Direct Memory Access to move data without using the CPU.
-   + `hardware_adc` / `hardware_pwm`: Control analog inputs and pulse-width modulation.
+The SDK is a set of CMake **INTERFACE libraries**: you link only the ones you use.
 
-## The Build System: CMake
+| Layer | Examples | Purpose |
+| --- | --- | --- |
+| `hardware_*` | `hardware_gpio`, `hardware_uart`, `hardware_spi`, `hardware_i2c`, `hardware_pwm`, `hardware_adc`, `hardware_dma`, `hardware_pio` | Thin APIs over one peripheral's registers |
+| `pico_*` | `pico_stdlib`, `pico_stdio_usb`, `pico_multicore`, `pico_time`, `pico_cyw43_arch_*` (Wi-Fi on Pico W) | Higher-level functions built on the hardware libraries |
+| `pico_stdlib` | GPIO, UART, time, `stdio` | Convenience bundle that most programs link |
 
-The Pico SDK does not use traditional, messy Makefiles.  
-Instead, it relies on **CMake** to manage projects. CMake acts as a project generator.  
++ `stdio_init_all()` connects `printf()` / `getchar()` to the `stdio` targets enabled in CMake: UART (GPIO 0/1 by default) and/or USB CDC.
+  On a Linux host, USB `stdio` appears as `/dev/ttyACM0`; see [USB_CDC.md](USB_CDC.md).
++ `hardware_pio` programs the PIO state machines; see [RPi_pico_PIO.md](RPi_pico_PIO.md).
 
-+ You write a simple text file called `CMakeLists.txt` to describe your project,  
-+ CMake automatically finds the SDK files and prepares the compiler.
+## 3. Example program
 
-### Example CMakeLists.txt Structure
+`blink.c`:
 
-```bash CMakeLists.txt
-cmake_minimum_required(VERSION 3.13)
+```c
+#include <stdio.h>
+#include "pico/stdlib.h"
 
-# Include the Pico SDK configuration
-include(pico_sdk_import.cmake)
+int main(void)
+{
+    stdio_init_all();                        /* USB and/or UART, as enabled in CMakeLists.txt */
 
-project(proj_name C CXX ASM)
+    const uint led = PICO_DEFAULT_LED_PIN;   /* GPIO 25 on Pico and Pico 2 */
+    gpio_init(led);
+    gpio_set_dir(led, GPIO_OUT);
 
-# Initialize the SDK
-pico_sdk_init()
-
-# Define your executable project file
-add_executable(target_name blink.c)
-
-# Link the standard libraries you need
-target_link_libraries(target_name pico_stdlib)
-
-# Enable USB serial output, disable UART serial output
-pico_enable_stdio_usb(target_name 1)
-pico_enable_stdio_uart(target_name 0)
+    while (true) {
+        gpio_put(led, 1);
+        printf("LED on\n");
+        sleep_ms(500);
+        gpio_put(led, 0);
+        sleep_ms(500);
+    }
+}
 ```
 
-### Compilation Output: The .uf2 File
+On the Pico W and Pico 2 W the LED is connected to the CYW43 wireless chip, not to a GPIO, and `PICO_DEFAULT_LED_PIN` is not defined.
+Use `cyw43_arch_init()` and `cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1)`, and link `pico_cyw43_arch_none`.
 
-When you compile a project using the SDK, the compiler generates a few different file types,  
-but the most important one is the **.uf2** file.
+## 4. Build system: CMake
 
-+ What it is: A plug-and-play flashing format designed by Microsoft.
-+ How it works: You hold the **BOOTSEL** button on your Pico, plug it into your computer,  
-  and it appears as a USB flash drive.  
-  You simply drag and drop your compiled **.uf2** file into that drive,  
-  and the Pico instantly programs itself and runs your C/C++ code.
+CMake generates the actual build files (Makefiles or Ninja); you describe the project in `CMakeLists.txt`.
 
-### Setup and Workflow
+```cmake
+cmake_minimum_required(VERSION 3.13)
 
-1. The Official Tool: Install Visual Studio Code (VS Code).
-2. The Extension: Install the official **Raspberry Pi Pico extension** inside VS Code.
-3. Automated Setup: The extension automatically downloads the CMake tools,  
-   the ARM GCC compiler (to compile code for the Pico's ARM processor), and the correct version of the SDK.
-4. Coding: You can generate a new project with one click, write your code, and hit "Build" to get your **.uf2** file.
+# Copy pico_sdk_import.cmake from the SDK's external/ directory into the project.
+# It must be included before project().
+include(pico_sdk_import.cmake)
+
+project(blink C CXX ASM)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+
+pico_sdk_init()
+
+add_executable(blink blink.c)
+target_link_libraries(blink pico_stdlib)
+
+# stdio over USB CDC, not UART
+pico_enable_stdio_usb(blink 1)
+pico_enable_stdio_uart(blink 0)
+
+# also create .uf2, .bin, .hex, .dis, .map (without this you only get .elf)
+pico_add_extra_outputs(blink)
+```
+
+Build from the command line:
+
+```shell
+export PICO_SDK_PATH=~/pico/pico-sdk         # where the SDK is cloned (with submodules, for TinyUSB and CYW43)
+mkdir build && cd build
+cmake -DPICO_BOARD=pico2 ..                  # pico (default), pico_w, pico2, pico2_w, ...
+make -j"$(nproc)"                            # -> blink.uf2, blink.elf, ...
+```
+
+`PICO_BOARD` selects the chip and board pin definitions; use a fresh build directory when you change it.
+The compiler is `arm-none-eabi-gcc` (the RP2350 can also run RISC-V code, with a RISC-V toolchain).
+
+## 5. Flashing
+
+**UF2 drag and drop**: UF2 is a USB flashing format created by Microsoft (for MakeCode).
+
+1. Hold **BOOTSEL** while plugging in the USB cable (or while pressing reset on boards that have one).
+2. The board appears as a USB mass-storage drive (`RPI-RP2` for RP2040, `RP2350` for RP2350).
+3. Copy the `.uf2` file to the drive. The board writes it to flash, reboots, and runs the program.
+
+**picotool** (also needs BOOTSEL mode, or a running program that includes USB `stdio` reset support):
+
+```shell
+picotool info -a                 # show what is on the board
+picotool load -x blink.uf2       # load and execute (-f forces a running device into BOOTSEL mode first)
+```
+
+**SWD debug**: with a Raspberry Pi Debug Probe (or a second Pico running debugprobe) and OpenOCD/GDB, you can flash `.elf` files and debug with breakpoints.
+
+## 6. VS Code workflow
+
+The official **Raspberry Pi Pico** extension for VS Code can download the SDK, the toolchain, CMake, Ninja, and picotool,
+create a new project from a template, and build, flash, and debug it. This is the easiest setup on Windows and macOS.
+The command-line build in section 4 works the same way underneath.
+
+## Related notes
+
++ [RPi_pico_PIO.md](RPi_pico_PIO.md): PIO state machines and `pioasm`
++ [USB_CDC.md](USB_CDC.md): USB CDC serial (`stdio` over USB)
++ [CMakeLists_syntax.md](CMakeLists_syntax.md): CMake syntax
++ [RTOS_intro.md](RTOS_intro.md): running an RTOS (e.g. FreeRTOS) on microcontrollers
+
+## Reference
+
++ Raspberry Pi Pico C/C++ SDK book: <https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf>
++ Getting started with Raspberry Pi Pico-series: <https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf>
++ Pico SDK API documentation: <https://www.raspberrypi.com/documentation/pico-sdk/>
++ Pico microcontroller documentation: <https://www.raspberrypi.com/documentation/microcontrollers/>
++ picotool: <https://github.com/raspberrypi/picotool>

@@ -1,132 +1,191 @@
-# the PIO of RPi pico
+# Raspberry Pi Pico PIO (Programmable I/O)
 
-Programmable Input/Output (PIO) is a specialized hardware subsystem on the Raspberry Pi Pico's RP2040 chip  
-designed to build custom, deterministic hardware interfaces.  
-It operates independently of the main dual-core ARM CPUs, executing precise assembly code to offload timing-critical tasks  
-like handling WS2812B LEDs, custom SPI/I2C variants, or video output.
+PIO is a set of small, programmable state machines inside the RP2040 (Pico, Pico W) and RP2350 (Pico 2) that drive GPIO pins
+with cycle-exact timing, independently of the CPU cores. You use it to build interfaces in "software-defined hardware":
+WS2812 LEDs, extra UART/SPI/I2C ports, quadrature encoders, DPI/VGA video, logic analyzers, and custom protocols.
 
-## Hardware Overview
+The CPU (or DMA) only exchanges data with the state machines through FIFOs; the timing is handled by the PIO program.
 
-+ Two Blocks: The RP2040 features 2 independent PIO hardware blocks.
-+ State Machines: Each block contains 4 state machines, totaling 8 execution units.
-+ Shared Memory: Each block shares a 32-instruction memory space for assembly code.
-+ FIFOs: Dedicated TX (Transmit) and RX (Receive) buffers handle main-CPU communication.
+## 1. Hardware overview
 
-## The 9 Base Instructions
+| | RP2040 | RP2350 |
+| --- | --- | --- |
+| PIO blocks | 2 (`pio0`, `pio1`) | 3 (`pio0`–`pio2`) |
+| State machines (SMs) per block | 4 | 4 |
+| Instruction memory per block | 32 instructions, shared by its 4 SMs | 32 instructions, shared by its 4 SMs |
+| PIO version | v0 | v1 (adds a few features, e.g. more `wait`/`mov` options, FIFO random access) |
 
-PIO programs are written in a dedicated assembly language consisting of exactly nine core instructions:
+Each state machine has:
 
-+ `JUMP`: Moves execution to a different instruction address based on a condition.
-+ `WAIT`: Pauses execution until a pin, IRQ flag, or bit meets a specific state.
-+ `IN`: Shifts data bits from a source (pins, scratch) into the Input Shift Register (ISR).
-+ `OUT`: Shifts data bits out of the Output Shift Register (OSR) to a destination.
-+ `PUSH`: Sends data from the ISR to the main memory RX FIFO.
-+ `PULL`: Fetches data from the main memory TX FIFO into the OSR.
-+ `MOV`: Copies data from a source location to a destination location.
-+ `IRQ`: Sets, clears, or waits on interrupt request flags across the system.
-+ `SET`: Directly writes immediate values (0–31) to configured pins or scratch registers.
++ **OSR** (output shift register) and **ISR** (input shift register), 32 bits each.
++ Two **scratch registers**, `X` and `Y`, 32 bits each (used as counters and temporary storage).
++ A **TX FIFO** (CPU → SM) and an **RX FIFO** (SM → CPU), 4 words each. They can be joined into one 8-word FIFO in one direction.
++ A **clock divider** (16-bit integer + 8-bit fraction): the SM runs at `clk_sys / div`. Default `clk_sys` is 125 MHz on RP2040 and 150 MHz on RP2350.
++ Pin mappings: separate base/count settings for `out`, `set`, `in`, side-set, and the `jmp pin`.
 
-## Key Concept: Delay and Wrapping
+Every instruction takes **one cycle** (plus optional delay), so timing is fully deterministic. A `wait` instruction, or `push`/`pull` with
+a full or empty FIFO, stalls until its condition is met.
 
-+ Side-Set and Delays: Every instruction can include a trailing delay like [19],  
-  pausing the hardware for **up to 31 clock cycles** without consuming extra memory lines.
-+ Automatic Wrapping: The `.wrap_target` and `.wrap` keywords loop the state machine automatically in hardware.  
-  This configuration costs zero execution time and uses zero instruction spaces.
+Each PIO block also has 8 IRQ flags, used to synchronize state machines with each other and (some of them) to interrupt the CPU.
 
-## program .pio file
+## 2. The nine instructions
 
-A .pio file contains the hardware assembly instructions and setup configurations for the Raspberry Pi Pico's Programmable I/O (PIO) state machines.  
-When compiled by the tool **pioasm**, it outputs a C/C++ header file (**.pio.h**) that integrates into your application.
+PIO assembly has nine instructions. `nop` is a pseudo-instruction (assembled as `mov y, y`).
 
-### Structure of a .pio File
+| Instruction | Syntax | What it does |
+| --- | --- | --- |
+| `jmp` | `jmp [cond] target` | Jump if the condition is true. Conditions: (always), `!x`, `x--`, `!y`, `y--`, `x!=y`, `pin`, `!osre` |
+| `wait` | `wait <0\|1> <gpio\|pin\|irq> <index>` | Stall until a GPIO, a mapped input pin, or an IRQ flag has the given level |
+| `in` | `in <src>, <bits>` | Shift bits into the ISR. Sources: `pins`, `x`, `y`, `null`, `isr`, `osr` |
+| `out` | `out <dest>, <bits>` | Shift bits out of the OSR. Destinations: `pins`, `x`, `y`, `null`, `pindirs`, `pc`, `isr`, `exec` |
+| `push` | `push [iffull] [block\|noblock]` | Move the ISR to the RX FIFO and clear the ISR. Blocks by default if the FIFO is full |
+| `pull` | `pull [ifempty] [block\|noblock]` | Load the OSR from the TX FIFO. Blocks by default if the FIFO is empty |
+| `mov` | `mov <dest>, [op] <src>` | Copy. Destinations: `pins`, `x`, `y`, `exec`, `pc`, `isr`, `osr`. Sources: `pins`, `x`, `y`, `null`, `status`, `isr`, `osr`. Ops: `!` (invert), `::` (bit-reverse) |
+| `irq` | `irq [set\|nowait\|wait\|clear] <n> [rel]` | Set or clear an IRQ flag; `irq wait` sets it and waits until something clears it |
+| `set` | `set <dest>, <value>` | Write a 5-bit immediate (0–31) to `pins`, `pindirs`, `x`, or `y` |
 
-A standard **.pio** file is divided into 3 primary segments:
++ `pull noblock` with an empty FIFO copies `X` into the OSR, which is a common way to "keep the last value".
++ **Autopush / autopull**: the SM can push the ISR or refill the OSR automatically when a threshold number of bits is shifted,
+  which saves the explicit `push`/`pull` instructions in tight loops.
++ The FIFOs are not main memory. The CPU accesses them with `pio_sm_put*()` / `pio_sm_get*()`, or DMA moves data to and from them.
 
-1. Directives: Configures the state machine properties and marks the program entry point.
-2. Assembly Instructions: The 9 core commands that control the hardware state machine.
-3. C Software Helper Block (Optional): Embedded C code to auto-generate state machine setup helper functions.
+## 3. Delay and side-set
 
-```C
-; Comments start with a semicolon
+Every instruction has 5 spare bits, shared between a **delay** and **side-set**:
 
-.program hello_blink     ; 1. Directives: Defines the program name
-.side_set 1 opt          ; Configures side-set behavior
+```text
+<instruction> [side <value>] [<delay>]
+set pins, 1   side 0 [7]
+```
 
-wrap_target              ; 2. Assembly Instructions: Program loop start
-    set pins, 1   side 0 ; Turn LED on, clear side-set pin
-    set pins, 0   side 1 ; Turn LED off, set side-set pin
-wrap                     ; Program loop end
++ **Delay** `[n]`: after the instruction, the SM idles for `n` extra cycles. No extra instruction memory is used.
++ **Side-set** `side <v>`: drives up to 5 side-set pins at the same time as the instruction executes (e.g. a clock line while `out` drives data).
++ Side-set bits come out of the 5 bits, so the maximum delay is `2^(5 - side-set bits) - 1`:
 
-% c-sdk {                // 3. Embedded C SDK Helper Block
-static inline void hello_blink_program_init(PIO pio, uint sm, uint offset, uint pin) {
-    pio_sm_config c = hello_blink_program_get_default_config(offset);
-    sm_config_set_set_pins(&c, pin, 1);
-    pio_gpio_init(pio, pin);
-    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+| `.side_set` directive | Bits used | Max delay |
+| --- | --- | --- |
+| none | 0 | 31 |
+| `.side_set 1` | 1 | 15 |
+| `.side_set 1 opt` | 2 (1 + "enable" bit) | 7 |
+| `.side_set 2` | 2 | 7 |
+
++ Without `opt`, **every** instruction must have a `side` value. With `opt`, it is optional, at the cost of one more bit.
++ `.side_set <n> pindirs` drives pin directions instead of pin values.
+
+## 4. The `.pio` file
+
+A `.pio` file contains one or more PIO programs plus optional code blocks for the target language.
+The **pioasm** assembler (part of the Pico SDK) turns it into a header, `<name>.pio.h`, with the encoded program and helper functions.
+
+### 4.1 Directives
+
+| Directive | Meaning |
+| --- | --- |
+| `.program <name>` | Start a program; generates `<name>_program` and `<name>_program_get_default_config()` |
+| `.define [PUBLIC] <symbol> <value>` | Constant; `PUBLIC` exports it to the header as `<program>_<symbol>` |
+| `.side_set <n> [opt] [pindirs]` | Configure side-set (section 3) |
+| `.wrap_target` / `.wrap` | Loop: after the instruction before `.wrap`, execution continues at `.wrap_target` with no `jmp` and no extra cycle |
+| `.origin <addr>` | Require the program to be loaded at a fixed address (e.g. when it relies on absolute addresses via `out pc` / `mov pc`) |
+| `.word <value>` | Insert a raw 16-bit instruction |
+| `public <label>:` | Export a label address to the header |
+| `.pio_version <0\|1>` | Target PIO version (RP2350 features need `1`; newer SDKs) |
+
+Comments start with `;` or `//`.
+
+### 4.2 Language blocks
+
+Text between `% c-sdk {` and `%}` is copied unchanged into the generated `.pio.h`. It normally holds an `..._init()` function
+that configures the state machine with SDK calls. The `%` markers are needed because the C code contains its own `{}`;
+only `%}` on its own ends the block. pioasm also has other output formats (for example `python` for MicroPython) with their own `% <lang> {` blocks.
+
+## 5. Example: two out-of-phase square waves
+
+`blink.pio`: one pin driven with `set`, a second pin with side-set, toggling in opposite phase.
+
+```text
+.program blink
+.side_set 1 opt               ; 1 side-set pin, optional -> max delay 7
+
+.wrap_target
+    set pins, 1   side 0 [7]  ; set pin high, side-set pin low, then wait 7 cycles
+    set pins, 0   side 1 [7]  ; set pin low,  side-set pin high, then wait 7 cycles
+.wrap                         ; jump back to .wrap_target for free
+
+% c-sdk {
+static inline void blink_program_init(PIO pio, uint sm, uint offset,
+                                      uint set_pin, uint side_pin, float div)
+{
+    pio_sm_config c = blink_program_get_default_config(offset);  /* includes wrap and side-set settings */
+
+    sm_config_set_set_pins(&c, set_pin, 1);
+    sm_config_set_sideset_pins(&c, side_pin);
+    sm_config_set_clkdiv(&c, div);
+
+    pio_gpio_init(pio, set_pin);                                  /* give the pins to this PIO block */
+    pio_gpio_init(pio, side_pin);
+    pio_sm_set_consecutive_pindirs(pio, sm, set_pin, 1, true);    /* outputs */
+    pio_sm_set_consecutive_pindirs(pio, sm, side_pin, 1, true);
+
     pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
 }
 %}
 ```
 
-### 1. Directives Syntax
+`main.c`:
 
-Directives begin with a dot (`.`) and instruct pioasm how to compile the assembly block.
+```c
+#include "pico/stdlib.h"
+#include "hardware/pio.h"
+#include "blink.pio.h"
 
-+ `.program <name>`: Marks the start of a PIO program and assigns a namespace for generated C constants.
-+ `.define <name> <value>`: Sets a global key-value constant (similar to #define in C).
-+ `.side_set <count> [opt] [pindirs]`: Reserves bits for simultaneous execution of side-set pins alongside regular instructions.
-+ `.wrap_target` and `.wrap`: Creates an execution loop without costing a `jmp` instruction.
+int main(void)
+{
+    PIO pio = pio0;
+    uint offset = pio_add_program(pio, &blink_program);   /* load into instruction memory */
+    uint sm = pio_claim_unused_sm(pio, true);             /* true = panic if none is free */
 
-### 2. Instruction Modifiers (Delay & Side-set)
+    blink_program_init(pio, sm, offset, 15, 16, 65535.0f);
 
-Every PIO instruction can be post-fixed with delay cycles and side-set operations using this structural pattern:
+    while (true)
+        tight_loop_contents();                            /* the CPU is free; PIO does the work */
+}
+```
 
-`<instruction> [<delay_count>] [side <side_set_value>]`
+Timing: one period is 2 instructions × (1 + 7) cycles = 16 SM cycles. With `div = 65535` and a 125 MHz `clk_sys`,
+the SM runs at about 1.9 kHz, so each pin toggles at about 119 Hz (too fast to see blink; measure it with a scope or logic analyzer).
+The slowest PIO clock is limited by the divider, so a visible blink needs a counting loop (`X`/`Y` with `jmp x--`) or delays fed from the CPU.
 
-+ `Delay [cycles]`: Appending a number inside brackets delays the next instruction execution by 1 to 31 cycles.
-+ `Side-set side <value>`: Drives designated side-set pins to high/low states concurrently with the base command execution.
+`CMakeLists.txt` additions:
 
-### 3. The 9 Core Assembly Instructions
+```cmake
+pico_generate_pio_header(blink ${CMAKE_CURRENT_LIST_DIR}/blink.pio)
+target_link_libraries(blink pico_stdlib hardware_pio)
+```
 
-The Raspberry Pi Pico PIO assembly language utilizes exactly 9 native instructions:
+## 6. Useful SDK functions
 
-+ `jmp [<condition>] <label>`: Jumps to a target label based on register status or pin conditions.
-+ `wait <polarity> <source> <index>`: Delays code execution until a pin or IRQ matches the target high/low polarity.
-+ `in <source> <bit_count>`: Shifts data bits from a source (pins, status, counter) into the Input Shift Register (ISR).
-+ `out <destination> <bit_count>`: Shifts data bits out of the Output Shift Register (OSR) to a destination.
-+ `push [block / noblock]`: Transfers data from the ISR directly into the RX FIFO.
-+ `pull [block / noblock]`: Loads data from the TX FIFO into the OSR.
-+ `mov <destination>, <source>`: Copies data between internal hardware registers (X, Y, OSR, ISR, Pins).
-+ `irq [<modifiers>] <irq_num>`: Sets, clears, or waits for internal or CPU system interrupt flags.
-+ `set <destination>, <value>`: Writes an immediate 5-bit raw integer directly into Pins or registers X/Y.
+| Function | Purpose |
+| --- | --- |
+| `pio_add_program()` / `pio_can_add_program()` | Load a program, or check that it fits |
+| `pio_claim_unused_sm()` | Get a free state machine |
+| `pio_sm_put_blocking()` / `pio_sm_get_blocking()` | Write to the TX FIFO / read from the RX FIFO, waiting if needed |
+| `pio_sm_set_enabled()` | Start or stop an SM |
+| `pio_sm_exec()` | Execute one instruction immediately (e.g. to preload `X`) |
+| `sm_config_set_out_pins()`, `sm_config_set_in_pins()`, `sm_config_set_jmp_pin()` | Pin mappings |
+| `sm_config_set_out_shift()`, `sm_config_set_in_shift()` | Shift direction, autopull/autopush and threshold |
+| `sm_config_set_fifo_join()` | Join both FIFOs into one 8-entry FIFO |
 
-### 4. Code Generation Block (% c-sdk)
+Start from the programs in `pico-examples/pio` (WS2812, UART TX/RX, SPI, I2C, quadrature encoder) instead of writing protocols from scratch.
 
-Text enclosed between `% c-sdk {` and `%}` is parsed by pioasm and copied directly into the compiled **.pio.h** output header file.  
-This block is typically written in C/C++ to create initialization templates using functions from the Pico C/C++ SDK,  
-bridging the low-level hardware configuration directly into your main runtime code.
+## Related notes
 
-#### How pioasm Uses the % Symbol
++ [RPi_pico_Cxx_SDK.md](RPi_pico_Cxx_SDK.md): Pico C/C++ SDK, CMake, and `.uf2` flashing
 
-The `%` character is used in the **.pio** file syntax as a special marker (or tag)  
-to tell the pioasm compiler that it is leaving the PIO assembly language syntax  
-and entering a different language block (like C/C++).  
+## Reference
 
-The pioasm compiler parses the file line by line.  
-It relies on specific delimiters to identify where code blocks begin and end:  
-
-+ `% c-sdk {` tells the compiler: "Stop treating the following lines as PIO assembly. Start capturing this raw text as C/C++ code."
-+ `%}` tells the compiler: "The C/C++ code block is finished. Switch back to parsing PIO file syntax."
-
-#### Why a Regular Curly Bracket {} Is Not Enough
-
-In many programming languages, curly brackets `{}` are enough to scope a block of code.  
-However, the PIO syntax needs the `%` symbol for 2 reasons:
-
-+ Syntax Protection: The C/C++ code block inside the .pio file will contain its own regular curly brackets `{}` for functions,  
-  if statements, and loops. If pioasm only looked for a closing `}`,  
-  it would get confused by the very first closing bracket inside your C function and end the block too early.  
-  The combination of `%}` ensures the compiler only triggers on the absolute end of the block.
-+ Compiler Directives Heritage: Using `%` to embed external code blocks is a classic design pattern  
-  borrowed from older parser-generator tools like Lex/Yacc and Flex/Bison, which use `%{` and `%}` sections to inject raw C code into generated files.  
-  The creators of the Raspberry Pi Pico adopted this standard because it is highly efficient for writing custom compiler scripts.
++ RP2040 datasheet, chapter 3 (PIO): <https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf>
++ RP2350 datasheet (PIO chapter): <https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf>
++ Raspberry Pi Pico C/C++ SDK book (PIO and pioasm): <https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf>
++ Pico SDK API documentation: <https://www.raspberrypi.com/documentation/pico-sdk/>
++ PIO examples: <https://github.com/raspberrypi/pico-examples/tree/master/pio>

@@ -159,7 +159,7 @@ Use `tasks.register` (lazy) instead of the old `task printVersion { }` / `tasks.
 
 ## Related notes
 
-+ [Groovy_intro.md](Groovy_intro.md), [building_note.md](building_note.md)
++ [Groovy_intro.md](Groovy_intro.md), [gradle_build.md](gradle_build.md)
 + [sign_apk.md](sign_apk.md): `signingConfigs` in Kotlin DSL
 
 ## Reference

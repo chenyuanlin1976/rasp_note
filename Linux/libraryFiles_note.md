@@ -1,124 +1,204 @@
-# Linux library files
+# Linux library files (`.a`, `.so`)
 
-In Linux, **.so** and **.a** files are both types of library files containing pre-compiled code that developers can reuse in their programs.  
-However, they handle how code is integrated and executed in fundamentally different ways.
+A library is pre-compiled code that programs reuse. Linux has two kinds:
 
-## 1. .so Files (Shared Object)
++ **Static library** (`.a`, "archive"): the linker copies the needed code into the executable at build time.
++ **Shared library** (`.so`, "shared object"): the executable only records the library's name; the dynamic loader (`ld-linux*.so`) maps the library into memory when the program starts.
+  It is the Linux counterpart of a Windows DLL.
 
-A **.so** file stands for **Shared Object**.  
-It is the Linux equivalent of a **DLL (.dynamic link library)** file in Windows.
+## 1. Static vs shared
 
-+ Dynamic Linking: The code inside a **.so** file is not copied into your final executable during compilation.  
-  Instead, the executable only keeps a reference to it.  
-  When the program runs, the operating system loads the **.so** file into memory.
-+ Memory and Disk Efficiency: Multiple running programs can share a single instance of a **.so** file in RAM simultaneously, saving system memory.
-+ Easy Updates: If a bug is fixed in a **.so** file, you can replace the file,  
-  and all programs that use it will automatically use the updated version without needing to be recompiled.
+| | `.a` static library | `.so` shared library |
+| --- | --- | --- |
+| What it is | An `ar` archive of `.o` object files | An ELF file, linked like an executable but without `main` |
+| When code is bound | At link time (build) | Recorded at link time, loaded and resolved at program start (or later with `dlopen()`) |
+| What goes into the executable | Only the archive members (`.o` files) that resolve undefined symbols | A `NEEDED` entry with the library's soname |
+| Executable size | Larger | Smaller |
+| Memory | Each program has its own copy | Read-only code pages are shared by all processes using the library; writable data is per process |
+| Deployment | No library file needed at run time | The `.so` (correct version) must be on the target |
+| Updating the library | Rebuild every program | Replace the `.so`; programs pick it up if the ABI is compatible (same soname) |
+| Licensing | Linking LGPL code statically has extra obligations | Usual way to use LGPL libraries |
 
-## 2. .a Files (Archive / Static Library)
++ A static executable is self-contained only if **all** libraries, including the C library, are linked statically (`gcc -static`).
+  Fully static glibc programs have limits (e.g. NSS name lookup and `dlopen()` still want shared libraries); musl libc is often used for static binaries instead.
++ When both `libfoo.so` and `libfoo.a` exist, `-lfoo` picks the **`.so`**. Use `-l:libfoo.a` or `-static` to force the static one.
 
-A **.a** file stands for **Archive**, commonly used as a **Static Library**.  
-It is a collection of compiled object files bundled together.
+## 2. Other related files
 
-+ Static Linking: During compilation, the compiler copies all the necessary functions and code from the **.a** file directly into your final executable binary.
-+ Self-Contained Binaries: Because the library code is embedded directly into the program, the resulting executable is completely independent.  
-  It does not require the **.a** file to be present on the target system to run.
-+ Larger File Sizes: Executables built with static libraries are generally larger because they carry copies of all the library code they use.
+| File | What it is |
+| --- | --- |
+| `.o` | Object file: compiler output for one source file, not yet linked. A `.a` is a bundle of `.o` files |
+| `.so.N` / `.so.N.M.P` | Versioned shared library (section 4) |
+| `.la` | GNU Libtool text file describing a library (dependencies, paths). Many distributions delete them |
+| `.lo` | GNU Libtool text file pointing to the PIC and non-PIC `.o` files of one source |
+| `.pc` | pkg-config file with the compiler and linker flags to use a library (`pkg-config --cflags --libs libgpiod`) |
+| `.ko` | Kernel module, loaded into the kernel, not into a user program; see [kernel_module.md](kernel_module.md) |
 
-## Key Differences at a Glance
+## 3. Build and use
 
-| Feature         | .so (Shared Object)                                  | .a (Static Library / Archive)                         |
-| --------------- | ---------------------------------------------------- | ----------------------------------------------------- |
-| Linking Time    | At runtime or load time                              | At compile time                                       |
-| Executable Size | Smaller (only references the library)                | Larger (contains a copy of the library code)          |
-| Memory Usage    | Shared across multiple running processes             | Duplicated inside every program that uses it          |
-| Portability     | Requires the .so file to exist on the target machine | Fully self-contained; no external dependencies        |
-| Updates         | Updating the .so file updates all dependent apps     | Requires recompiling the application to apply updates |
+Example sources:
 
-## architecture-dependent
+```c
+/* mylib.h */
+#ifndef MYLIB_H
+#define MYLIB_H
+int add(int a, int b);
+#endif
+```
 
-**.a and .so files are also strictly platform-specific.**  
-Because they contain compiled machine code, they are bound to the specific hardware architecture and operating system environment they were built for.
+```c
+/* mylib.c */
+#include "mylib.h"
 
-### Why .a and .so Are Platform-Specific
+int add(int a, int b)
+{
+    return a + b;
+}
+```
 
-1. CPU Architecture: A .so or .a file compiled on an Intel (x86_64) PC contains x86 machine instructions.  
-   If you try to link or run it on an ARM-based device (like a Raspberry Pi or an Apple Silicon Mac),  
-   the CPU will not understand the instructions, resulting in errors during compilation or execution (such as Exec format error).
-2. Operating System and ABI (Application Binary Interface):  
-   + OS Compatibility: A Linux .so file cannot be used directly by Windows or macOS,  
-     because different operating systems use different binary formats (**Linux uses ELF, Windows uses PE, macOS uses Mach-O**).
-   + ABI Compatibility: Even within the same OS, they must match the system's ABI (e.g., 32-bit vs. 64-bit, or different calling conventions).
+```c
+/* main.c */
+#include <stdio.h>
+#include "mylib.h"
 
-### How They Differ from .ko Files (The Kernel Exception)
+int main(void)
+{
+    printf("2 + 3 = %d\n", add(2, 3));
+    return 0;
+}
+```
 
-While **.a, .so, and .ko** files are all platform-specific regarding the CPU,  
-.a and .so files have one major advantage over .ko files:
+### 3.1 Static library
 
-+ User Space vs. Kernel Space: .a and .so files typically run in user space. Because they rely on standard user-space APIs (like the C standard library, glibc),  
-  they are not tightly bound to a specific Linux kernel version.
-+ A .so file compiled for an Intel 64-bit Linux system running kernel 5.4 will usually still work fine on the same system running kernel 6.8,  
-  whereas a .ko file compiled for kernel 5.4 will almost certainly fail to load on kernel 6.8.
+```shell
+gcc -c mylib.c -o mylib.o              # compile to an object file
+ar rcs libmylib.a mylib.o              # r: insert/replace, c: create, s: write symbol index
+gcc main.c -L. -lmylib -o myapp        # -L: search dir, -lmylib -> libmylib.so or libmylib.a
+./myapp
+```
 
-## other library format
+Order matters with static libraries: the linker scans left to right, so put libraries **after** the files that use them (`gcc main.c -lmylib`, not `gcc -lmylib main.c`).
 
-while .a, .so, and .ko are the primary compiled library formats in Linux,  
-there are a few other auxiliary file types and metadata formats closely associated with libraries and the compilation process:
+### 3.2 Shared library
 
-1. **.o** Files (Object Files):  
-   + What it is: The raw output of a compiler (like GCC) after translating a single source code file (e.g., main.c) into machine code,  
-     but before it has been linked into an executable or packaged into a library.  
-   + Role: They are the fundamental building blocks. *A static library (.a) is essentially just a collection of bundled .o files.*
-2. **.la** Files (Libtool Archive):  
-   + What it is: Unlike the others, a .la file is not a binary file; it is a plain text configuration file.  
-   + Role: Created by the GNU Libtool package, it acts as a metadata container.  
-     It describes a library's dependencies, paths, and whether a shared (.so) or static (.a) version should be preferred by the build system.
-3. **.lo** Files (Libtool Object):  
-   + What it is: A specialized object file generated by GNU Libtool.  
-   + Role: It contains extra metadata required by Libtool to help compile code that can be safely turned into shared libraries across various Unix-like platforms.
-4. Versioned .so Files (e.g., `.so.1`, `.so.1.2.3`)
-   + What it is: A naming convention variation of the standard Shared Object (.so).  
-   + Role: Linux shared libraries often append version numbers to their extensions (e.g., libc.so.6).  
-     This allows multiple incompatible versions of the same library to coexist peacefully on the same system,  
-     letting programs link specifically to the version they were tested against.
+```shell
+gcc -c -fPIC mylib.c -o mylib.o                                  # position-independent code
+gcc -shared -Wl,-soname,libmylib.so.1 -o libmylib.so.1.0.0 mylib.o
+ln -sf libmylib.so.1.0.0 libmylib.so.1                           # soname link (used at run time)
+ln -sf libmylib.so.1 libmylib.so                                 # linker name (used by -lmylib)
 
-## Compile libraries with gcc
+gcc main.c -L. -lmylib -o myapp
+./myapp            # error while loading shared libraries: libmylib.so.1: cannot open shared object file
+```
 
-Compiling C source files into libraries allows you to reuse code efficiently.  
-Depending on your needs, you can create  
+The program builds, but the loader doesn't search the current directory. Fix it in one of these ways:
 
-+ a **Static Library (.a)** which is bundled directly into your executable at compile time,  
-+ a **Shared/Dynamic Library (.so)** which is loaded at runtime.
+```shell
+LD_LIBRARY_PATH=. ./myapp                                 # 1. quick test only
 
-### 1. Creating a Static Library (.a)
+gcc main.c -L. -lmylib -Wl,-rpath,'$ORIGIN' -o myapp      # 2. embed a search path: the executable's own directory
+./myapp
 
-A static library is essentially *a collection of object files* packed into a single archive.
+sudo cp libmylib.so.1.0.0 /usr/local/lib/                 # 3. install system-wide
+sudo ldconfig                                             #    creates the libmylib.so.1 link and updates /etc/ld.so.cache
+```
 
-1. Compile the C file into an Object File (.o): `gcc -c mylib.c -o mylib.o`
-2. Create the Static Library using **ar**: `ar rcs libmylib.a mylib.o`  
-   Use the archiving utility ar to **bundle** the object file into a .a file.  
-   + r: Insert the files into the archive (replacing older files if they exist).
-   + c: Create the archive if it does not already exist.
-   + s: Write an object-file index into the archive (speeds up linking).
-3. Link and Use the Static Library: `gcc main.c -L. -lmylib -o myapp`  
-   + -L.: Tells the compiler to look for libraries in the current directory (.).
-   + -lmylib: Links the library libmylib.a (*drop the lib prefix and the .a extension*).
++ `-fPIC` is required for shared libraries on most architectures, because the library can be mapped at any address.
++ `'$ORIGIN'` must be quoted so the shell doesn't expand it.
++ Don't put `LD_LIBRARY_PATH` in global startup files; it affects every program and can load the wrong library versions.
 
-### 2. Creating a Shared Library (.so)
+## 4. Library versions and the soname
 
-*A shared library is loaded dynamically by programs at runtime*, saving memory and disk space.
+A shared library usually has three names:
 
-1. Compile with Position Independent Code (**-fPIC**): `gcc -c -fPIC mylib.c -o mylib.o`  
-   Shared libraries must use Position Independent Code (PIC)  
-   so they can be loaded anywhere in memory. Compile your source file with -fPIC and -c:
-2. Create the Shared Library (.so): `gcc -shared -o libmylib.so mylib.o`  
-   Use the **-shared** flag to link the object file into a shared library.
-3. Link and Use the Shared Library: `gcc main.c -L. -lmylib -o myapp`  
-   Compile your main program, pointing it to the shared library just like the static library.
-4. Run the Executable:  
-   Because shared libraries are resolved at runtime,  
-   *the operating system needs to know where to find `libmylib.so` when you run myapp.*  
-   If you run it immediately, you might get a library-not-found error.  
-   To fix this temporarily for your current terminal session, add the current directory to your **library path**:  
-   `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.`
-   `./myapp`
+| Name | Example | Used by |
+| --- | --- | --- |
+| Real name (the file) | `libmylib.so.1.0.0` | The file on disk |
+| soname | `libmylib.so.1` | Stored in the library (`-Wl,-soname`) and copied into every program linked against it; the loader looks for this name |
+| Linker name | `libmylib.so` | `gcc -lmylib` at build time; on distributions it comes with the `-dev` package |
+
++ The **major number** (`.1`) changes only when the ABI breaks (removed functions, changed structs or signatures).
+  Programs keep using `libmylib.so.1` while `libmylib.so.2` can be installed next to it.
++ Minor updates (`1.0.0` → `1.1.0`) keep the same soname, so existing programs use the new file without a rebuild.
++ `ldconfig` reads `/etc/ld.so.conf` (and `/etc/ld.so.conf.d/*`), creates soname links, and builds the cache the loader uses.
+
+Loader search order (simplified): `DT_RPATH` (old-style, if no `RUNPATH`), `LD_LIBRARY_PATH`, `DT_RUNPATH`, `/etc/ld.so.cache`, then the default dirs (`/lib`, `/usr/lib`, and the multiarch dirs such as `/usr/lib/aarch64-linux-gnu`).
+
+## 5. Inspect libraries and programs
+
+```shell
+file libmylib.so.1.0.0        # ELF 64-bit LSB shared object, ARM aarch64, ...
+ldd ./myapp                   # shared libraries the program needs and where they resolve
+readelf -d ./myapp            # dynamic section: NEEDED, RUNPATH
+readelf -d libmylib.so.1.0.0 | grep SONAME
+nm -D libmylib.so.1.0.0       # exported dynamic symbols (T = function defined here)
+nm -C libmylib.a              # symbols of each object in the archive (-C demangles C++)
+ar t libmylib.a               # list the .o members
+objdump -T /lib/x86_64-linux-gnu/libc.so.6 | grep GLIBC_2.3   # versioned glibc symbols
+```
+
+`ldd` may run the program's loader; don't use it on untrusted binaries (`readelf -d` or `objdump -p` are safe alternatives).
+
+## 6. Libraries are platform-specific
+
+`.a` and `.so` files contain machine code, so they only work where they were built for:
+
++ **CPU architecture**: an x86-64 library can't be used on an ARM board (Raspberry Pi, RK3566). Linking fails with
+  `file in wrong format` / `skipping incompatible`; running an x86-64 program on ARM gives `Exec format error`.
+  Build for the target with a cross compiler (`aarch64-linux-gnu-gcc`) or on the board.
++ **Binary format and OS**: Linux uses ELF, Windows PE (`.dll`), macOS Mach-O (`.dylib`). Files can't be shared between them.
++ **ABI**: 32-bit vs 64-bit, hard-float vs soft-float on 32-bit ARM, C++ standard library and compiler ABI.
++ **C library**: a program or library built against glibc needs glibc on the target, and at least the **same or newer version** it was built with.
+  Running a binary built on a newer distribution on an older one fails with errors like `version 'GLIBC_2.34' not found`.
+  Build on the oldest system you support. Programs built against musl (Alpine) or Android's Bionic are not compatible with glibc either.
+
+**User-space vs kernel modules**: `.so` and `.a` files talk to the kernel only through system calls, and Linux keeps that interface stable.
+So a library built on a system with kernel 5.4 normally still works after upgrading to kernel 6.8 (if the C library is compatible).
+A `.ko` kernel module is different: it is tied to the exact kernel version and configuration it was built for (`vermagic`), see [kernel_module.md](kernel_module.md).
+
+## 7. Loading at run time: `dlopen()`
+
+Plugins are shared libraries loaded on request instead of at startup:
+
+```c
+#include <dlfcn.h>
+#include <stdio.h>
+
+int main(void)
+{
+    void *h = dlopen("./libmylib.so.1", RTLD_NOW);
+    if (h == NULL) {
+        fprintf(stderr, "%s\n", dlerror());
+        return 1;
+    }
+
+    int (*add)(int, int) = (int (*)(int, int))dlsym(h, "add");
+    if (add == NULL) {
+        fprintf(stderr, "%s\n", dlerror());
+        dlclose(h);
+        return 1;
+    }
+
+    printf("%d\n", add(2, 3));
+    dlclose(h);
+    return 0;
+}
+```
+
+Build with `gcc plugin.c -o plugin` (glibc 2.34 and newer have `dlopen` in libc; older versions need `-ldl`).
+Android's JNI `System.loadLibrary()` uses the same mechanism.
+
+## Related notes
+
++ [kernel_module.md](kernel_module.md): `.ko` kernel modules and why they are tied to one kernel
++ [../CMakeLists_syntax.md](../CMakeLists_syntax.md): `add_library(STATIC|SHARED)`, cross-compiling toolchain files
++ [../Android/NDK_intro.md](../Android/NDK_intro.md): `.so` libraries in Android apps (Bionic, per-ABI builds)
++ [apt_dpkg_cmd.md](apt_dpkg_cmd.md): installing `-dev` packages that provide headers and linker names
+
+## Reference
+
++ Program Library HOWTO (static, shared, dynamically loaded libraries): <https://tldp.org/HOWTO/Program-Library-HOWTO/>
++ `ld.so(8)` loader and search order: <https://man7.org/linux/man-pages/man8/ld.so.8.html>
++ `ldconfig(8)`: <https://man7.org/linux/man-pages/man8/ldconfig.8.html>
++ `dlopen(3)`: <https://man7.org/linux/man-pages/man3/dlopen.3.html>
++ GCC link options: <https://gcc.gnu.org/onlinedocs/gcc/Link-Options.html>

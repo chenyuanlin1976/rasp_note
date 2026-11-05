@@ -10,8 +10,8 @@ An Android project follows a standardized Gradle-based **directory structure** s
   + values/: Strings (strings.xml), colors, styles, and dimensions.
   + drawable/ & mipmap/: Vector assets, icons, and bitmap images.
   + navigation/: Jetpack Navigation graphs (if used).
-+ app/src/main/`AndroidManifest.xml`: The core configuration file declaring app components, permissions, and minimum API requirements.
-+ `build.gradle.kts` (Project & Module levels): Build scripts defining dependencies, compilation SDK versions, and build variants.
++ app/src/main/`AndroidManifest.xml`: The core configuration file declaring app components, permissions, and required features (see [AndroidManifest.md](AndroidManifest.md)).
++ `build.gradle.kts` (Project & Module levels): Build scripts defining dependencies, `namespace` and `applicationId`, SDK versions (`compileSdk`, `minSdk`, `targetSdk`), and build variants.
 + `settings.gradle.kts`: Defines global repositories and registers all sub-modules included in the workspace.
 
 ## Package Organization Strategies

@@ -248,6 +248,7 @@ Shell commands and `adb root` are for bring-up only. In a product:
 
 + [hw_control_sysfs.md](hw_control_sysfs.md), [HAL_libgpiod.md](HAL_libgpiod.md), [libgpiod_android.md](libgpiod_android.md)
 + [Led_control.md](Led_control.md)
++ [input_key_flow.md](input_key_flow.md): buttons as `gpio-keys` input devices, from the kernel to an app
 + [../Linux/libgpiod_sysfs_cmp.md](../Linux/libgpiod_sysfs_cmp.md), [../Linux/dts_node_leds.md](../Linux/dts_node_leds.md)
 
 ## Reference

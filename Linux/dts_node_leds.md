@@ -117,7 +117,7 @@ gpioset gpiochip4 29=1             # libgpiod v1 (v2: gpioset -c gpiochip4 29=1)
 RK3566 pin math: `GPIO<bank>_<group><n>` → `gpiochip<bank>`, offset = group × 8 + n (A=0 … D=3), so GPIO4_D5 = `gpiochip4` line 29.
 See [libgpiod_intro.md](libgpiod_intro.md) and [libgpiod_sysfs_cmp.md](libgpiod_sysfs_cmp.md).
 
-Other choices for non-LED pins: **buttons** belong in `gpio-keys` (input events on `/dev/input/event*`),
+Other choices for non-LED pins: **buttons** belong in `gpio-keys` (input events on `/dev/input/event*`, see [../Android/input_key_flow.md](../Android/input_key_flow.md)),
 and **power rails** in `regulator-fixed` (see [dts_node_fixedRegulator.md](dts_node_fixedRegulator.md)).
 
 ## 3. Checking the result
@@ -142,6 +142,7 @@ If `/sys/class/leds/<name>` is missing:
 + [HAL_DeviceTree.md](HAL_DeviceTree.md): from this node to a C++ HAL
 + [dts_conventions.md](dts_conventions.md): pinctrl details
 + [../Android/AIDL_impl_leds_cxx.md](../Android/AIDL_impl_leds_cxx.md), [../Android/HAL_libgpiod.md](../Android/HAL_libgpiod.md)
++ [../Android/input_key_flow.md](../Android/input_key_flow.md): a `gpio-keys` button from the kernel to an Android app
 
 ## Reference
 

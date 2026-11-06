@@ -50,7 +50,7 @@ library (AAR) manifests ─┘   (dependencies also add permissions and componen
 + AOSP apps (`android_app` in `Android.bp`) take `AndroidManifest.xml` from the module directory, and there the `package` attribute is still written in the file.
   See [Android_bp_intro.md](Android_bp_intro.md).
 
-Gradle settings: [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md) (section 4). Project layout: [dir_structure.md](dir_structure.md).
+Gradle settings: [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md) (section 4). Project layout: [app_project_structure.md](app_project_structure.md).
 
 ## 2. Element tree
 
@@ -236,7 +236,7 @@ More `aapt2` commands: [aapt_note.md](aapt_note.md). `dumpsys` and `pm`: [adb_sh
 
 ## Related notes
 
-+ [dir_structure.md](dir_structure.md), [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md), [Android_bp_intro.md](Android_bp_intro.md), [jar_aar_intro.md](jar_aar_intro.md)
++ [app_project_structure.md](app_project_structure.md), [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md), [Android_bp_intro.md](Android_bp_intro.md), [jar_aar_intro.md](jar_aar_intro.md)
 + [AIDL_binding.md](AIDL_binding.md), [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md), [ContentProvider_sharing.md](ContentProvider_sharing.md)
 + [sharedUserId.md](sharedUserId.md), [sign_apk.md](sign_apk.md), [aapt_note.md](aapt_note.md), [adb_shell_cmds.md](adb_shell_cmds.md)
 

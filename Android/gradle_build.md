@@ -131,7 +131,7 @@ android {
 ## Related notes
 
 + [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md), [Groovy_intro.md](Groovy_intro.md)
-+ [jar_aar_intro.md](jar_aar_intro.md), [dir_structure.md](dir_structure.md), [AndroidManifest.md](AndroidManifest.md)
++ [jar_aar_intro.md](jar_aar_intro.md), [app_project_structure.md](app_project_structure.md), [AndroidManifest.md](AndroidManifest.md)
 + [sign_apk.md](sign_apk.md), [JNI_android_studio.md](JNI_android_studio.md)
 
 ## Reference

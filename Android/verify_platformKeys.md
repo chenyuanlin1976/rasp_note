@@ -69,7 +69,7 @@ The same app signed with **your** platform key must install. That also confirms 
 ## Related notes
 
 + [sign_apk.md](sign_apk.md), [keytool_note.md](keytool_note.md), [sharedUserId.md](sharedUserId.md)
-+ [pre_installed_APKs.md](pre_installed_APKs.md)
++ [AOSP_preinstalled_apps.md](AOSP_preinstalled_apps.md)
 
 ## Reference
 

@@ -1,4 +1,4 @@
-# Regular expressions
+# Regular expression syntax
 
 A regular expression (regex) is a pattern that matches text. The core syntax is the same everywhere,
 but each tool uses one of a few **flavors**, and the differences (`\d`, `+`, `{}`, `( )`, lazy `*?`) cause most surprises.
@@ -10,7 +10,7 @@ Examples were run with GNU grep 3.11, GNU sed 4.9, gawk 5.2, mawk 1.3.4, Bash 5.
 | --- | --- | --- |
 | **BRE** (POSIX basic) | `grep`, `sed`, `vi` | `? + { } ( ) \|` are literal characters; write `\{ \} \( \)` for the operators. GNU adds `\+ \? \|` |
 | **ERE** (POSIX extended) | `grep -E`, `sed -E`, `awk`, Bash `[[ =~ ]]`, `find -regextype posix-extended` | `? + { } ( ) \|` are operators without backslashes |
-| **PCRE** / Perl-style | `grep -P`, Perl, PCRE2; Python `re`, JavaScript, Java, C++ `std::regex` are very similar | Adds `\d \w \s`, lazy quantifiers, lookarounds, non-capturing and named groups |
+| **PCRE** / Perl-style | `grep -P`, Perl, PCRE2; Python `re`, JavaScript, Java, C++ `std::regex` are very similar | Adds `\d \w \s`, lazy quantifiers, lookarounds, non-capturing and named groups (section 6) |
 
 When in doubt, use ERE (`grep -E`, `sed -E`): it is the same in GNU and BSD/macOS tools, apart from the GNU extensions noted below.
 
@@ -27,8 +27,10 @@ When in doubt, use ERE (`grep -E`, `sed -E`): it is the same in GNU and BSD/macO
 | `\w` / `\W` | Word character (`[[:alnum:]_]`) / other | PCRE; GNU grep, sed, gawk |
 | `\s` / `\S` | Whitespace (space, tab, newline, ...) / other | PCRE; GNU grep, sed, gawk |
 
-Inside brackets, most metacharacters are literal: `[.*+?]` matches one of those four characters.
-To include `]`, put it first (`[]x]`); to include `-`, put it first or last (`[a-]`); `^` is literal if it isn't first.
++ Inside brackets, most metacharacters are literal: `[.*+?]` matches one of those four characters.
+  To include `]`, put it first (`[]x]`); to include `-`, put it first or last (`[a-]`); `^` is literal if it isn't first.
++ Outside brackets, prefix a metacharacter with `\` to match it literally: `\.`, `\*`, `\[`, `\$`, `\\`.
+  In ERE, also `\+`, `\?`, `\(`, `\{`, `\|`. A class works too and is easier to read: `[.]`.
 
 **`\d` is not POSIX.** GNU grep (without `-P`), sed, and mawk don't reject it; they match a **literal `d`**:
 
@@ -40,7 +42,21 @@ echo "d5" | grep -o '[0-9]'     # 5  (portable)
 
 gawk warns about `\d` and also treats it as `d`; Bash `[[ =~ ]]` doesn't support it.
 
-## 3. Quantifiers
+## 3. Anchors and boundaries
+
+Anchors match a **position**, not a character.
+
+| Syntax | Matches at | Flavors |
+| --- | --- | --- |
+| `^` / `$` | Start / end of the line (grep, sed, awk work line by line) or string | All |
+| `\b` / `\B` | A word boundary / not a word boundary. `\bcat\b` matches "the cat", not "concat"; `\Bcat\B` matches inside "educate" | PCRE; GNU grep, sed |
+| `\<` / `\>` | Start / end of a word | GNU grep, sed, gawk |
+| `\y` | Word boundary (gawk uses `\y` because `\b` is backspace in awk) | gawk |
+| `\A`, `\z`, `(?m)` | Start / end of the whole string, multiline mode (`^`/`$` at each line) | PCRE, Python |
+
+`grep -w pattern` is the simplest way to match whole words.
+
+## 4. Quantifiers
 
 A quantifier repeats the item before it (a character, a class, or a group).
 
@@ -64,20 +80,6 @@ echo '<a><b>' | grep -oP '<.+?>'      # <a> and <b>  (PCRE lazy)
 echo '<a><b>' | grep -oE '<[^>]+>'    # <a> and <b>  (portable)
 ```
 
-## 4. Anchors and boundaries
-
-Anchors match a **position**, not a character.
-
-| Syntax | Matches at | Flavors |
-| --- | --- | --- |
-| `^` / `$` | Start / end of the line (grep, sed, awk work line by line) or string | All |
-| `\b` / `\B` | A word boundary / not a word boundary. `\bcat\b` matches "the cat", not "concat"; `\Bcat\B` matches inside "educate" | PCRE; GNU grep, sed |
-| `\<` / `\>` | Start / end of a word | GNU grep, sed, gawk |
-| `\y` | Word boundary (gawk uses `\y` because `\b` is backspace in awk) | gawk |
-| `\A`, `\z`, `(?m)` | Start / end of the whole string, multiline mode (`^`/`$` at each line) | PCRE, Python |
-
-`grep -w pattern` is the simplest way to match whole words.
-
 ## 5. Groups, alternation, back-references
 
 | ERE / PCRE | BRE | Meaning |
@@ -93,7 +95,9 @@ echo 2026-11-03 | sed -E 's/([0-9]{4})-([0-9]{2})-([0-9]{2})/\3.\2.\1/'   # 03.1
 echo abc | sed 's/b/[&]/'                                                # a[b]c  (& = the whole match)
 ```
 
-Perl-style flavors only:
+## 6. Perl-style extensions
+
+Only in PCRE (`grep -P`), Perl, Python, JavaScript, Java, and similar flavors. Lazy quantifiers are in section 4.
 
 | Syntax | Meaning |
 | --- | --- |
@@ -104,17 +108,15 @@ Perl-style flavors only:
 | `\K` (PCRE) | Drop what was matched so far from the result: `grep -oP 'key=\K\w+'` prints only the value |
 | `(?i)` | Flags inside the pattern: ignore case (also `m` multiline, `s` dot matches newline) |
 
-## 6. Escaping and quoting
+## 7. Regexes in the shell
 
-+ Prefix a metacharacter with `\` to match it literally: `\.`, `\*`, `\[`, `\$`, `\\`. In ERE, also `\+`, `\?`, `\(`, `\{`, `\|`.
-  A class works too and is easier to read: `[.]`.
++ Put patterns in **single quotes**, so the shell doesn't expand `$`, `*`, or `\` first ([quotes_note.md](quotes_note.md)).
 + For a fixed string with no regex at all, use `grep -F` (`grep -F 'a.b[1]'`).
-+ Put patterns in **single quotes** in the shell, so the shell doesn't expand `$`, `*`, or `\` first ([quotes_note.md](quotes_note.md)).
 + `\t` and `\n` are understood by GNU sed and PCRE, but not by `grep` (BRE/ERE). Use Bash's `$'\t'` there: `grep $'a\tb'`.
 + In Bash, store the pattern in a variable and use it **unquoted** on the right of `=~`; quoting it makes it a literal string:
   `re='^v([0-9]+)\.([0-9]+)$'; [[ $s =~ $re ]] && echo "${BASH_REMATCH[1]}"`.
 
-## 7. Common patterns (ERE)
+## 8. Common patterns (ERE)
 
 | Pattern | Matches |
 | --- | --- |

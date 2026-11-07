@@ -40,7 +40,7 @@ Notes:
 
 ## 2. Core properties every device node uses
 
-+ `compatible`: selects the driver (see [dts_driver.md](dts_driver.md)).
++ `compatible`: selects the driver (see [dts_driver_probe.md](dts_driver_probe.md)).
 + `reg`: register region(s) or bus address.
 + `interrupts` / `interrupts-extended`.
 + `status`: `"okay"` or `"disabled"`.
@@ -112,7 +112,7 @@ Rockchip uses its own compact format: `rockchip,pins = <bank pin function &confi
 ```
 
 `RK_PA0`…`RK_PD7` are pin numbers 0–31 within a bank, `RK_FUNC_GPIO` is mux 0, and `&pcfg_pull_none`/`&pcfg_pull_up`/... are config nodes from the SoC `.dtsi`.
-See [dts_node_leds.md](dts_node_leds.md) for a complete LED / GPIO example.
+See [dts_node_led_vs_gpio.md](dts_node_led_vs_gpio.md) for a complete LED / GPIO example.
 
 ## 4. Power: regulators instead of raw enable GPIOs
 
@@ -120,11 +120,11 @@ When a GPIO switches a **power rail**, describe it as a regulator (for example `
 The consumer driver then calls `regulator_enable()`.
 The regulator framework handles reference counting (several consumers on one rail), delays, and sequencing.
 A GPIO-switched fixed regulator is part of the regulator framework too, not an alternative to it.
-See [dts_node_fixedRegulator.md](dts_node_fixedRegulator.md).
+See [dts_node_regulator_fixed.md](dts_node_regulator_fixed.md).
 
 ## Related notes
 
-+ [dts_intro.md](dts_intro.md), [dts_syntax.md](dts_syntax.md), [dts_driver.md](dts_driver.md)
++ [dts_intro.md](dts_intro.md), [dts_syntax.md](dts_syntax.md), [dts_driver_probe.md](dts_driver_probe.md)
 
 ## Reference
 

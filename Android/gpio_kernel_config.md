@@ -52,12 +52,12 @@ The full rules are in [gpio_control.md](gpio_control.md) (section 5.3).
 
 If a driver should own the pin (LED, button, regulator enable), describe it as that driver's node instead:
 
-+ LED: `gpio-leds` ([../Linux/dts_node_leds.md](../Linux/dts_node_leds.md))
++ LED: `gpio-leds` ([../Linux/dts_node_led_vs_gpio.md](../Linux/dts_node_led_vs_gpio.md))
 + Button: `gpio-keys` ([input_key_flow.md](input_key_flow.md))
-+ Power rail: `regulator-fixed` ([../Linux/dts_node_fixedRegulator.md](../Linux/dts_node_fixedRegulator.md))
++ Power rail: `regulator-fixed` ([../Linux/dts_node_regulator_fixed.md](../Linux/dts_node_regulator_fixed.md))
 + Fixed level at boot that nobody changes: `gpio-hog` in the GPIO controller node
 
-Syntax and the provider/consumer pattern: [../Linux/dts_conventions.md](../Linux/dts_conventions.md).
+Syntax and the provider/consumer pattern: [../Linux/dts_provider_consumer.md](../Linux/dts_provider_consumer.md).
 
 ## 3. Kernel config
 
@@ -130,7 +130,7 @@ adb shell gpioinfo gpiochip4                                          # line 10 
 + [gpio_control.md](gpio_control.md): using GPIOs and LEDs at run time
 + [libgpiod_android.md](libgpiod_android.md), [HAL_libgpiod.md](HAL_libgpiod.md), [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md)
 + [AOSP_build.md](AOSP_build.md), [Bazel_intro.md](Bazel_intro.md): building AOSP and the kernel (Kleaf)
-+ [../Linux/kernel_build.md](../Linux/kernel_build.md), [../Linux/dts_intro.md](../Linux/dts_intro.md), [../Linux/dts_conventions.md](../Linux/dts_conventions.md)
++ [../Linux/kernel_build.md](../Linux/kernel_build.md), [../Linux/dts_intro.md](../Linux/dts_intro.md), [../Linux/dts_provider_consumer.md](../Linux/dts_provider_consumer.md)
 
 ## Reference
 

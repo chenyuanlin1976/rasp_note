@@ -81,7 +81,7 @@ it can be a `fixed-clock` in the SoC DTSI, with its frequency set by each board.
 
 ## Related notes
 
-+ [dts_syntax.md](dts_syntax.md), [dts_conventions.md](dts_conventions.md), [dts_intro.md](dts_intro.md)
++ [dts_syntax.md](dts_syntax.md), [dts_provider_consumer.md](dts_provider_consumer.md), [dts_intro.md](dts_intro.md)
 
 ## Reference
 

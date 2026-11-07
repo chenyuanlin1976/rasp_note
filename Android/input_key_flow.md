@@ -183,7 +183,7 @@ adb logcat -s InputReader InputDispatcher           # device add/remove, mapping
 
 + [gpio_control.md](gpio_control.md): GPIO and LED control on the RK3566 board
 + [ADC_values.md](ADC_values.md): reading the RK3566 SARADC (the ADC that `adc-keys` buttons use)
-+ [../Linux/dts_node_leds.md](../Linux/dts_node_leds.md): `gpio-leds`, and when to use `gpio-keys` instead
++ [../Linux/dts_node_led_vs_gpio.md](../Linux/dts_node_led_vs_gpio.md): `gpio-leds`, and when to use `gpio-keys` instead
 
 ## Reference
 

@@ -55,7 +55,7 @@ You get triggers, a stable sysfs name, and no custom code for blinking.
 + The container node (`leds`) isn't a hardware controller. It's a node that the `leds-gpio` driver binds to,
   and each child (`led-*`) is one LED.
   The label `leds:` is only needed if another file wants to extend it with `&leds { ... }`.
-+ Child node names should be `led-<n>` or `led-<name>` (dashes, no underscores; see [dts_codingStyle.md](dts_codingStyle.md)).
++ Child node names should be `led-<n>` or `led-<name>` (dashes, no underscores; see [dts_coding_style.md](dts_coding_style.md)).
   The sysfs name comes from `label`, or from `color`/`function`.
 + Kernel config: `CONFIG_LEDS_GPIO`, plus `CONFIG_LEDS_TRIGGER_*` for each trigger you use.
 
@@ -114,11 +114,14 @@ gpioinfo gpiochip4                 # line 29 "RELAY_EN" unused
 gpioset gpiochip4 29=1             # libgpiod v1 (v2: gpioset -c gpiochip4 29=1)
 ```
 
+With libgpiod v1, `gpioset` releases the line when it exits, so the value isn't guaranteed to stay.
+Use `--mode=wait` (v1) or v2's `gpioset`, which holds the line until it's stopped, or let a daemon keep the line requested.
+
 RK3566 pin math: `GPIO<bank>_<group><n>` → `gpiochip<bank>`, offset = group × 8 + n (A=0 … D=3), so GPIO4_D5 = `gpiochip4` line 29.
 See [libgpiod_intro.md](libgpiod_intro.md) and [libgpiod_sysfs_cmp.md](libgpiod_sysfs_cmp.md).
 
 Other choices for non-LED pins: **buttons** belong in `gpio-keys` (input events on `/dev/input/event*`, see [../Android/input_key_flow.md](../Android/input_key_flow.md)),
-and **power rails** in `regulator-fixed` (see [dts_node_fixedRegulator.md](dts_node_fixedRegulator.md)).
+and **power rails** in `regulator-fixed` (see [dts_node_regulator_fixed.md](dts_node_regulator_fixed.md)).
 
 ## 3. Checking the result
 
@@ -140,7 +143,7 @@ If `/sys/class/leds/<name>` is missing:
 
 + [sysfs_leds.md](sysfs_leds.md): LED class attributes and triggers
 + [HAL_DeviceTree.md](HAL_DeviceTree.md): from this node to a C++ HAL
-+ [dts_conventions.md](dts_conventions.md): pinctrl details
++ [dts_provider_consumer.md](dts_provider_consumer.md): pinctrl details
 + [../Android/AIDL_ndk_led_sysfs.md](../Android/AIDL_ndk_led_sysfs.md), [../Android/HAL_libgpiod.md](../Android/HAL_libgpiod.md)
 + [../Android/input_key_flow.md](../Android/input_key_flow.md): a `gpio-keys` button from the kernel to an Android app
 

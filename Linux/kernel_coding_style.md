@@ -157,7 +157,7 @@ In drivers, `devm_*` allocations and helpers often remove the need for most clea
 
 ## Related notes
 
-+ [kernel_build.md](kernel_build.md), [kernel_module.md](kernel_module.md), [dts_codingStyle.md](dts_codingStyle.md)
++ [kernel_build.md](kernel_build.md), [kernel_module.md](kernel_module.md), [dts_coding_style.md](dts_coding_style.md)
 
 ## Reference
 

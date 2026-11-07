@@ -113,7 +113,7 @@ They are built with Kleaf/DDK ([../Android/Bazel_intro.md](../Android/Bazel_intr
 
 ## Related notes
 
-+ [kernel_build.md](kernel_build.md), [kernel_coding_style.md](kernel_coding_style.md), [dts_driver.md](dts_driver.md)
++ [kernel_build.md](kernel_build.md), [kernel_coding_style.md](kernel_coding_style.md), [dts_driver_probe.md](dts_driver_probe.md)
 + [sysfs_intro.md](sysfs_intro.md): `/sys/module/` shows loaded modules and their parameters
 
 ## Reference

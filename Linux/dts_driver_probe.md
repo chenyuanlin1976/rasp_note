@@ -3,16 +3,9 @@
 The device tree describes hardware, and drivers contain the logic.
 This note shows how the kernel connects them: it creates devices from the tree, matches them to drivers through `compatible`,
 and the drivers read their resources in `probe()`.
+How `.dts` and `.dtsi` files are layered is in [dts_intro.md](dts_intro.md#3-file-layering).
 
-## 1. `.dtsi` vs `.dts`
-
-+ **`.dtsi`** (SoC include): the blocks inside the chip, such as CPUs, interrupt controller, timers, UART/I2C/SPI controllers, and GPIO banks.
-  Most peripherals are `status = "disabled"` here.
-+ **`.dts`** (board): includes the `.dtsi`, sets `status = "okay"` on the blocks the board uses, and adds the board's own devices (PMIC, sensors, LEDs, regulators).
-
-More in [dts_intro.md](dts_intro.md).
-
-## 2. From DTB to device objects
+## 1. From DTB to device objects
 
 1. **Build**: `cpp` + `dtc` turn `.dts` + `.dtsi` into a `.dtb`.
 2. **Boot**: the bootloader loads the DTB and passes its address to the kernel. The kernel *unflattens* it into `struct device_node`s.
@@ -25,7 +18,7 @@ More in [dts_intro.md](dts_intro.md).
 5. **Dependencies**: if `probe()` needs a resource that isn't ready yet (a clock, regulator, or GPIO), it returns **`-EPROBE_DEFER`**, and the kernel retries later.
    `fw_devlink` (`fw_devlink=on`, the default) orders probing from the phandle references, so most of this happens automatically.
 
-## 3. Matching through `compatible`
+## 2. Matching through `compatible`
 
 ```dts
 /* SoC .dtsi */
@@ -65,7 +58,7 @@ module_platform_driver(my_i2c_driver);
   so one driver can support several chip variants.
 + Without `MODULE_DEVICE_TABLE`, a modular driver doesn't load automatically, even when the DT node is correct.
 
-## 4. Reading resources in `probe()`
+## 3. Reading resources in `probe()`
 
 Use the **managed** (`devm_*`) and **firmware-agnostic** helpers. They are released automatically on unbind,
 and the `device_property_*` ones also work with ACPI.
@@ -115,7 +108,7 @@ static int my_i2c_probe(struct platform_device *pdev)
 | scalar/string properties | `device_property_read_u32/_bool/_string()` (or the DT-only `of_property_read_*()`) |
 | child nodes | `device_for_each_child_node(dev, child)` |
 
-## 5. Example: a GPIO consumer, with polarity handled by the device tree
+## 4. Example: a GPIO consumer, with polarity handled by the device tree
 
 ```dts
 sensor@68 {
@@ -156,7 +149,7 @@ static int my_sensor_probe(struct i2c_client *client)
 + The descriptor is released automatically (`devm_`) when the driver unbinds.
   Integer GPIO numbers (`gpio_request()`, `of_get_named_gpio()`) are the deprecated legacy API.
 
-## 6. Debugging "my driver doesn't probe"
+## 5. Debugging "my driver doesn't probe"
 
 ```shell
 ls /sys/firmware/devicetree/base/...                  # is the node in the LIVE tree (right DTB loaded)?
@@ -167,7 +160,7 @@ cat /sys/kernel/debug/devices_deferred                # stuck in -EPROBE_DEFER? 
 dmesg | grep -i -E "fe5a0000|probe|defer"
 ```
 
-## Summary
+## 6. Summary
 
 1. Describe the SoC block in the `.dtsi` and enable it in the board `.dts`.
 2. `dtc` builds the `.dtb`, and the bootloader passes it to the kernel.
@@ -177,7 +170,7 @@ dmesg | grep -i -E "fe5a0000|probe|defer"
 
 ## Related notes
 
-+ [dts_intro.md](dts_intro.md), [dts_syntax.md](dts_syntax.md), [dts_conventions.md](dts_conventions.md)
++ [dts_intro.md](dts_intro.md), [dts_syntax.md](dts_syntax.md), [dts_provider_consumer.md](dts_provider_consumer.md)
 + [HAL_DeviceTree.md](HAL_DeviceTree.md)
 
 ## Reference

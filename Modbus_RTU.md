@@ -133,7 +133,7 @@ Use 2 ports (two USB adapters wired A-to-A, B-to-B, or TX-to-RX for RS-232), or 
 ## Related notes
 
 + [Modbus_intro.md](Modbus_intro.md), [Modbus_SunSpec.md](Modbus_SunSpec.md)
-+ [USB_CDC.md](USB_CDC.md), [Linux/dts_conventions.md](Linux/dts_conventions.md)
++ [USB_CDC.md](USB_CDC.md), [Linux/dts_provider_consumer.md](Linux/dts_provider_consumer.md)
 
 ## Reference
 

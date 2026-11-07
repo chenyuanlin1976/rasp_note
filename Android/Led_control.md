@@ -144,7 +144,7 @@ Check this on the target with `ls -lZ` after `trigger=timer`.
 
 ## Related notes
 
-+ [../Linux/sysfs_leds.md](../Linux/sysfs_leds.md), [../Linux/dts_node_leds.md](../Linux/dts_node_leds.md)
++ [../Linux/sysfs_leds.md](../Linux/sysfs_leds.md), [../Linux/dts_node_led_vs_gpio.md](../Linux/dts_node_led_vs_gpio.md)
 + [gpio_control.md](gpio_control.md), [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md)
 + [hw_control_sysfs.md](hw_control_sysfs.md), [HAL_sysfsNodes.md](HAL_sysfsNodes.md), [neverallow_error.md](neverallow_error.md)
 + [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md): exposing the LED to 3rd-party apps through a system app

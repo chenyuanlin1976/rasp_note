@@ -93,7 +93,7 @@ And it shouldn't: the consumer driver owns the rail.
 If you really need user-space control, there are 3 options:
 
 1. **No kernel consumer**: describe the pin as a plain GPIO (not a regulator) and switch it from a daemon or HAL with libgpiod
-   (see [dts_node_leds.md](dts_node_leds.md#2-as-a-plain-gpio) and [../Android/AIDL_HAL_gpio.md](../Android/AIDL_HAL_gpio.md)).
+   (see [dts_node_led_vs_gpio.md](dts_node_led_vs_gpio.md#2-as-a-plain-gpio) and [../Android/AIDL_HAL_gpio.md](../Android/AIDL_HAL_gpio.md)).
 2. **Kernel `userspace-consumer` regulator driver** (`CONFIG_REGULATOR_USERSPACE_CONSUMER`).
    A consumer node creates a device with a **writable** `state` attribute that enables or disables its supply.
    In current kernels, the node is described as a power output (binding `regulator-output.yaml`):
@@ -118,8 +118,8 @@ Check the schematic for the enable polarity, the rail voltage, and any power-seq
 
 ## Related notes
 
-+ [dts_conventions.md](dts_conventions.md) (`-supply` convention), [dts_driver.md](dts_driver.md)
-+ [dts_node_leds.md](dts_node_leds.md), [dts_syntax.md](dts_syntax.md)
++ [dts_provider_consumer.md](dts_provider_consumer.md) (`-supply` convention), [dts_driver_probe.md](dts_driver_probe.md)
++ [dts_node_led_vs_gpio.md](dts_node_led_vs_gpio.md), [dts_syntax.md](dts_syntax.md)
 
 ## Reference
 

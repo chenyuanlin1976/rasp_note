@@ -79,7 +79,7 @@ Within one driver's `of_match_table`, the kernel picks the entry that matches th
 Across drivers, the first registered driver that matches any string binds.
 So a specific driver and a generic driver should not both claim the same hardware, or the result depends on load order.
 Vendor prefixes are registered in `Documentation/devicetree/bindings/vendor-prefixes.yaml` (`fsl`, `st`, `ti`, `rockchip`, `ns`, ...).
-See [dts_driver.md](dts_driver.md).
+See [dts_driver_probe.md](dts_driver_probe.md).
 
 On the root node, `compatible` identifies the **board**, then the SoC (`"mycompany,my-board", "rockchip,rk3566"`).
 `model` is a human-readable board name.
@@ -175,7 +175,7 @@ dev { interrupt-parent = <&pic>; };   /* dtc writes pic's phandle number here */
 
 ## Related notes
 
-+ [dts_intro.md](dts_intro.md), [dts_conventions.md](dts_conventions.md) (GPIO/regulator/clock/pinctrl conventions), [dts_codingStyle.md](dts_codingStyle.md)
++ [dts_intro.md](dts_intro.md), [dts_provider_consumer.md](dts_provider_consumer.md) (GPIO/regulator/clock/pinctrl conventions), [dts_coding_style.md](dts_coding_style.md)
 
 ## Reference
 

@@ -149,7 +149,7 @@ adb shell "echo heartbeat > /sys/class/leds/dvb-rf/trigger"      # blink in the 
 ```
 
 These pins are **owned by `leds-gpio`**, so exporting 123 or 148 through sysfs fails with `EBUSY`. That is expected.
-More on the LED class: [../Linux/sysfs_leds.md](../Linux/sysfs_leds.md) and [../Linux/dts_node_leds.md](../Linux/dts_node_leds.md).
+More on the LED class: [../Linux/sysfs_leds.md](../Linux/sysfs_leds.md) and [../Linux/dts_node_led_vs_gpio.md](../Linux/dts_node_led_vs_gpio.md).
 
 ### RGB LEDs
 
@@ -219,7 +219,7 @@ For user space to request a pin, **no kernel consumer may own it**:
 ```
 
 Optionally, add `gpio-line-names` to `&gpio4` so that `gpioinfo`, `gpiofind` (v1), and the v2 tools can use a name.
-The full example is in [../Linux/dts_node_leds.md](../Linux/dts_node_leds.md#2-as-a-plain-gpio).
+The full example is in [../Linux/dts_node_led_vs_gpio.md](../Linux/dts_node_led_vs_gpio.md#2-as-a-plain-gpio).
 
 ### 5.4 Common errors
 
@@ -250,7 +250,7 @@ Shell commands and `adb root` are for bring-up only. In a product:
 + [Led_control.md](Led_control.md)
 + [gpio_kernel_config.md](gpio_kernel_config.md): device tree, kernel config and build for a GPIO
 + [input_key_flow.md](input_key_flow.md): buttons as `gpio-keys` input devices, from the kernel to an app
-+ [../Linux/libgpiod_sysfs_cmp.md](../Linux/libgpiod_sysfs_cmp.md), [../Linux/dts_node_leds.md](../Linux/dts_node_leds.md)
++ [../Linux/libgpiod_sysfs_cmp.md](../Linux/libgpiod_sysfs_cmp.md), [../Linux/dts_node_led_vs_gpio.md](../Linux/dts_node_led_vs_gpio.md)
 
 ## Reference
 

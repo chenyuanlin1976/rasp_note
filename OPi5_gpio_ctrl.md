@@ -66,7 +66,7 @@ Check that your board is in Blinka's supported list.
 
 ## Related notes
 
-+ [Linux/libgpiod_intro.md](Linux/libgpiod_intro.md), [Linux/dts_node_leds.md](Linux/dts_node_leds.md) (Rockchip pinctrl/GPIO in DT)
++ [Linux/libgpiod_intro.md](Linux/libgpiod_intro.md), [Linux/dts_node_led_vs_gpio.md](Linux/dts_node_led_vs_gpio.md) (Rockchip pinctrl/GPIO in DT)
 + [RPi5_gpio_ctrl.md](RPi5_gpio_ctrl.md), [NV_jetson_gpio_ctrl.md](NV_jetson_gpio_ctrl.md), [orangePi.md](orangePi.md)
 
 ## Reference

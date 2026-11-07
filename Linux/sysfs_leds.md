@@ -10,7 +10,7 @@ LEDs did **not**: sysfs is the intended, standard interface for them, and there 
 A driver registers each LED with `led_classdev_register()`. Common drivers:
 
 + **`leds-gpio`**: an LED on a GPIO pin, described in the device tree (`compatible = "gpio-leds"`).
-  See [HAL_DeviceTree.md](HAL_DeviceTree.md) and [dts_node_leds.md](dts_node_leds.md).
+  See [HAL_DeviceTree.md](HAL_DeviceTree.md) and [dts_node_led_vs_gpio.md](dts_node_led_vs_gpio.md).
 + **`leds-pwm`**: dimmable LEDs on a PWM channel (`compatible = "pwm-leds"`).
 + **PMIC / LED-controller drivers**: I2C LED drivers, keyboard backlights, RGB controllers (multicolor class).
 
@@ -96,7 +96,7 @@ If you still need another interface:
 
 + [sysfs_intro.md](sysfs_intro.md): sysfs in general
 + [HAL_DeviceTree.md](HAL_DeviceTree.md): `gpio-leds` in the device tree, and a C++ HAL over `/sys/class/leds`
-+ [dts_node_leds.md](dts_node_leds.md), [dts_conventions.md](dts_conventions.md)
++ [dts_node_led_vs_gpio.md](dts_node_led_vs_gpio.md), [dts_provider_consumer.md](dts_provider_consumer.md)
 + [../Android/Led_control.md](../Android/Led_control.md): LEDs on Android (Lights HAL, vendor HAL, kernel blinking)
 
 ## Reference

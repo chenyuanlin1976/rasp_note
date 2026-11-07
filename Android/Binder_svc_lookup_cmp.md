@@ -1,4 +1,4 @@
-# ServiceConnection vs ServiceManager
+# Binder Service Lookup: bindService() vs ServiceManager
 
 Both give you an `IBinder` to another process, but they are different mechanisms for different users:
 

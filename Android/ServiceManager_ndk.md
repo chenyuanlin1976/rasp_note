@@ -127,7 +127,7 @@ Error handling for the calls themselves (`ScopedAStatus`, `EX_SERVICE_SPECIFIC`)
 | `isDeclared(name)` | `AServiceManager_isDeclared` |
 
 Only code built with the platform (`platform_apis: true`) can call these. Apps use `bindService()` and `ServiceConnection` instead.
-See [ServiceConnection_vs_ServiceManager.md](ServiceConnection_vs_ServiceManager.md).
+See [Binder_svc_lookup_cmp.md](Binder_svc_lookup_cmp.md).
 
 ## 7. Debug
 
@@ -148,7 +148,7 @@ adb logcat -b all | grep -E 'servicemanager|avc: denied .*service_manager'
 ## Related notes
 
 + [AIDL_HAL_impl.md](AIDL_HAL_impl.md), [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md), [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md)
-+ [VINTF_intro.md](VINTF_intro.md), [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md), [ServiceConnection_vs_ServiceManager.md](ServiceConnection_vs_ServiceManager.md)
++ [VINTF_intro.md](VINTF_intro.md), [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md), [Binder_svc_lookup_cmp.md](Binder_svc_lookup_cmp.md)
 + [hw_control_sysfs.md](hw_control_sysfs.md), [HAL_libgpiod.md](HAL_libgpiod.md), [SELinux_policy.md](SELinux_policy.md)
 
 ## Reference

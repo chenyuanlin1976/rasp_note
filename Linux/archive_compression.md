@@ -108,7 +108,7 @@ unzip -o archive.zip                 # overwrite without asking
 
 + [rsync_demo.md](rsync_demo.md): copying and syncing directories
 + [bootableUsbDrive.md](bootableUsbDrive.md): writing images to USB drives and SD cards
-+ [../shellScript/shellScript_recipes.md](../shellScript/shellScript_recipes.md): loops over files (e.g. gzip every log)
++ [../shellScript/bash_recipes.md](../shellScript/bash_recipes.md): loops over files (e.g. gzip every log)
 + [../Android/jar_aar_intro.md](../Android/jar_aar_intro.md): JAR and AAR, which are zip files
 
 ## Reference

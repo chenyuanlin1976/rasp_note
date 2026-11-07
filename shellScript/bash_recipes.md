@@ -1,6 +1,6 @@
 # Shell script recipes
 
-Small, tested patterns for everyday scripts (GNU Bash 5.2). Language basics are in [shellScript_basic.md](shellScript_basic.md).
+Small, tested patterns for everyday scripts (GNU Bash 5.2). Language basics are in [bash_basic.md](bash_basic.md).
 
 ## 1. Read a file
 
@@ -113,7 +113,7 @@ shift $((OPTIND - 1))              # "$@" now holds the remaining arguments
 
 ## Related notes
 
-+ [shellScript_basic.md](shellScript_basic.md), [shellScript_brackets.md](shellScript_brackets.md), [quotes_note.md](quotes_note.md), [fallbacks.md](fallbacks.md)
++ [bash_basic.md](bash_basic.md), [brackets.md](brackets.md), [quotes_note.md](quotes_note.md), [fallbacks.md](fallbacks.md)
 + [grep_intro.md](grep_intro.md), [awk_intro.md](awk_intro.md), [sed_intro.md](sed_intro.md)
 
 ## Reference

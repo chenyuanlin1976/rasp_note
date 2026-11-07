@@ -8,9 +8,9 @@ All examples were run with GNU Bash 5.2.
 
 | Topic | Note |
 | --- | --- |
-| Brackets: `()`, `$()`, `(( ))`, `[ ]`, `[[ ]]`, `{}`, `${}` | [shellScript_brackets.md](shellScript_brackets.md) |
+| Brackets: `()`, `$()`, `(( ))`, `[ ]`, `[[ ]]`, `{}`, `${}` | [brackets.md](brackets.md) |
 | Quoting | [quotes_note.md](quotes_note.md) |
-| Ready-made recipes (read a file, rename files, `source`, ...) | [shellScript_recipes.md](shellScript_recipes.md) |
+| Ready-made recipes (read a file, rename files, `source`, ...) | [bash_recipes.md](bash_recipes.md) |
 | Text tools | [grep_intro.md](grep_intro.md), [sed_intro.md](sed_intro.md), [awk_intro.md](awk_intro.md) |
 
 ## 1. A script
@@ -51,7 +51,7 @@ export PATH="$HOME/bin:$PATH"   # visible to child processes
 
 + Values are strings. Arithmetic contexts (`$(( ))`, `-eq`, `declare -i`) treat them as integers.
 + Use lower-case names for script variables. Upper-case names are used by the environment (`PATH`, `HOME`, ...).
-+ Expansions and string operations (`${var:-default}`, `${var%.*}`, ...) are in [shellScript_brackets.md](shellScript_brackets.md#5-parameter-expansion).
++ Expansions and string operations (`${var:-default}`, `${var%.*}`, ...) are in [brackets.md](brackets.md#5-parameter-expansion).
 
 ### 2.1 Arrays *(Bash)*
 
@@ -227,7 +227,7 @@ Use `printf` instead of `echo -e` for escapes and formats: `printf '%s=%d\n' "$n
 
 ## Related notes
 
-+ [shellScript_brackets.md](shellScript_brackets.md), [quotes_note.md](quotes_note.md), [shellScript_recipes.md](shellScript_recipes.md), [fallbacks.md](fallbacks.md)
++ [brackets.md](brackets.md), [quotes_note.md](quotes_note.md), [bash_recipes.md](bash_recipes.md), [fallbacks.md](fallbacks.md)
 + [grep_intro.md](grep_intro.md), [sed_intro.md](sed_intro.md), [awk_intro.md](awk_intro.md), [linux_cmds.md](linux_cmds.md)
 
 ## Reference

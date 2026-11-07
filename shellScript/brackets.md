@@ -15,7 +15,7 @@ All examples were run with GNU Bash 5.2.
 | `{ cmds; }` | Group | Runs `cmds` in the current shell; changes survive | 4.1 |
 | `{a,b}`, `{1..5}` | Brace expansion | Generates words | 4.2 |
 | `${var...}` | Parameter expansion | Value of a variable, with optional operations | 5 |
-| `arr=( ... )`, `${arr[i]}` | Array *(Bash)* | See [shellScript_basic.md](shellScript_basic.md#21-arrays-bash) | |
+| `arr=( ... )`, `${arr[i]}` | Array *(Bash)* | See [bash_basic.md](bash_basic.md#21-arrays-bash) | |
 
 ## 1. Spaces
 
@@ -69,7 +69,7 @@ legs=100
 echo "rabbits: $(( legs / 4 ))"   # expansion: substitutes the value (25)
 ```
 
-+ Integers only. Inside, variables don't need `$`. See [shellScript_basic.md](shellScript_basic.md#7-arithmetic).
++ Integers only. Inside, variables don't need `$`. See [bash_basic.md](bash_basic.md#7-arithmetic).
 + `(( expr ))` returns status 1 when the value is 0. With `set -e`, `i=0; (( i++ ))` exits the script; use `i=$(( i + 1 ))`.
 
 ## 3. Square brackets
@@ -96,7 +96,7 @@ ver="6.14"
 
 + No word splitting or globbing inside `[[ ]]`, so unquoted variables are safe there.
 + Quote the right side of `==` to compare literally: `[[ $a == "$b" ]]`.
-+ Regex syntax: [regex_syntax.md](regex_syntax.md). Operator table: [shellScript_basic.md](shellScript_basic.md#4-exit-status-and-conditions).
++ Regex syntax: [regex_syntax.md](regex_syntax.md). Operator table: [bash_basic.md](bash_basic.md#4-exit-status-and-conditions).
 
 ## 4. Curly braces
 
@@ -152,7 +152,7 @@ More on defaults: [fallbacks.md](fallbacks.md).
 
 ## Related notes
 
-+ [shellScript_basic.md](shellScript_basic.md), [quotes_note.md](quotes_note.md), [shellScript_recipes.md](shellScript_recipes.md)
++ [bash_basic.md](bash_basic.md), [quotes_note.md](quotes_note.md), [bash_recipes.md](bash_recipes.md)
 + [fallbacks.md](fallbacks.md), [regex_syntax.md](regex_syntax.md)
 
 ## Reference

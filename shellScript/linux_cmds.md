@@ -4,7 +4,7 @@ Everyday commands on a Debian/Ubuntu host or a board (Raspberry Pi, Orange Pi, J
 
 + Text tools have their own notes: [grep_intro.md](grep_intro.md), [sed_intro.md](sed_intro.md), [awk_intro.md](awk_intro.md).
 + Shell syntax, including the standard streams (**0 stdin**, **1 stdout**, **2 stderr**) and redirection (`>`, `2>&1`, `|`),
-  is in [shellScript_basic.md](shellScript_basic.md#8-input-output-redirection).
+  is in [bash_basic.md](bash_basic.md#8-input-output-redirection).
 
 ## 1. System information
 
@@ -143,11 +143,11 @@ timedatectl list-timezones | grep Taipei
 sudo timedatectl set-timezone Asia/Taipei
 ```
 
-`date` formats and timestamps in scripts: [shellScript_recipes.md](shellScript_recipes.md#4-timestamps-and-delays).
+`date` formats and timestamps in scripts: [bash_recipes.md](bash_recipes.md#4-timestamps-and-delays).
 
 ## Related notes
 
-+ [shellScript_basic.md](shellScript_basic.md), [shellScript_recipes.md](shellScript_recipes.md), [grep_intro.md](grep_intro.md)
++ [bash_basic.md](bash_basic.md), [bash_recipes.md](bash_recipes.md), [grep_intro.md](grep_intro.md)
 + [../Linux/rsync_demo.md](../Linux/rsync_demo.md), [../Linux/wget_intro.md](../Linux/wget_intro.md), [../Linux/apt_dpkg_cmd.md](../Linux/apt_dpkg_cmd.md)
 + [../Linux/kernel_module.md](../Linux/kernel_module.md), [../Linux/archive_compression.md](../Linux/archive_compression.md)
 + [../network_cmds.md](../network_cmds.md), [../openssl_note.md](../openssl_note.md), [../checksumCmd.md](../checksumCmd.md)

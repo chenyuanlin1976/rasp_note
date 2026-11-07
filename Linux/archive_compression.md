@@ -101,12 +101,12 @@ unzip -o archive.zip                 # overwrite without asking
 + **Board images: stream, don't unpack.** A Raspberry Pi or Orange Pi `.img.xz` can go straight to the card without a temporary file:
   `xz -dc image.img.xz | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync`. Double-check `/dev/sdX` with `lsblk` first.
 + **Over the network, compress in a pipe:** `tar -czf - dir/ | ssh host 'tar -xzf - -C /dest'`.
-  For repeated copies, `rsync` is better: it sends only the changes ([rsync_demo.md](rsync_demo.md)).
+  For repeated copies, `rsync` is better: it sends only the changes ([rsync_cmds.md](rsync_cmds.md)).
 + **Compression doesn't help already-compressed data** (JPEG, MP4, `.apk`, `.zip`). Just `tar` it, or use a fast level.
 
 ## Related notes
 
-+ [rsync_demo.md](rsync_demo.md): copying and syncing directories
++ [rsync_cmds.md](rsync_cmds.md): copying and syncing directories
 + [bootableUsbDrive.md](bootableUsbDrive.md): writing images to USB drives and SD cards
 + [../shellScript/bash_recipes.md](../shellScript/bash_recipes.md): loops over files (e.g. gzip every log)
 + [../Android/jar_aar_intro.md](../Android/jar_aar_intro.md): JAR and AAR, which are zip files

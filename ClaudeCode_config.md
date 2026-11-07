@@ -324,7 +324,7 @@ Example requests once a server is connected: "Show me the users who were active 
 ## Related notes
 
 + [CLAUDE.md](CLAUDE.md): this repository's instructions for Claude Code
-+ [git_tips.md](git_tips.md)
++ [git_pull_rebase.md](git_pull_rebase.md), [git_cmds.md](git_cmds.md)
 
 ## Reference
 

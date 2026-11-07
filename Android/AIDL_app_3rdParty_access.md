@@ -118,7 +118,7 @@ In the client's `AndroidManifest.xml`:
 
 ## 4. SELinux (on the system-app side only)
 
-You only open the path **system app → native service**. Example, with the domain/type names from [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md):
+You only open the path **system app → native service**. Example, with the domain/type names from [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md):
 
 ```text
 # system_ext/private/gpio_bridge_app.te: a dedicated domain for the bridge app
@@ -132,7 +132,7 @@ user=_app seinfo=platform name=com.yourcompany.gpiohost domain=gpio_bridge_app t
 ```
 
 `hal_gpioctl` must be defined in `system_ext/public`, not in vendor policy, or this file can't reference it.
-See [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md#step-6-selinux).
+See [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md#6-selinux).
 
 Don't add rules like `allow untrusted_app gpio_device:chr_file ...`.
 The app never opens `/dev/gpiochip*`; only the daemon does.
@@ -169,8 +169,8 @@ For a long-lived public interface, give the `.aidl` file a stable evolution rule
 
 ## Related notes
 
-+ [AIDL_binding.md](AIDL_binding.md): bound-service basics
-+ [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md): the native GPIO daemon behind the system app
++ [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md): bound-service basics
++ [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md): the native GPIO daemon behind the system app
 + [jar_aar_intro.md](jar_aar_intro.md), [SELinux_policy.md](SELinux_policy.md), [neverallow_error.md](neverallow_error.md)
 
 ## Reference

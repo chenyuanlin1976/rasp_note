@@ -39,7 +39,7 @@ The correct architecture is:
 App (Kotlin) --Binder/AIDL--> system app (bound service) --Binder/stable AIDL--> GPIO HAL (C++, own SELinux domain) --libgpiod--> /dev/gpiochipN
 ```
 
-It's described in [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md) and [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md),
+It's described in [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md) and [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md),
 and why the shortcuts fail at build time is in [neverallow_error.md](neverallow_error.md).
 
 ## 3. Example: a GPIO write in JNI code (rooted dev board / lab only)

@@ -54,7 +54,7 @@ Work through these questions **in order**. `audit2allow` only answers the last o
 3. **Is the source a normal app** (`untrusted_app`, `priv_app`, ...)?
    Then don't grant hardware or system access to the app.
    Put the access in a HAL or system service, and let the app call it over Binder
-   (see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md) and [neverallow_error.md](neverallow_error.md)).
+   (see [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md) and [neverallow_error.md](neverallow_error.md)).
 4. **Is it a legitimate need of this domain?**
    Then add the **minimal** rule to that domain's `.te` file, using macros:
 

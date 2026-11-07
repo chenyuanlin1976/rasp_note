@@ -15,7 +15,7 @@ AIDL generates the boilerplate that hides this:
 | Layer | Every layer: app ↔ app, app ↔ system service, framework ↔ HAL (stable AIDL) |
 | Purpose | Defines the methods and data types that 2 processes use to talk to each other |
 | Transport | Binder (`/dev/binder`; the older vendor ↔ vendor `/dev/vndbinder` is deprecated since Android 11) |
-| Backends | Java (Kotlin uses it), C++ `cpp`, C++ `ndk`, Rust: see [AIDL_impl_langs.md](AIDL_impl_langs.md) |
+| Backends | Java (Kotlin uses it), C++ `cpp`, C++ `ndk`, Rust: see [AIDL_backends.md](AIDL_backends.md) |
 
 ## 1. How AIDL works
 
@@ -71,7 +71,7 @@ public void onServiceConnected(ComponentName name, IBinder service) {
 }
 ```
 
-The complete Android Studio walkthrough (Gradle, manifest, client lifecycle) is in [AIDL_binding.md](AIDL_binding.md).
+The complete Android Studio walkthrough (Gradle, manifest, client lifecycle) is in [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md).
 
 ## 3. Supported data types
 
@@ -156,11 +156,23 @@ See [AIDL_HIDL_cmp.md](AIDL_HIDL_cmp.md) and [AIDL_HAL_impl.md](AIDL_HAL_impl.md
 
 ## Related notes
 
-+ [AIDL_impl_langs.md](AIDL_impl_langs.md): backends (Java / CPP / NDK / Rust)
+Concepts:
+
++ [AIDL_backends.md](AIDL_backends.md): backends (Java / CPP / NDK / Rust)
 + [AIDL_call_flow.md](AIDL_call_flow.md): what happens during one call
-+ [AIDL_binding.md](AIDL_binding.md): app-level bound service, step by step
-+ [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md): exposing an AOSP service to 3rd-party apps
-+ [AIDL_HAL.md](AIDL_HAL.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md): AIDL HALs
++ [AIDL_HIDL_cmp.md](AIDL_HIDL_cmp.md): why AIDL replaced HIDL
+
+Apps:
+
++ [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md): app-level bound service, step by step
++ [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md): exposing an AOSP service to 3rd-party apps
+
+Native services and HALs:
+
++ [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md): pure C++ (NDK) service and client
++ [AIDL_HAL_intro.md](AIDL_HAL_intro.md): AIDL as the HAL contract
++ [AIDL_HAL_impl.md](AIDL_HAL_impl.md): complete vendor HAL (VINTF, SELinux, clients)
++ [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md): GPIO HAL with libgpiod
 
 ## Reference
 

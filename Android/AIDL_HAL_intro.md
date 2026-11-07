@@ -1,4 +1,4 @@
-# AIDL and HAL services
+# AIDL HAL: AIDL as the HAL contract
 
 "AIDL is the **public contract** for a **native HAL service**." This note explains what that sentence means.
 
@@ -108,7 +108,7 @@ try {
 ```
 
 Normal 3rd-party apps **can't** do this, because vendor HALs are not reachable from apps.
-They go through a framework or system-app API instead (see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)).
+They go through a framework or system-app API instead (see [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)).
 
 ### 4.4 Why this structure matters
 

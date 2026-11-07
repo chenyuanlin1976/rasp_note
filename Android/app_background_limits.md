@@ -39,7 +39,7 @@ The update is installed in `/data/app` and the app keeps its system status; "Uni
 | Android 12 (API 31) | Apps targeting 12+ can't start a foreground service from the background, except for listed exemptions (e.g. a high-priority FCM message, exact alarm, user interaction with a notification) |
 | Android 14 (API 34) | Every foreground service must declare `android:foregroundServiceType` in the manifest and hold the matching `FOREGROUND_SERVICE_<TYPE>` permission |
 
-A **bound** service runs as long as a client is bound to it, and isn't affected by these start rules; see [AIDL_binding.md](AIDL_binding.md).
+A **bound** service runs as long as a client is bound to it, and isn't affected by these start rules; see [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md).
 For deferrable work (sync, upload, cleanup), use **WorkManager** instead of a long-running service.
 
 ## 3. Wake locks
@@ -108,7 +108,7 @@ For a call or alarm, use a high-priority notification with a full-screen intent.
 ## Related notes
 
 + [AOSP_preinstalled_apps.md](AOSP_preinstalled_apps.md): system apps, `priv-app`, factory reset behavior
-+ [AIDL_binding.md](AIDL_binding.md): bound services and foreground services
++ [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md): bound services and foreground services
 + [AndroidManifest.md](AndroidManifest.md): declaring services, receivers and permissions
 + [sharedUserId.md](sharedUserId.md): shared UIDs for platform apps
 + [android_class_hierarchy.md](android_class_hierarchy.md): why `this` is a `Context` in an `Activity` or `Service`

@@ -141,7 +141,7 @@ If `/sys/class/leds/<name>` is missing:
 + [sysfs_leds.md](sysfs_leds.md): LED class attributes and triggers
 + [HAL_DeviceTree.md](HAL_DeviceTree.md): from this node to a C++ HAL
 + [dts_conventions.md](dts_conventions.md): pinctrl details
-+ [../Android/AIDL_impl_leds_cxx.md](../Android/AIDL_impl_leds_cxx.md), [../Android/HAL_libgpiod.md](../Android/HAL_libgpiod.md)
++ [../Android/AIDL_ndk_led_sysfs.md](../Android/AIDL_ndk_led_sysfs.md), [../Android/HAL_libgpiod.md](../Android/HAL_libgpiod.md)
 + [../Android/input_key_flow.md](../Android/input_key_flow.md): a `gpio-keys` button from the kernel to an Android app
 
 ## Reference

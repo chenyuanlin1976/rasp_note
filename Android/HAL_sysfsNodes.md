@@ -112,7 +112,7 @@ Device HALs (under `device/<vendor>/...` or `vendor/...`) contain the real sysfs
 ## Related notes
 
 + [HAL_intro.md](HAL_intro.md), [hw_control_sysfs.md](hw_control_sysfs.md)
-+ [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md): an AIDL service that writes LED sysfs nodes
++ [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md): an AIDL service that writes LED sysfs nodes
 + [Led_control.md](Led_control.md)
 
 ## Reference

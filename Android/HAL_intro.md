@@ -106,7 +106,7 @@ The driver programs the flash LED driver IC (over I2C, a GPIO, or a PWM), and th
 + [HAL_sysfsNodes.md](HAL_sysfsNodes.md): how a HAL relates to sysfs
 + [HAL_libgpiod.md](HAL_libgpiod.md): GPIO HAL with libgpiod
 + [HAL_STM32_example.md](HAL_STM32_example.md): what a microcontroller "HAL" does
-+ [AIDL_HAL.md](AIDL_HAL.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md): writing an AIDL HAL
++ [AIDL_HAL_intro.md](AIDL_HAL_intro.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md): writing an AIDL HAL
 
 ## Reference
 

@@ -4,7 +4,7 @@ This note walks through an app-level AIDL service and its client, end to end, wi
 The **service** answers requests; the **client** binds to it and calls it.
 For the concepts, see [AIDL_intro.md](AIDL_intro.md).
 
-## Step 1: Enable AIDL in Gradle
+## 1. Enable AIDL in Gradle
 
 Starting with **AGP 8.0**, AIDL compilation is **off by default**. Enable it in the module's `build.gradle.kts`, then sync Gradle:
 
@@ -25,7 +25,7 @@ android {
 }
 ```
 
-## Step 2: Create the `.aidl` file
+## 2. Create the `.aidl` file
 
 Put it under `app/src/main/aidl/`, in a directory that **matches the package name**.
 You can also right-click the module and choose **New > AIDL > AIDL File**.
@@ -45,7 +45,7 @@ Then run **Build > Make Project**. AGP generates the Java file
 `app/build/generated/aidl_source_output_dir/<variant>/out/com/example/aidldemo/IMyAidlInterface.java`.
 It contains `IMyAidlInterface.Stub`.
 
-## Step 3: Implement the service
+## 3. Implement the service
 
 ```kotlin
 package com.example.aidldemo
@@ -77,7 +77,7 @@ class MyAidlService : Service() {
 }
 ```
 
-## Step 4: Declare the service in `AndroidManifest.xml`
+## 4. Declare the service in `AndroidManifest.xml`
 
 ```xml
 <application ... >
@@ -102,7 +102,7 @@ class MyAidlService : Service() {
 + If `exported="true"`, protect the service with `android:permission`. A `signature` permission allows only apps signed with your key.
   Otherwise, any app can call your service.
 
-## Step 5: Bind from a client (Activity)
+## 5. Bind from a client (Activity)
 
 ```kotlin
 package com.example.aidldemo
@@ -172,10 +172,10 @@ Notes:
 + `ServiceConnection` also has `onBindingDied()` (API 26+: the binding is dead for good, so unbind and bind again)
   and `onNullBinding()` (API 28+: the service returned `null` from `onBind()`).
 
-## Step 6: Cross-app checklist
+## 6. Cross-app checklist
 
 + The client app needs its **own copy of the same `.aidl` file**, with the same package and the same signatures.
-  Alternatively, ship a JAR/AAR (see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)).
+  Alternatively, ship a JAR/AAR (see [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)).
 + **Package visibility (API 30+)**: the client declares the server package in its manifest:
 
   ```xml
@@ -187,7 +187,7 @@ Notes:
 + The client requests the permission with `<uses-permission android:name="com.example.aidldemo.permission.BIND_MY_SERVICE" />`.
 + On the server, you can also check the caller with `Binder.getCallingUid()` and `packageManager.getPackagesForUid()`.
 
-## Best practices
+## 7. Best practices
 
 + **Threading**: server methods run on binder threads, so make them thread-safe.
   Client calls block, so don't make slow calls on the main thread (ANR risk).
@@ -198,7 +198,7 @@ Notes:
 ## Related notes
 
 + [AIDL_intro.md](AIDL_intro.md), [AIDL_call_flow.md](AIDL_call_flow.md)
-+ [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)
++ [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)
 + [sharedUserId.md](sharedUserId.md): why cross-app calls use a bound service instead of a shared UID; [ContentProvider_sharing.md](ContentProvider_sharing.md)
 
 ## Reference

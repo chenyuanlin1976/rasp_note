@@ -82,9 +82,9 @@ Use explicit IPC between apps that each keep their own UID:
 | Need | Mechanism | Note |
 | --- | --- | --- |
 | Share structured data or files | `ContentProvider` with a signature permission, or per-URI grants | [ContentProvider_sharing.md](ContentProvider_sharing.md) |
-| Call methods / business logic in the other app | Bound service with AIDL (or `Messenger`) | [AIDL_binding.md](AIDL_binding.md) |
+| Call methods / business logic in the other app | Bound service with AIDL (or `Messenger`) | [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md) |
 | Trigger an action or send small data | Explicit `Intent` (activity, service, broadcast with a permission) | |
-| Expose hardware or a system service to apps | A system app with a bound service in front of the HAL | [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md) |
+| Expose hardware or a system service to apps | A system app with a bound service in front of the HAL | [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md) |
 
 ### 5.1 Limit access to your own apps: signature permissions
 
@@ -113,7 +113,7 @@ A custom permission with `protectionLevel="signature"` gives the same rule, but 
 
 ## Related notes
 
-+ [ContentProvider_sharing.md](ContentProvider_sharing.md), [AIDL_binding.md](AIDL_binding.md), [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)
++ [ContentProvider_sharing.md](ContentProvider_sharing.md), [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md), [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)
 + [SELinux_domains.md](SELinux_domains.md), [sign_apk.md](sign_apk.md), [verify_platformKeys.md](verify_platformKeys.md)
 
 ## Reference

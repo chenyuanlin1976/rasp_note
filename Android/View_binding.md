@@ -184,7 +184,7 @@ class MainActivity : AppCompatActivity() {
 ## Related notes
 
 + [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md): `build.gradle(.kts)` syntax
-+ [AIDL_binding.md](AIDL_binding.md): a different "binding", binding to a service
++ [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md): a different "binding", binding to a service
 
 ## Reference
 

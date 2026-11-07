@@ -14,7 +14,7 @@ adb shell zcat /proc/config.gz | grep GPIO_SYSFS   # if /proc/config.gz is enabl
 ```
 
 If the interface is missing, use the character device (`/dev/gpiochipN`) with libgpiod instead.
-See [HAL_libgpiod.md](HAL_libgpiod.md), [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md), and [../Linux/libgpiod_sysfs_cmp.md](../Linux/libgpiod_sysfs_cmp.md).
+See [HAL_libgpiod.md](HAL_libgpiod.md), [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md), and [../Linux/libgpiod_sysfs_cmp.md](../Linux/libgpiod_sysfs_cmp.md).
 
 ## 2. Why an app can't use it
 
@@ -39,7 +39,7 @@ App --Binder (AIDL)--> GPIO daemon / HAL (own UID + SELinux domain) --write--> /
 1. A native daemon (preferably a vendor AIDL HAL) owns the pin. It runs as `user system` (or a dedicated user) and in its own domain.
 2. It exports the pin and sets the direction once at startup, then writes `value` when a request arrives.
 3. It exposes an **AIDL** interface. Apps use it through a system app or service
-   (see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md) and [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md)).
+   (see [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md) and [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md)).
 
 ### 3.1 Ownership and permissions (DAC)
 
@@ -111,7 +111,7 @@ For new work, use **`/dev/gpiochipN` + libgpiod** in the daemon instead of sysfs
 + The labels are a plain `file_contexts` entry.
 + Line ownership is released automatically if the daemon crashes.
 
-The full example is in [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md).
+The full example is in [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md).
 
 ## Related notes
 

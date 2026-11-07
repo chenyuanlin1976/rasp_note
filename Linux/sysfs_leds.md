@@ -82,7 +82,7 @@ Everything above is lost at reboot. To set the state at boot:
 ## 6. If you think you need a character device
 
 Usually you don't. Write the sysfs files from your daemon or HAL.
-That is how Android's Lights HAL implementations work (see [../Android/AIDL_impl_leds_cxx.md](../Android/AIDL_impl_leds_cxx.md)).
+That is how Android's Lights HAL implementations work (see [../Android/AIDL_ndk_led_sysfs.md](../Android/AIDL_ndk_led_sysfs.md)).
 If you still need another interface:
 
 1. **A custom kernel module** that registers a `/dev/my_led` misc device and calls the in-kernel LED API

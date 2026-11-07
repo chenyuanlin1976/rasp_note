@@ -5,7 +5,7 @@ a server **adds** an instance name with its binder object, and a client **looks 
 Native code uses the `AServiceManager_*` functions from `libbinder_ndk`. Java platform code uses the hidden `android.os.ServiceManager`.
 
 The full HAL that uses these calls (`.aidl`, `Android.bp`, `.rc`, VINTF, SELinux) is in [AIDL_HAL_impl.md](AIDL_HAL_impl.md),
-and the GPIO version is in [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md).
+and the GPIO version is in [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md).
 This note covers only the service manager API and the rules around it.
 
 ## 1. Which service manager
@@ -23,7 +23,7 @@ Typical path from an app to hardware on Android 11+:
 ```
 
 3rd-party apps never use `servicemanager` directly: `android.os.ServiceManager` is a hidden API, and SELinux blocks the lookup.
-See [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md).
+See [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md).
 
 ## 2. Who may add and find a service
 
@@ -147,8 +147,8 @@ adb logcat -b all | grep -E 'servicemanager|avc: denied .*service_manager'
 
 ## Related notes
 
-+ [AIDL_HAL_impl.md](AIDL_HAL_impl.md), [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md), [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md)
-+ [VINTF_intro.md](VINTF_intro.md), [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md), [Binder_svc_lookup_cmp.md](Binder_svc_lookup_cmp.md)
++ [AIDL_HAL_impl.md](AIDL_HAL_impl.md), [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md), [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md)
++ [VINTF_intro.md](VINTF_intro.md), [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md), [Binder_svc_lookup_cmp.md](Binder_svc_lookup_cmp.md)
 + [hw_control_sysfs.md](hw_control_sysfs.md), [HAL_libgpiod.md](HAL_libgpiod.md), [SELinux_policy.md](SELinux_policy.md)
 
 ## Reference

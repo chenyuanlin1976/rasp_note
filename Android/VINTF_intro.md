@@ -158,7 +158,7 @@ because `/dev/vndbinder` is deprecated since Android 11. Code that doesn't offer
   from using vendor device nodes, sockets, or vendor properties.
   So "skip the HAL and let the app talk to a vendor daemon directly" doesn't work in a product.
 + For GPIO, the decision and the full examples are in [HAL_libgpiod.md](HAL_libgpiod.md#2-do-i-need-jni-native-aidl-hal-vs-jni)
-  and [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md).
+  and [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md).
   Use the character device with libgpiod, not the deprecated `/sys/class/gpio`.
 
 ## 7. Inspect VINTF on a device
@@ -184,10 +184,10 @@ adb logcat -b all | grep -i -E "servicemanager|vintf"
 ## Related notes
 
 + [HAL_history.md](HAL_history.md): libhardware → HIDL/Treble → stable AIDL
-+ [AIDL_HAL.md](AIDL_HAL.md): AIDL as the HAL contract
++ [AIDL_HAL_intro.md](AIDL_HAL_intro.md): AIDL as the HAL contract
 + [AIDL_HAL_impl.md](AIDL_HAL_impl.md): complete vendor AIDL HAL including VINTF and SELinux
 + [AIDL_HIDL_cmp.md](AIDL_HIDL_cmp.md), [HIDL_intro.md](HIDL_intro.md)
-+ [HAL_libgpiod.md](HAL_libgpiod.md), [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md), [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)
++ [HAL_libgpiod.md](HAL_libgpiod.md), [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md), [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)
 + [neverallow_error.md](neverallow_error.md)
 
 ## Reference

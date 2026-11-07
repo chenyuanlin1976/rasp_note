@@ -40,7 +40,7 @@ App --Binder (AIDL)--> LED HAL / system service (own domain) --write--> /sys/cla
 Define an AIDL interface and implement it in a native service or a vendor HAL
 (`@VintfStability`, stable AIDL) that runs in its **own domain**.
 The app calls the service; it never touches sysfs.
-Examples: [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md).
+Examples: [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md).
 
 ### Step 2: Label exactly the files the service needs
 
@@ -109,7 +109,7 @@ If your rule touches these, the feature belongs in (or behind) the domain that a
 
 + [avc_denied.md](avc_denied.md): runtime denials (the step before a neverallow usually appears)
 + [SELinux_policy.md](SELinux_policy.md), [SELinux_intro.md](SELinux_intro.md)
-+ [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md), [HAL_sysfsNodes.md](HAL_sysfsNodes.md)
++ [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md), [HAL_sysfsNodes.md](HAL_sysfsNodes.md)
 
 ## Reference
 

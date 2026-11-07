@@ -52,7 +52,7 @@ Because stable AIDL covers everything HIDL did, HIDL is deprecated, and new HAL 
 ## Related notes
 
 + [HIDL_intro.md](HIDL_intro.md), [Binder_intro.md](Binder_intro.md)
-+ [AIDL_HAL.md](AIDL_HAL.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md)
++ [AIDL_HAL_intro.md](AIDL_HAL_intro.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md)
 
 ## Reference
 

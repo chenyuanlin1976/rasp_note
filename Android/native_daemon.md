@@ -69,7 +69,7 @@ Policy: [SELinux_policy.md](SELinux_policy.md#5-complete-example-a-vendor-daemon
 | Caller | Mechanism |
 | --- | --- |
 | Framework / system app → vendor daemon | Stable AIDL HAL on `/dev/binder` ([AIDL_HAL_impl.md](AIDL_HAL_impl.md)) |
-| 3rd-party app | Never directly. Through a system app's bound service ([AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)) |
+| 3rd-party app | Never directly. Through a system app's bound service ([AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)) |
 | Vendor process → vendor daemon | Stable AIDL on `/dev/binder` (vndbinder is deprecated since Android 11) |
 | Simple commands, same partition | A UNIX socket from the `socket` option, or a `vendor.*` property the daemon watches |
 
@@ -94,7 +94,7 @@ adb shell dmesg | grep -i mydaemon            # init messages also go to the ker
 
 ## Related notes
 
-+ [AIDL_HAL_impl.md](AIDL_HAL_impl.md), [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md), [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md), [Led_control.md](Led_control.md)
++ [AIDL_HAL_impl.md](AIDL_HAL_impl.md), [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md), [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md), [Led_control.md](Led_control.md)
 + [SELinux_policy.md](SELinux_policy.md), [hw_control_sysfs.md](hw_control_sysfs.md), [ServiceManager_ndk.md](ServiceManager_ndk.md)
 + [JNI_intro.md](JNI_intro.md), [HAL_libgpiod.md](HAL_libgpiod.md), [Binder_intro.md](Binder_intro.md)
 

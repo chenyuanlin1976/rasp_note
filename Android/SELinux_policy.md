@@ -211,7 +211,7 @@ sudo restorecon -Rv /usr/sbin/myapp /var/log/myapp
 
 + [SELinux_intro.md](SELinux_intro.md), [SELinux_DomainTran.md](SELinux_DomainTran.md), [SELinux_domains.md](SELinux_domains.md)
 + [avc_denied.md](avc_denied.md), [neverallow_error.md](neverallow_error.md)
-+ [AIDL_HAL_impl.md](AIDL_HAL_impl.md), [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md): policy for real HALs
++ [AIDL_HAL_impl.md](AIDL_HAL_impl.md), [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md): policy for real HALs
 
 ## Reference
 

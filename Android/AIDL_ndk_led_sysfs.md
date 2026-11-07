@@ -7,7 +7,7 @@ The `.aidl` file is the same one a Java client would use; only the generated cod
 This example controls an LED through the kernel LED class (`/sys/class/leds/<name>/`).
 For the design (Lights HAL vs a custom HAL, kernel blinking), see [Led_control.md](Led_control.md); for the sysfs side, [../Linux/sysfs_leds.md](../Linux/sysfs_leds.md).
 
-## Step 1: The AIDL file
+## 1. The AIDL file
 
 The path must match the package: `com/example/led/ILedControl.aidl`.
 
@@ -24,7 +24,7 @@ interface ILedControl {
 }
 ```
 
-## Step 2: Android.bp
+## 2. Android.bp
 
 ```bp
 aidl_interface {
@@ -59,7 +59,7 @@ About `stability`:
 The build generates `<aidl/com/example/led/ILedControl.h>` and `<aidl/com/example/led/BnLedControl.h>`
 in the namespace `aidl::com::example::led`.
 
-## Step 3: The service
+## 3. The service
 
 ### LedControlService.h
 
@@ -134,7 +134,7 @@ ScopedAStatus LedControlService::setLedState(int32_t state, int32_t delayOnMs, i
 }
 ```
 
-## Step 4: Register the service (main.cpp)
+## 4. Register the service (main.cpp)
 
 ```c++
 #define LOG_TAG "LedControlMain"
@@ -166,7 +166,7 @@ int main() {
 That same name must appear in `service_contexts`, and the service needs SELinux rules to write the LED sysfs files
 (see [SELinux_policy.md](SELinux_policy.md)).
 
-## Step 5: A native C++ client
+## 5. A native C++ client
 
 ```c++
 #include <aidl/com/example/led/ILedControl.h>
@@ -189,16 +189,16 @@ bool blinkLed() {
 
 The client links `libbinder_ndk` and `com.example.led-ndk`.
 
-## Why pure C++ AIDL
+## 6. Why pure C++ AIDL
 
 + **No JVM / JNI**: no `jstring`/`jint` conversion, a small memory footprint, and fast startup.
 + **Fits system daemons and HALs** that run outside the Android runtime.
 + **Stable ABI** (NDK backend): the same code works in vendor, APEX, or system modules.
-  The older `cpp` backend (`libbinder`) is limited to platform-internal code; see [AIDL_impl_langs.md](AIDL_impl_langs.md).
+  The older `cpp` backend (`libbinder`) is limited to platform-internal code; see [AIDL_backends.md](AIDL_backends.md).
 
 ## Related notes
 
-+ [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md): the same pattern with libgpiod
++ [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md): the same pattern with libgpiod
 + [AIDL_HAL_impl.md](AIDL_HAL_impl.md): turning a service like this into a stable vendor HAL
 + [Led_control.md](Led_control.md)
 

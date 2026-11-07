@@ -271,7 +271,7 @@ That error confirms the protection works.
 ## Related notes
 
 + [sharedUserId.md](sharedUserId.md): what `sharedUserId` was, migration, signature permissions
-+ [AIDL_binding.md](AIDL_binding.md): the other replacement, a bound service with AIDL
++ [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md): the other replacement, a bound service with AIDL
 + [SettingsProvider_intro.md](SettingsProvider_intro.md): the system's settings provider
 + [adb_shell_cmds.md](adb_shell_cmds.md)
 

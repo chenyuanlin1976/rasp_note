@@ -33,7 +33,7 @@ bindService(intent, connection, Context.BIND_AUTO_CREATE)
 + `bindService()` goes to ActivityManagerService (itself registered in `servicemanager` as `"activity"`).
   AMS finds the component, starts its process if needed, calls the service's `onBind()`, and hands the binder back through the callback.
 + `onServiceDisconnected()` is called only when the service process dies, not on `unbindService()`.
-+ The full walkthrough (Gradle, manifest, cross-app checklist) is in [AIDL_binding.md](AIDL_binding.md).
++ The full walkthrough (Gradle, manifest, cross-app checklist) is in [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md).
 
 ## 2. `ServiceManager` (platform code)
 
@@ -61,11 +61,11 @@ IMyHalService hal = IMyHalService.Stub.asInterface(b);
 ```
 
 A 3rd-party app can't use `ServiceManager`. It binds to a system app, and the system app uses `ServiceManager` to reach the HAL.
-See [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md).
+See [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md).
 
 ## Related notes
 
-+ [AIDL_binding.md](AIDL_binding.md), [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md), [ServiceManager_ndk.md](ServiceManager_ndk.md)
++ [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md), [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md), [ServiceManager_ndk.md](ServiceManager_ndk.md)
 + [Binder_intro.md](Binder_intro.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md)
 
 ## Reference

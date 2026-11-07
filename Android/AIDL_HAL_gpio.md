@@ -1,4 +1,4 @@
-# GPIO control service: AIDL (NDK) + libgpiod
+# GPIO vendor AIDL HAL (NDK backend) with libgpiod
 
 An Android app **can't** open `/dev/gpiochip*` itself: the app sandbox, DAC permissions, and SELinux all block it.
 Instead, a **native daemon** owns the GPIO lines and exposes them through an **AIDL** interface:
@@ -19,7 +19,7 @@ For the full generic HAL plumbing (VINTF matrix, client code), see [AIDL_HAL_imp
 | Executable | `/vendor/bin/hw/vendor.example.hardware.gpio-service` |
 | libgpiod API | **v1** (`gpiod_line_*`), see [../Linux/libgpiod_intro.md](../Linux/libgpiod_intro.md); v2 replaced it with `gpiod_chip_request_lines()` / `gpiod_line_request_*` |
 
-## Step 1: The AIDL interface
+## 1. The AIDL interface
 
 ```java
 // aidl/vendor/example/hardware/gpio/IGpioControl.aidl
@@ -35,7 +35,7 @@ interface IGpioControl {
 }
 ```
 
-## Step 2: The service implementation
+## 2. The service implementation
 
 Design points:
 
@@ -180,7 +180,7 @@ ScopedAStatus GpioControl::getLineValue(int32_t chip, int32_t lineOffset, bool* 
 }  // namespace aidl::vendor::example::hardware::gpio
 ```
 
-## Step 3: Register the service (main.cpp)
+## 3. Register the service (main.cpp)
 
 ```c++
 #define LOG_TAG "GpioControlMain"
@@ -210,7 +210,7 @@ int main() {
 }
 ```
 
-## Step 4: Android.bp
+## 4. Android.bp
 
 ```bp
 // aidl/Android.bp
@@ -258,7 +258,7 @@ Notes:
   + The cpp backend (`libbinder`) on the vendor partition registers with **`vndservicemanager`** (`/dev/vndbinder`),
     so framework and system apps can't see the service. (`/dev/vndbinder` is also deprecated since Android 11.)
 
-## Step 5: init, ueventd, VINTF
+## 5. init, ueventd, VINTF
 
 ```text
 # vendor.example.hardware.gpio-service.rc
@@ -287,9 +287,9 @@ service vendor.example.hardware.gpio-service /vendor/bin/hw/vendor.example.hardw
 Also add the HAL to the device framework compatibility matrix (see [AIDL_HAL_impl.md](AIDL_HAL_impl.md#3-init-script-and-vintf)).
 Avoid `user root`: the service needs only access to the device nodes, which the `ueventd.rc` line grants.
 
-## Step 6: SELinux
+## 6. SELinux
 
-The client is a **system-side** app (see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)).
+The client is a **system-side** app (see [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)).
 So the HAL attribute and the service type go in **`system_ext/public`**, where both partitions' policies can see them.
 The reason is explained in [AIDL_HAL_impl.md](AIDL_HAL_impl.md#4-selinux).
 
@@ -316,10 +316,10 @@ allow hal_gpioctl_default gpio_device:chr_file rw_file_perms;   # rw_file_perms 
 vendor.example.hardware.gpio.IGpioControl/default           u:object_r:hal_gpioctl_service:s0
 ```
 
-The client's domain (the system app in [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)) gets `hal_client_domain(<client_domain>, hal_gpioctl)`
+The client's domain (the system app in [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)) gets `hal_client_domain(<client_domain>, hal_gpioctl)`
 in `system_ext/private`.
 
-## Step 7: Calling it
+## 7. Calling it
 
 Native C++ client (NDK):
 
@@ -344,20 +344,20 @@ try {
 }
 ```
 
-Third-party apps go through that system app; see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md).
+Third-party apps go through that system app; see [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md).
 
-## RK3566 notes
+## 8. RK3566 notes
 
 + Pin numbering: `GPIO<bank>_<group><n>` → chip = bank, offset = group × 8 + n (A=0, B=1, C=2, D=3).
   For example, GPIO4_D5 → `gpiochip4`, line 29.
   Confirm the chip-to-bank mapping with `gpiodetect` / `gpioinfo`.
 + If a line is claimed by a kernel driver (device tree `*-gpios`), `gpiod_line_request_output` fails with `EBUSY`.
-  See [AIDL_HAL.md](AIDL_HAL.md#5-describing-the-gpio-in-the-device-tree-dtsi).
+  See [AIDL_HAL_intro.md](AIDL_HAL_intro.md#5-describing-the-gpio-in-the-device-tree-dtsi).
 + The pin must be muxed as GPIO (pinctrl) in the device tree.
 
 ## Related notes
 
-+ [AIDL_HAL_impl.md](AIDL_HAL_impl.md), [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md)
++ [AIDL_HAL_impl.md](AIDL_HAL_impl.md), [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md)
 + [../Linux/libgpiod_intro.md](../Linux/libgpiod_intro.md), [libgpiod_android.md](libgpiod_android.md), [HAL_libgpiod.md](HAL_libgpiod.md), [gpio_control.md](gpio_control.md)
 
 ## Reference

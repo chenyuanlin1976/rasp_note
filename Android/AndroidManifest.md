@@ -147,7 +147,7 @@ Elements in the `android:` namespace are documented by the platform. `tools:` at
 + Since Android 8 (API 26), receivers declared in the manifest no longer get most **implicit** broadcasts.
   Register at runtime for those, or send an explicit broadcast.
 + Apps that target Android 14 (API 34) must pass `RECEIVER_EXPORTED` or `RECEIVER_NOT_EXPORTED` when they register a receiver at runtime for broadcasts other than system broadcasts.
-+ Bound services and providers between apps: [AIDL_binding.md](AIDL_binding.md), [ContentProvider_sharing.md](ContentProvider_sharing.md).
++ Bound services and providers between apps: [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md), [ContentProvider_sharing.md](ContentProvider_sharing.md).
 
 ## 5. Intent filters and `android:exported`
 
@@ -186,7 +186,7 @@ It matches 3 things: `<action>`, `<category>`, and `<data>` (scheme, host, path,
 + `maxSdkVersion` requests a permission only on older releases, where it is still needed.
 + Declaring a permission in the manifest doesn't grant a `dangerous` one. The runtime request is still needed.
 + Custom permissions to protect a service or provider: [sharedUserId.md](sharedUserId.md#51-limit-access-to-your-own-apps-signature-permissions),
-  [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md).
+  [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md).
 
 ## 7. Features and SDK levels
 
@@ -237,7 +237,7 @@ More `aapt2` commands: [aapt_note.md](aapt_note.md). `dumpsys` and `pm`: [adb_sh
 ## Related notes
 
 + [app_project_structure.md](app_project_structure.md), [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md), [Android_bp_intro.md](Android_bp_intro.md), [jar_aar_intro.md](jar_aar_intro.md)
-+ [AIDL_binding.md](AIDL_binding.md), [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md), [ContentProvider_sharing.md](ContentProvider_sharing.md)
++ [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md), [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md), [ContentProvider_sharing.md](ContentProvider_sharing.md)
 + [sharedUserId.md](sharedUserId.md), [sign_apk.md](sign_apk.md), [aapt_note.md](aapt_note.md), [adb_shell_cmds.md](adb_shell_cmds.md)
 
 ## Reference

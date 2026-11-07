@@ -150,7 +150,7 @@ adb shell dumpsys package com.example.myapp | grep -A20 "install permissions"   
 + [AOSP_build.md](AOSP_build.md), [AOSP_build_system.md](AOSP_build_system.md), [AOSP_envsetup_cmds.md](AOSP_envsetup_cmds.md)
 + [sign_apk.md](sign_apk.md), [verify_platformKeys.md](verify_platformKeys.md): app and platform keys
 + [AndroidManifest.md](AndroidManifest.md): `signature|privileged` permissions
-+ [sharedUserId.md](sharedUserId.md), [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md): a privileged system app that exposes a service
++ [sharedUserId.md](sharedUserId.md), [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md): a privileged system app that exposes a service
 
 ## Reference
 

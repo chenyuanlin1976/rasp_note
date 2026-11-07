@@ -6,7 +6,7 @@ This note covers how an AOSP device (for example RK3566) lets user space control
 + what libgpiod is
 + where it fits in an Android HAL
 
-The complete, buildable AIDL GPIO HAL is in [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md).
+The complete, buildable AIDL GPIO HAL is in [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md).
 
 ## 1. Architecture
 
@@ -29,7 +29,7 @@ SoC GPIO controller -> pin
   AIDL generates the Java proxy and the C++ stub.
   JNI is needed only if a Java class must call a native library **in its own process** (see section 2).
 + Third-party apps can't call a vendor HAL directly. They go through a system app;
-  see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md).
+  see [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md).
 
 ## 2. Do I need JNI? Native AIDL HAL vs JNI
 
@@ -47,7 +47,7 @@ Java/Kotlin (system app / framework) --Binder--> C++ GPIO HAL --libgpiod--> /dev
 
 Only the HAL's SELinux domain can open `/dev/gpiochip*`.
 Clients only get permission to *call the HAL* (`hal_client_domain`).
-Full example: [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md).
+Full example: [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md).
 
 ### 2.2 JNI wrapper (legacy; blocked for vendor hardware on Android 8+)
 
@@ -78,7 +78,7 @@ JNI is still the right tool for in-app native **computation** (codecs, math, gam
 | --- | --- |
 | Framework or system app controls vendor GPIO | Native AIDL HAL (2.1); no JNI |
 | A vendor daemon uses GPIO only for itself | Link libgpiod directly in that daemon; no IPC needed |
-| A 3rd-party app controls GPIO | A system app with a bound service in front of the HAL: [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md) |
+| A 3rd-party app controls GPIO | A system app with a bound service in front of the HAL: [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md) |
 | An app needs native code for computation, without hardware | JNI / NDK |
 
 ## 3. The 2 kernel interfaces for GPIO
@@ -159,7 +159,7 @@ A long-running HAL should keep its output lines requested.
 
 ## 5. Building a GPIO HAL in AOSP: checklist
 
-Every item is shown in full in [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md).
+Every item is shown in full in [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md).
 
 1. **Interface**: a stable AIDL interface (`@VintfStability`, `stability: "vintf"`), for example `vendor.example.hardware.gpio.IGpioControl`.
    Report errors with `ServiceSpecificException` / `ScopedAStatus::fromServiceSpecificError()`, not with `boolean` return codes.
@@ -176,7 +176,7 @@ Every item is shown in full in [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md).
    + give each client `hal_client_domain`
 6. **Device tree**: the pin must be muxed as GPIO and **not claimed by a kernel driver**, or the request fails with `EBUSY`.
    Use `gpio-line-names` so the HAL can find the line by name.
-   See [AIDL_HAL.md](AIDL_HAL.md#5-describing-the-gpio-in-the-device-tree-dtsi).
+   See [AIDL_HAL_intro.md](AIDL_HAL_intro.md#5-describing-the-gpio-in-the-device-tree-dtsi).
 
 Debugging on the device:
 
@@ -194,7 +194,7 @@ Standard AOSP has **no** public GPIO API. You build your own vendor HAL plus a s
 
 ## Related notes
 
-+ [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md): full AIDL + libgpiod GPIO HAL
++ [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md): full AIDL + libgpiod GPIO HAL
 + [../Linux/libgpiod_intro.md](../Linux/libgpiod_intro.md), [libgpiod_android.md](libgpiod_android.md), [JNI_intro.md](JNI_intro.md)
 + [hw_control_sysfs.md](hw_control_sysfs.md), [gpio_control.md](gpio_control.md)
 + [HAL_intro.md](HAL_intro.md), [HAL_sysfsNodes.md](HAL_sysfsNodes.md)

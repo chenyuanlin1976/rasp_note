@@ -55,7 +55,7 @@ Example: [wifi_default.md](wifi_default.md).
 SettingsProvider stores **configuration**, for example "the user wants the notification LED to blink".
 It doesn't drive hardware.
 A system service reads the setting and calls a HAL, which writes to the kernel interface (such as `/sys/class/leds/`).
-See [gpio_control.md](gpio_control.md) and [AIDL_HAL.md](AIDL_HAL.md).
+See [gpio_control.md](gpio_control.md) and [AIDL_HAL_intro.md](AIDL_HAL_intro.md).
 
 ## Related notes
 

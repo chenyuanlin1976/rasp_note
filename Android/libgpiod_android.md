@@ -73,7 +73,7 @@ dmesg | tail; ip link                    # did the Wi-Fi interface come up?
 + A plain `gpioset gpiochip1 12=1` (v1) releases the line as soon as it exits. After that, the level is no longer guaranteed.
 + If `gpioset` fails with **`Device or resource busy`**, a kernel driver owns the pin (for example, the Wi-Fi driver through `enable-gpios`).
   Then control power through that driver (rfkill or sysfs), or remove the property from the device tree.
-  See [AIDL_HAL.md](AIDL_HAL.md#5-describing-the-gpio-in-the-device-tree-dtsi).
+  See [AIDL_HAL_intro.md](AIDL_HAL_intro.md#5-describing-the-gpio-in-the-device-tree-dtsi).
 + If it fails with `Permission denied` even as root, check `adb shell getenforce` and `dmesg | grep avc`.
 
 ## 3. Use it from a service (production)
@@ -90,11 +90,11 @@ Everything needed is already written up:
 
 | Topic | Note |
 | --- | --- |
-| Wi-Fi power HAL example (interface, C++ with libgpiod, device-tree options) | [AIDL_HAL.md](AIDL_HAL.md) |
-| Complete GPIO HAL: `.aidl`, service, `Android.bp`, `.rc`, `ueventd.rc`, VINTF, SELinux | [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md) |
+| Wi-Fi power HAL example (interface, C++ with libgpiod, device-tree options) | [AIDL_HAL_intro.md](AIDL_HAL_intro.md) |
+| Complete GPIO HAL: `.aidl`, service, `Android.bp`, `.rc`, `ueventd.rc`, VINTF, SELinux | [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md) |
 | Generic AIDL HAL plumbing and clients | [AIDL_HAL_impl.md](AIDL_HAL_impl.md) |
 | Why no JNI is needed | [HAL_libgpiod.md](HAL_libgpiod.md#2-do-i-need-jni-native-aidl-hal-vs-jni) |
-| Exposing it to 3rd-party apps | [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md) |
+| Exposing it to 3rd-party apps | [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md) |
 | sysfs vs chardev, AOSP checklist | [HAL_libgpiod.md](HAL_libgpiod.md) |
 
 Rules that those notes follow, and that this note's old example broke:

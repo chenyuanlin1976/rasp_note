@@ -7,7 +7,7 @@ The details are in other notes:
 | --- | --- |
 | LED class attributes and triggers (`brightness`, `trigger`, `delay_on`, ...) | [../Linux/sysfs_leds.md](../Linux/sysfs_leds.md) |
 | Board LEDs on RK3566 (`gpio-leds`), notification LED, `LightsManager` | [gpio_control.md](gpio_control.md) |
-| Complete C++ (NDK) AIDL service that writes `/sys/class/leds` | [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md) |
+| Complete C++ (NDK) AIDL service that writes `/sys/class/leds` | [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md) |
 | Turning it into a stable vendor HAL (VINTF, SELinux) | [AIDL_HAL_impl.md](AIDL_HAL_impl.md) |
 | Permissions on sysfs files (`ueventd.rc`, `genfs_contexts`) | [hw_control_sysfs.md](hw_control_sysfs.md) |
 
@@ -108,7 +108,7 @@ interface IStatusLed {
 + Package `vendor.<company>.hardware.*`; `android.hardware.*` is reserved for Google.
   With `stability: "vintf"`, a frozen version, an NDK-backend service in `/vendor/bin/hw/`, a VINTF manifest entry, and SELinux:
   see [AIDL_HAL_impl.md](AIDL_HAL_impl.md).
-  The write logic is the same as in [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md) (which uses an unstable `com.example.led` interface for a prototype).
+  The write logic is the same as in [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md) (which uses an unstable `com.example.led` interface for a prototype).
 + Several LEDs: either one instance per LED (`.../IStatusLed/red`, `.../IStatusLed/green`) or an `int ledId` parameter plus `getLeds()`, like `ILights`.
 
 ## 5. Why the app can't write sysfs itself
@@ -145,9 +145,9 @@ Check this on the target with `ls -lZ` after `trigger=timer`.
 ## Related notes
 
 + [../Linux/sysfs_leds.md](../Linux/sysfs_leds.md), [../Linux/dts_node_leds.md](../Linux/dts_node_leds.md)
-+ [gpio_control.md](gpio_control.md), [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md)
++ [gpio_control.md](gpio_control.md), [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md)
 + [hw_control_sysfs.md](hw_control_sysfs.md), [HAL_sysfsNodes.md](HAL_sysfsNodes.md), [neverallow_error.md](neverallow_error.md)
-+ [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md): exposing the LED to 3rd-party apps through a system app
++ [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md): exposing the LED to 3rd-party apps through a system app
 
 ## Reference
 

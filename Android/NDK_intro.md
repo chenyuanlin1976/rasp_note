@@ -18,7 +18,7 @@ It doesn't escape the app sandbox and gives no extra hardware access.
 
 The **"NDK backend" of AIDL** (`libbinder_ndk`, `ndk::ScopedAStatus`) is named after the NDK because it is a stable C ABI.
 Vendor HALs use it, but they are built with Soong, not with the NDK download.
-See [AIDL_impl_langs.md](AIDL_impl_langs.md) and [AIDL_HAL_impl.md](AIDL_HAL_impl.md).
+See [AIDL_backends.md](AIDL_backends.md) and [AIDL_HAL_impl.md](AIDL_HAL_impl.md).
 
 ## 2. When an app needs native code
 
@@ -79,7 +79,7 @@ AGP 8.5.1+ with **NDK r28+** does it by default. Older NDKs need the linker flag
 ## Related notes
 
 + [JNI_intro.md](JNI_intro.md), [JNI_android_studio.md](JNI_android_studio.md), [JNI_C_code.md](JNI_C_code.md)
-+ [native_daemon.md](native_daemon.md), [AIDL_impl_langs.md](AIDL_impl_langs.md)
++ [native_daemon.md](native_daemon.md), [AIDL_backends.md](AIDL_backends.md)
 
 ## Reference
 

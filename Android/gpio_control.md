@@ -12,7 +12,7 @@ The examples use real output from this board.
 | An LED on your board | DT **`gpio-leds`** → `/sys/class/leds/<name>/` (section 4) | root / a daemon / a HAL |
 | A plain GPIO (relay, enable, signal) | **`/dev/gpiochipN` + libgpiod** (section 5.1) | root / a daemon / a HAL |
 | The same, on old setups | `/sys/class/gpio` export (section 5.2), deprecated | root |
-| A product feature that apps use | A **vendor AIDL HAL** behind a system app ([AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md), [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)) | Apps, through Binder |
+| A product feature that apps use | A **vendor AIDL HAL** behind a system app ([AIDL_HAL_gpio.md](AIDL_HAL_gpio.md), [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)) | Apps, through Binder |
 
 Normal apps can never touch `/sys/class/*` or `/dev/gpiochip*` directly. The reasons are in [hw_control_sysfs.md](hw_control_sysfs.md) and [JNI_C_code.md](JNI_C_code.md).
 
@@ -239,10 +239,10 @@ Check `pinmux-pins` before using a pin that the schematic assigns to something e
 Shell commands and `adb root` are for bring-up only. In a product:
 
 + **LEDs**: declare them as `gpio-leds`/`pwm-leds`. The Lights HAL or a vendor service writes `/sys/class/leds/...`
-  ([AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md)).
+  ([AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md)).
 + **Other GPIOs**: a vendor AIDL HAL owns the lines through libgpiod
-  ([AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md), [HAL_libgpiod.md](HAL_libgpiod.md)).
-+ **Apps**: call a system app's bound service ([AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)).
+  ([AIDL_HAL_gpio.md](AIDL_HAL_gpio.md), [HAL_libgpiod.md](HAL_libgpiod.md)).
++ **Apps**: call a system app's bound service ([AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)).
 
 ## Related notes
 

@@ -12,7 +12,7 @@ All names follow one example interface:
 | Generated NDK library | `vendor.example.hardware.myhal-V1-ndk` |
 | Executable | `/vendor/bin/hw/vendor.example.hardware.myhal-service` |
 
-## Directory layout
+Directory layout:
 
 ```text
 vendor/example/hardware/myhal/
@@ -298,7 +298,7 @@ int main() {
 
 `android.os.ServiceManager` is a **hidden API**, so this code works only in platform code
 (`system_server`, or an app built with `platform_apis: true` and signed with the platform key).
-3rd-party apps can't reach a vendor HAL; see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md).
+3rd-party apps can't reach a vendor HAL; see [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md).
 
 ```bp
 android_app {
@@ -347,8 +347,8 @@ Put that rule in `system_ext/private`, which works because `hal_myhal` is in `sy
 
 ## Related notes
 
-+ [AIDL_HAL.md](AIDL_HAL.md): concept and the "contract"
-+ [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md), [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md): hardware examples
++ [AIDL_HAL_intro.md](AIDL_HAL_intro.md): concept and the "contract"
++ [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md), [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md): hardware examples
 + [VINTF_intro.md](VINTF_intro.md), [SELinux_policy.md](SELinux_policy.md), [Binder_svc_lookup_cmp.md](Binder_svc_lookup_cmp.md)
 + [ServiceManager_ndk.md](ServiceManager_ndk.md): `AServiceManager_*` API, add/find rules, lazy services
 

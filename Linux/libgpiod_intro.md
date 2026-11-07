@@ -42,7 +42,7 @@ There are 2 incompatible generations. Check which one you have first: `gpiodetec
 | Python module | `gpiod` 1.x (`python3-libgpiod` on Debian 12 / Raspberry Pi OS Bookworm) | `gpiod` 2.x (`pip install gpiod`, newer distros) |
 | Typical in | Debian 12, Ubuntu 22.04, older Yocto/Buildroot | Debian 13, Ubuntu 24.04+, Fedora, current Yocto/Buildroot |
 
-The other notes in this repo use the **v1** C API (for example [../Android/AIDL_impl_gpio_cxx.md](../Android/AIDL_impl_gpio_cxx.md)).
+The other notes in this repo use the **v1** C API (for example [../Android/AIDL_HAL_gpio.md](../Android/AIDL_HAL_gpio.md)).
 
 ## 3. What's in the package
 

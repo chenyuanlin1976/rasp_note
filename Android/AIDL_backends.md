@@ -35,7 +35,7 @@ There are **4 backends**. Kotlin is **not** a separate backend: it uses the Java
 
 + Supported since **Android 12**, for memory-safe system services, daemons, and HALs.
 
-## Summary
+## 5. Summary
 
 | Backend | Language | Binder library | Typical use | Stable ABI |
 | --- | --- | --- | --- | --- |
@@ -51,8 +51,8 @@ For an `unstable: true` interface, there is no version suffix: `<name>-java`, `<
 ## Related notes
 
 + [AIDL_intro.md](AIDL_intro.md)
-+ [AIDL_impl_leds_cxx.md](AIDL_impl_leds_cxx.md), [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md): NDK backend examples
-+ [AIDL_binding.md](AIDL_binding.md): Java/Kotlin example
++ [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md), [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md): NDK backend examples
++ [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md): Java/Kotlin example
 
 ## Reference
 

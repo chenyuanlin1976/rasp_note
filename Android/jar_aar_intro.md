@@ -4,7 +4,7 @@ JAR and AAR are the two standard formats for shipping a library to Android devel
 Both contain compiled Java/Kotlin code. They differ in what else they can carry.
 
 A typical use case in these notes: a client SDK for a GPIO service exposed by a system app
-(see [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md)).
+(see [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)).
 
 ## 1. JAR (Java Archive)
 
@@ -113,7 +113,7 @@ dependencies {
 
 ## Related notes
 
-+ [AIDL_3rdParty_app.md](AIDL_3rdParty_app.md), [AIDL_binding.md](AIDL_binding.md)
++ [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md), [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md)
 + [AndroidManifest.md](AndroidManifest.md), [Android_bp_intro.md](Android_bp_intro.md), [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md)
 + [JNI_android_studio.md](JNI_android_studio.md), [NDK_intro.md](NDK_intro.md)
 

@@ -123,12 +123,12 @@ adb shell gpioinfo gpiochip4                                          # line 10 
 + **Decide who owns the pin first.** If a kernel driver fits (LED, button, regulator), use it: you get the standard sysfs/input interfaces and Android frameworks for free. Use libgpiod only for plain signals with no matching driver.
 + **Prefer an overlay for board variants.** On Android, a `dtbo` overlay lets one base DTB serve several board revisions; see [../Linux/dts_intro.md](../Linux/dts_intro.md) (section 6).
 + **Keep iterations short.** Rebuild only the DTB (`make rockchip/<board>.dtb`) and flash only the partition that holds it. A full `m` is needed only when the Android side changes.
-+ **The kernel is only half the work.** An app can't open `/dev/gpiochipN`. A product also needs a `ueventd.rc` entry, SELinux rules, and usually a vendor AIDL HAL ([AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md), [HAL_libgpiod.md](HAL_libgpiod.md)).
++ **The kernel is only half the work.** An app can't open `/dev/gpiochipN`. A product also needs a `ueventd.rc` entry, SELinux rules, and usually a vendor AIDL HAL ([AIDL_HAL_gpio.md](AIDL_HAL_gpio.md), [HAL_libgpiod.md](HAL_libgpiod.md)).
 
 ## Related notes
 
 + [gpio_control.md](gpio_control.md): using GPIOs and LEDs at run time
-+ [libgpiod_android.md](libgpiod_android.md), [HAL_libgpiod.md](HAL_libgpiod.md), [AIDL_impl_gpio_cxx.md](AIDL_impl_gpio_cxx.md)
++ [libgpiod_android.md](libgpiod_android.md), [HAL_libgpiod.md](HAL_libgpiod.md), [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md)
 + [AOSP_build.md](AOSP_build.md), [Bazel_intro.md](Bazel_intro.md): building AOSP and the kernel (Kleaf)
 + [../Linux/kernel_build.md](../Linux/kernel_build.md), [../Linux/dts_intro.md](../Linux/dts_intro.md), [../Linux/dts_conventions.md](../Linux/dts_conventions.md)
 

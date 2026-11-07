@@ -193,7 +193,7 @@ Android's JNI `System.loadLibrary()` uses the same mechanism.
 + [kernel_module.md](kernel_module.md): `.ko` kernel modules and why they are tied to one kernel
 + [../CMakeLists_syntax.md](../CMakeLists_syntax.md): `add_library(STATIC|SHARED)`, cross-compiling toolchain files
 + [../Android/NDK_intro.md](../Android/NDK_intro.md): `.so` libraries in Android apps (Bionic, per-ABI builds)
-+ [apt_dpkg_cmd.md](apt_dpkg_cmd.md): installing `-dev` packages that provide headers and linker names
++ [apt_dpkg_cmds.md](apt_dpkg_cmds.md): installing `-dev` packages that provide headers and linker names
 
 ## Reference
 

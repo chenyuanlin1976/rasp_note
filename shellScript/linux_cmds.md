@@ -132,7 +132,7 @@ sudo dpkg -i package.deb                      # low level: no dependency resolut
 dpkg -L package; dpkg -S /usr/bin/xxd         # files of a package; which package owns a file
 ```
 
-More: [../Linux/apt_dpkg_cmd.md](../Linux/apt_dpkg_cmd.md).
+More: [../Linux/apt_dpkg_cmds.md](../Linux/apt_dpkg_cmds.md).
 
 ## 10. Date and time
 
@@ -148,7 +148,7 @@ sudo timedatectl set-timezone Asia/Taipei
 ## Related notes
 
 + [bash_basic.md](bash_basic.md), [bash_recipes.md](bash_recipes.md), [grep_intro.md](grep_intro.md)
-+ [../Linux/rsync_cmds.md](../Linux/rsync_cmds.md), [../Linux/wget_cmds.md](../Linux/wget_cmds.md), [../Linux/apt_dpkg_cmd.md](../Linux/apt_dpkg_cmd.md)
++ [../Linux/rsync_cmds.md](../Linux/rsync_cmds.md), [../Linux/wget_cmds.md](../Linux/wget_cmds.md), [../Linux/apt_dpkg_cmds.md](../Linux/apt_dpkg_cmds.md)
 + [../Linux/kernel_module.md](../Linux/kernel_module.md), [../Linux/archive_compression.md](../Linux/archive_compression.md)
 + [../network_cmds.md](../network_cmds.md), [../openssl_note.md](../openssl_note.md), [../checksumCmd.md](../checksumCmd.md)
 

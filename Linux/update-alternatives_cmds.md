@@ -137,7 +137,7 @@ re-run `--auto gcc` or `--config gcc` afterwards if needed.
 
 ## Related notes
 
-+ [apt_dpkg_cmd.md](apt_dpkg_cmd.md): apt and dpkg, which also provide update-alternatives
++ [apt_dpkg_cmds.md](apt_dpkg_cmds.md): apt and dpkg, which also provide update-alternatives
 + [ufw_cmds.md](ufw_cmds.md): ufw, one of the system tools that depends on the system `python3`
 
 ## Reference

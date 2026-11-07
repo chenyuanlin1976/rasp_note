@@ -2,7 +2,7 @@
 
 `ufw` is a simple command-line front-end for the kernel's netfilter firewall on Ubuntu and Debian.
 It writes iptables rules for you; on current Ubuntu/Debian, `iptables` itself uses the nftables backend.
-How ufw relates to iptables, nftables, and firewalld: [firewalls_intro.md](firewalls_intro.md).
+How ufw relates to iptables, nftables, and firewalld: [firewall_intro.md](firewall_intro.md).
 
 ## 1. Set up safely
 
@@ -75,7 +75,7 @@ sudo tail -f /var/log/ufw.log
 
 ## Related notes
 
-+ [firewalls_intro.md](firewalls_intro.md): netfilter, iptables, nftables, firewalld, ufw
++ [firewall_intro.md](firewall_intro.md): netfilter, iptables, nftables, firewalld, ufw
 + [ssh_login.md](ssh_login.md), [../network_cmds.md](../network_cmds.md), [../docker_demo.md](../docker_demo.md)
 
 ## Reference

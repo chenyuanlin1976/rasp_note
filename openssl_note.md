@@ -10,7 +10,7 @@ openssl help                # list of commands
 openssl <command> -help     # options of one command, e.g. openssl x509 -help
 ```
 
-Java/Android keystores (`.jks`, `keytool`) are covered in [Android/keytool_note.md](Android/keytool_note.md).
+Java/Android keystores (`.jks`, `keytool`) are covered in [Android/keytool_cmds.md](Android/keytool_cmds.md).
 
 ## 1. File formats
 
@@ -180,7 +180,7 @@ openssl list -cipher-algorithms        # available ciphers
 
 + [hashingAlgorithm.md](hashingAlgorithm.md): hash functions and which ones are secure
 + [checksumCmd.md](checksumCmd.md): `sha256sum`, `b2sum`, and checksum verification
-+ [Android/keytool_note.md](Android/keytool_note.md): Java keystores and `keytool`
++ [Android/keytool_cmds.md](Android/keytool_cmds.md): Java keystores and `keytool`
 + [Android/sign_apk.md](Android/sign_apk.md): converting AOSP `.pk8` keys and signing APKs
 + [Android/verify_platformKeys.md](Android/verify_platformKeys.md): comparing certificate hashes of an AOSP build
 + [Linux/ssh_login.md](Linux/ssh_login.md): SSH keys (a different key format and tool)

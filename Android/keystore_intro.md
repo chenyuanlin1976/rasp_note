@@ -4,7 +4,7 @@ The **Android Keystore system** lets an app create and use cryptographic keys th
 The app gets a handle to the key, not the key bytes. Operations run in the keystore service, or in secure hardware when the device has it.
 
 This is not the same thing as a keystore **file** (`.jks` / `.p12`) used to sign APKs on a build machine.
-For those, see [keytool_note.md](keytool_note.md) and [sign_apk.md](sign_apk.md).
+For those, see [keytool_cmds.md](keytool_cmds.md) and [sign_apk.md](sign_apk.md).
 
 ## 1. What it provides
 
@@ -90,7 +90,7 @@ The encrypted bytes can go anywhere: a file, SQLite, DataStore. Only the key sta
 
 ## Related notes
 
-+ [sign_apk.md](sign_apk.md), [keytool_note.md](keytool_note.md): build-time keystore files, a different topic
++ [sign_apk.md](sign_apk.md), [keytool_cmds.md](keytool_cmds.md): build-time keystore files, a different topic
 + [Binder_intro.md](Binder_intro.md): how the app reaches the keystore daemon
 
 ## Reference

@@ -1,4 +1,4 @@
-# keytool
+# keytool commands
 
 `keytool` (part of the JDK) manages Java keystores: private keys with their certificates (`PrivateKeyEntry`),
 and trusted certificates (`trustedCertEntry`).

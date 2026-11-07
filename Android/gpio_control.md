@@ -149,7 +149,7 @@ adb shell "echo heartbeat > /sys/class/leds/dvb-rf/trigger"      # blink in the 
 ```
 
 These pins are **owned by `leds-gpio`**, so exporting 123 or 148 through sysfs fails with `EBUSY`. That is expected.
-More on the LED class: [../Linux/sysfs_leds.md](../Linux/sysfs_leds.md) and [../Linux/dts_node_led_vs_gpio.md](../Linux/dts_node_led_vs_gpio.md).
+More on the LED class: [../Linux/sysfs_led_class.md](../Linux/sysfs_led_class.md) and [../Linux/dts_node_led_vs_gpio.md](../Linux/dts_node_led_vs_gpio.md).
 
 ### RGB LEDs
 

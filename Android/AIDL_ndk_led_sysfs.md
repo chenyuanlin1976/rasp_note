@@ -5,7 +5,7 @@ There is no JVM/ART and no JNI.
 The `.aidl` file is the same one a Java client would use; only the generated code differs.
 
 This example controls an LED through the kernel LED class (`/sys/class/leds/<name>/`).
-For the design (Lights HAL vs a custom HAL, kernel blinking), see [Led_control.md](Led_control.md); for the sysfs side, [../Linux/sysfs_leds.md](../Linux/sysfs_leds.md).
+For the design (Lights HAL vs a custom HAL, kernel blinking), see [Led_control.md](Led_control.md); for the sysfs side, [../Linux/sysfs_led_class.md](../Linux/sysfs_led_class.md).
 
 ## 1. The AIDL file
 

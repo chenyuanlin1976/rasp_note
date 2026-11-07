@@ -76,7 +76,7 @@ You get triggers, a stable sysfs name, and no custom code for blinking.
 
 + Use the `pattern` trigger (`led-pattern` property / `pattern` file) for arbitrary sequences.
 
-The full list of attributes and triggers is in [sysfs_leds.md](sysfs_leds.md).
+The full list of attributes and triggers is in [sysfs_led_class.md](sysfs_led_class.md).
 
 ## 2. As a plain GPIO
 
@@ -141,7 +141,7 @@ If `/sys/class/leds/<name>` is missing:
 
 ## Related notes
 
-+ [sysfs_leds.md](sysfs_leds.md): LED class attributes and triggers
++ [sysfs_led_class.md](sysfs_led_class.md): LED class attributes and triggers
 + [HAL_DeviceTree.md](HAL_DeviceTree.md): from this node to a C++ HAL
 + [dts_provider_consumer.md](dts_provider_consumer.md): pinctrl details
 + [../Android/AIDL_ndk_led_sysfs.md](../Android/AIDL_ndk_led_sysfs.md), [../Android/HAL_libgpiod.md](../Android/HAL_libgpiod.md)

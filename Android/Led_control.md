@@ -5,7 +5,7 @@ The details are in other notes:
 
 | Topic | Note |
 | --- | --- |
-| LED class attributes and triggers (`brightness`, `trigger`, `delay_on`, ...) | [../Linux/sysfs_leds.md](../Linux/sysfs_leds.md) |
+| LED class attributes and triggers (`brightness`, `trigger`, `delay_on`, ...) | [../Linux/sysfs_led_class.md](../Linux/sysfs_led_class.md) |
 | Board LEDs on RK3566 (`gpio-leds`), notification LED, `LightsManager` | [gpio_control.md](gpio_control.md) |
 | Complete C++ (NDK) AIDL service that writes `/sys/class/leds` | [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md) |
 | Turning it into a stable vendor HAL (VINTF, SELinux) | [AIDL_HAL_impl.md](AIDL_HAL_impl.md) |
@@ -144,7 +144,7 @@ Check this on the target with `ls -lZ` after `trigger=timer`.
 
 ## Related notes
 
-+ [../Linux/sysfs_leds.md](../Linux/sysfs_leds.md), [../Linux/dts_node_led_vs_gpio.md](../Linux/dts_node_led_vs_gpio.md)
++ [../Linux/sysfs_led_class.md](../Linux/sysfs_led_class.md), [../Linux/dts_node_led_vs_gpio.md](../Linux/dts_node_led_vs_gpio.md)
 + [gpio_control.md](gpio_control.md), [AIDL_ndk_led_sysfs.md](AIDL_ndk_led_sysfs.md), [AIDL_HAL_impl.md](AIDL_HAL_impl.md)
 + [hw_control_sysfs.md](hw_control_sysfs.md), [HAL_sysfsNodes.md](HAL_sysfsNodes.md), [neverallow_error.md](neverallow_error.md)
 + [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md): exposing the LED to 3rd-party apps through a system app

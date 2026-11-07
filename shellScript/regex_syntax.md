@@ -141,7 +141,7 @@ Regexes are fine for finding things in text. For structured formats (JSON, XML, 
 
 ## Related notes
 
-+ [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_demo.md](awk_demo.md)
++ [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_intro.md](awk_intro.md)
 + [quotes_note.md](quotes_note.md): quoting patterns in the shell
 + [shellScript_basic.md](shellScript_basic.md): `[[ =~ ]]` in Bash
 

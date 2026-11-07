@@ -1,7 +1,7 @@
 # grep and line-oriented text tools
 
 `grep` prints the lines that match a pattern. The other tools here (`sort`, `uniq`, `cut`, `tr`, `column`, `head`, `tail`)
-are commonly piped after it. For editing lines, see [sed_demo.md](sed_demo.md). For columns and sums, see [awk_demo.md](awk_demo.md).
+are commonly piped after it. For editing lines, see [sed_demo.md](sed_demo.md). For columns and sums, see [awk_intro.md](awk_intro.md).
 Examples were run with GNU grep and coreutils.
 
 ## 1. grep
@@ -80,7 +80,7 @@ tail -f /var/log/syslog     # follow a growing file
 
 ## Related notes
 
-+ [sed_demo.md](sed_demo.md), [awk_demo.md](awk_demo.md), [quotes_note.md](quotes_note.md), [linux_cmds.md](linux_cmds.md)
++ [sed_demo.md](sed_demo.md), [awk_intro.md](awk_intro.md), [quotes_note.md](quotes_note.md), [linux_cmds.md](linux_cmds.md)
 + [regex_syntax.md](regex_syntax.md)
 
 ## Reference

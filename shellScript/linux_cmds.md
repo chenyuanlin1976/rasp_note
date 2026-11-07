@@ -2,7 +2,7 @@
 
 Everyday commands on a Debian/Ubuntu host or a board (Raspberry Pi, Orange Pi, Jetson).
 
-+ Text tools have their own notes: [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_demo.md](awk_demo.md).
++ Text tools have their own notes: [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_intro.md](awk_intro.md).
 + Shell syntax, including the standard streams (**0 stdin**, **1 stdout**, **2 stderr**) and redirection (`>`, `2>&1`, `|`),
   is in [shellScript_basic.md](shellScript_basic.md#8-input-output-redirection).
 

@@ -41,7 +41,7 @@ Regex syntax itself: [regex_syntax.md](regex_syntax.md).
 ## Related notes
 
 + [shellScript_basic.md](shellScript_basic.md), [brackets_note.md](brackets_note.md)
-+ [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_demo.md](awk_demo.md)
++ [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_intro.md](awk_intro.md)
 
 ## Reference
 

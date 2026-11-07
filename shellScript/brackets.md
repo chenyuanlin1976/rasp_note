@@ -152,7 +152,7 @@ More on defaults: [fallbacks.md](fallbacks.md).
 
 ## Related notes
 
-+ [bash_basic.md](bash_basic.md), [quotes_note.md](quotes_note.md), [bash_recipes.md](bash_recipes.md)
++ [bash_basic.md](bash_basic.md), [shell_quoting.md](shell_quoting.md), [bash_recipes.md](bash_recipes.md)
 + [fallbacks.md](fallbacks.md), [regex_syntax.md](regex_syntax.md)
 
 ## Reference

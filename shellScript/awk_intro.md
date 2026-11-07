@@ -21,7 +21,7 @@ awk -f program.awk [file...]
 | `pattern` | Regex `/re/`, condition `$3 > 10`, range `NR==2, NR==5`, `BEGIN`, `END`. No pattern = every record |
 | `{ action }` | Statements. No action = `{ print }` (print the record) |
 
-+ Always put the program in **single quotes**, so the shell leaves `$1` alone (see [quotes_note.md](quotes_note.md)).
++ Always put the program in **single quotes**, so the shell leaves `$1` alone (see [shell_quoting.md](shell_quoting.md)).
 + `/re/` patterns use ERE syntax ([regex_syntax.md](regex_syntax.md)). `\d` doesn't work; use `[0-9]`.
 
 ## 2. Built-in variables
@@ -89,7 +89,7 @@ For sizes: `find . -type f -size +1M`.
 
 ## Related notes
 
-+ [grep_intro.md](grep_intro.md), [sed_intro.md](sed_intro.md), [regex_syntax.md](regex_syntax.md), [quotes_note.md](quotes_note.md)
++ [grep_intro.md](grep_intro.md), [sed_intro.md](sed_intro.md), [regex_syntax.md](regex_syntax.md), [shell_quoting.md](shell_quoting.md)
 + [sumup_1st_col.sh](sumup_1st_col.sh): the same column sum in pure Bash (integers only)
 
 ## Reference

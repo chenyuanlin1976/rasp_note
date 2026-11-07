@@ -110,7 +110,7 @@ Only in PCRE (`grep -P`), Perl, Python, JavaScript, Java, and similar flavors. L
 
 ## 7. Regexes in the shell
 
-+ Put patterns in **single quotes**, so the shell doesn't expand `$`, `*`, or `\` first ([quotes_note.md](quotes_note.md)).
++ Put patterns in **single quotes**, so the shell doesn't expand `$`, `*`, or `\` first ([shell_quoting.md](shell_quoting.md)).
 + For a fixed string with no regex at all, use `grep -F` (`grep -F 'a.b[1]'`).
 + `\t` and `\n` are understood by GNU sed and PCRE, but not by `grep` (BRE/ERE). Use Bash's `$'\t'` there: `grep $'a\tb'`.
 + In Bash, store the pattern in a variable and use it **unquoted** on the right of `=~`; quoting it makes it a literal string:
@@ -142,7 +142,7 @@ Regexes are fine for finding things in text. For structured formats (JSON, XML, 
 ## Related notes
 
 + [grep_intro.md](grep_intro.md), [sed_intro.md](sed_intro.md), [awk_intro.md](awk_intro.md)
-+ [quotes_note.md](quotes_note.md): quoting patterns in the shell
++ [shell_quoting.md](shell_quoting.md): quoting patterns in the shell
 + [bash_basic.md](bash_basic.md): `[[ =~ ]]` in Bash
 
 ## Reference

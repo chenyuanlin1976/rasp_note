@@ -1,7 +1,10 @@
 # Linux command cheat sheet
 
 Everyday commands on a Debian/Ubuntu host or a board (Raspberry Pi, Orange Pi, Jetson).
-Text tools have their own notes: [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_demo.md](awk_demo.md).
+
++ Text tools have their own notes: [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_demo.md](awk_demo.md).
++ Shell syntax, including the standard streams (**0 stdin**, **1 stdout**, **2 stderr**) and redirection (`>`, `2>&1`, `|`),
+  is in [shellScript_basic.md](shellScript_basic.md#8-input-output-redirection).
 
 ## 1. System information
 
@@ -14,7 +17,23 @@ lscpu; free -h              # CPU details; memory (RAM and swap)
 uptime                      # load average
 ```
 
-## 2. Processes
+## 2. Hardware and kernel modules
+
+```shell
+lspci -nnk                  # PCI devices, IDs, kernel driver in use
+lsusb; lsusb -t             # USB devices; as a tree with drivers
+sudo lshw -C network        # hardware details by class
+lsmod | grep iwlwifi        # loaded modules
+modinfo iwlwifi             # parameters, firmware, version
+sudo modprobe iwlwifi       # load, with dependencies (from /lib/modules/$(uname -r))
+sudo modprobe -r iwlwifi    # unload
+sudo insmod ./mydrv.ko      # load one .ko by path, no dependency handling (for development)
+sudo dmesg -w | grep -i iwlwifi        # kernel log (follow)
+```
+
+`dkms` rebuilds out-of-tree modules automatically for new kernels. Module details: [../Linux/kernel_module.md](../Linux/kernel_module.md).
+
+## 3. Processes
 
 ```shell
 ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head     # top memory users
@@ -25,20 +44,19 @@ pgrep -a ssh; pkill -f myscript.sh                     # find / kill by name
 kill -TERM "$pid"; kill -KILL "$pid"                   # ask to stop / force
 ```
 
-## 3. Disks and file systems
+## 4. Files
 
 ```shell
-df -h                       # free space per mounted file system
-du -sh dir; du -h --max-depth=1 . | sort -h     # size of a directory / of each subdirectory
-lsblk -f                    # block devices, partitions, file system types, mount points
-sudo fdisk -l /dev/sdX      # partition table (fdisk /dev/sdX: edit it interactively)
-sudo mkfs.ext4 -L data /dev/sdX1                # create an ext4 file system (mke2fs -t ext4)
-sudo mount /dev/sdX1 /mnt; sudo umount /mnt
+chown user:group file; chmod 640 file; chmod u+x script.sh
+cmp file1 file2             # first differing byte (binary files)
+diff -u file1 file2         # unified diff; diff -y: side by side
+rsync -avu --delete /home/user/SRC/ /home/user/DEST     # see ../Linux/rsync_demo.md
+wget -c -i urls.txt         # resume downloads from a list; see ../Linux/wget_intro.md
 ```
 
-Double-check the device name with `lsblk` before `fdisk` or `mkfs`. They destroy data.
+Archives (`tar`, `zip`, ...): [../Linux/archive_compression.md](../Linux/archive_compression.md).
 
-## 4. Find files and commands
+## 5. Find files and commands
 
 | Command | Searches | Speed / freshness |
 | --- | --- | --- |
@@ -56,16 +74,6 @@ find . -type d -exec chmod 755 {} +       # '+' passes many files per chmod ('\;
 find . -type f -exec chmod 644 {} +
 ```
 
-## 5. Files
-
-```shell
-chown user:group file; chmod 640 file; chmod u+x script.sh
-cmp file1 file2             # first differing byte (binary files)
-diff -u file1 file2         # unified diff; diff -y: side by side
-rsync -avu --delete /home/user/SRC/ /home/user/DEST     # see ../Linux/rsync_demo.md
-wget -c -i urls.txt         # resume downloads from a list; see ../Linux/wget_intro.md
-```
-
 ## 6. Bytes and hex
 
 ```shell
@@ -81,34 +89,20 @@ Use `hexdump -C` or `xxd`, which show bytes in file order. Plain `hexdump` (and 
 
 Hashes and HMAC (`openssl dgst`), checksums: [../openssl_note.md](../openssl_note.md), [../checksumCmd.md](../checksumCmd.md).
 
-## 7. Date and time
+## 7. Disks and file systems
 
 ```shell
-date '+%F %T %Z %z'         # 2026-11-03 10:15:30 CST +0800
-timedatectl                 # local time, time zone, NTP sync (systemd)
-timedatectl list-timezones | grep Taipei
-sudo timedatectl set-timezone Asia/Taipei
+df -h                       # free space per mounted file system
+du -sh dir; du -h --max-depth=1 . | sort -h     # size of a directory / of each subdirectory
+lsblk -f                    # block devices, partitions, file system types, mount points
+sudo fdisk -l /dev/sdX      # partition table (fdisk /dev/sdX: edit it interactively)
+sudo mkfs.ext4 -L data /dev/sdX1                # create an ext4 file system (mke2fs -t ext4)
+sudo mount /dev/sdX1 /mnt; sudo umount /mnt
 ```
 
-`date` formats and timestamps in scripts: [shellScript_recipes.md](shellScript_recipes.md#4-timestamps-and-delays).
+Double-check the device name with `lsblk` before `fdisk` or `mkfs`. They destroy data.
 
-## 8. Kernel modules and hardware
-
-```shell
-lsmod | grep iwlwifi        # loaded modules
-modinfo iwlwifi             # parameters, firmware, version
-sudo modprobe iwlwifi       # load, with dependencies (from /lib/modules/$(uname -r))
-sudo modprobe -r iwlwifi    # unload
-sudo insmod ./mydrv.ko      # load one .ko by path, no dependency handling (for development)
-sudo dmesg -w | grep -i iwlwifi        # kernel log (follow)
-lspci -nnk                  # PCI devices, IDs, kernel driver in use
-lsusb; lsusb -t             # USB devices; as a tree with drivers
-sudo lshw -C network        # hardware details by class
-```
-
-`dkms` rebuilds out-of-tree modules automatically for new kernels.
-
-## 9. Network
+## 8. Network
 
 Prefer the `iproute2` commands. `ifconfig`, `netstat`, and `arp` (net-tools) are deprecated and often not installed.
 
@@ -128,7 +122,7 @@ ping -c 4 8.8.8.8
 
 More: [../network_cmds.md](../network_cmds.md).
 
-## 10. Packages (Debian/Ubuntu)
+## 9. Packages (Debian/Ubuntu)
 
 ```shell
 sudo apt update && sudo apt upgrade
@@ -140,15 +134,22 @@ dpkg -L package; dpkg -S /usr/bin/xxd         # files of a package; which packag
 
 More: [../Linux/apt_dpkg_cmd.md](../Linux/apt_dpkg_cmd.md).
 
-## 11. Standard streams
+## 10. Date and time
 
-Every process starts with 3 file descriptors: **0 stdin**, **1 stdout**, **2 stderr**.
-Redirection (`>`, `2>&1`, `|`, ...) is in [shellScript_basic.md](shellScript_basic.md#8-input-output-redirection).
+```shell
+date '+%F %T %Z %z'         # 2026-11-03 10:15:30 CST +0800
+timedatectl                 # local time, time zone, NTP sync (systemd)
+timedatectl list-timezones | grep Taipei
+sudo timedatectl set-timezone Asia/Taipei
+```
+
+`date` formats and timestamps in scripts: [shellScript_recipes.md](shellScript_recipes.md#4-timestamps-and-delays).
 
 ## Related notes
 
 + [shellScript_basic.md](shellScript_basic.md), [shellScript_recipes.md](shellScript_recipes.md), [grep_demo.md](grep_demo.md)
 + [../Linux/rsync_demo.md](../Linux/rsync_demo.md), [../Linux/wget_intro.md](../Linux/wget_intro.md), [../Linux/apt_dpkg_cmd.md](../Linux/apt_dpkg_cmd.md)
++ [../Linux/kernel_module.md](../Linux/kernel_module.md), [../Linux/archive_compression.md](../Linux/archive_compression.md)
 + [../network_cmds.md](../network_cmds.md), [../openssl_note.md](../openssl_note.md), [../checksumCmd.md](../checksumCmd.md)
 
 ## Reference

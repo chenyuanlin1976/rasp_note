@@ -80,7 +80,7 @@ tail -f /var/log/syslog     # follow a growing file
 
 ## Related notes
 
-+ [sed_demo.md](sed_demo.md), [awk_demo.md](awk_demo.md), [quotes_note.md](quotes_note.md), [shellCmd_note.md](shellCmd_note.md)
++ [sed_demo.md](sed_demo.md), [awk_demo.md](awk_demo.md), [quotes_note.md](quotes_note.md), [linux_cmds.md](linux_cmds.md)
 + [Regex_intro.md](Regex_intro.md)
 
 ## Reference

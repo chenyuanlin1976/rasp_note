@@ -57,7 +57,7 @@ or the `AmbientCapabilities=CAP_NET_BIND_SERVICE` setting in a systemd unit.
 ## Related notes
 
 + [../network_cmds.md](../network_cmds.md), [../Modbus_intro.md](../Modbus_intro.md), [../MQTT_intro.md](../MQTT_intro.md)
-+ [../shellScript/shellCmd_note.md](../shellScript/shellCmd_note.md)
++ [../shellScript/linux_cmds.md](../shellScript/linux_cmds.md)
 
 ## Reference
 

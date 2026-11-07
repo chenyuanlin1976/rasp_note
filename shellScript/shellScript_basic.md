@@ -228,7 +228,7 @@ Use `printf` instead of `echo -e` for escapes and formats: `printf '%s=%d\n' "$n
 ## Related notes
 
 + [brackets_note.md](brackets_note.md), [quotes_note.md](quotes_note.md), [shellScript_recipes.md](shellScript_recipes.md), [fallbacks.md](fallbacks.md)
-+ [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_demo.md](awk_demo.md), [shellCmd_note.md](shellCmd_note.md)
++ [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_demo.md](awk_demo.md), [linux_cmds.md](linux_cmds.md)
 
 ## Reference
 

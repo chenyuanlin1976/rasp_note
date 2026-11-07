@@ -64,7 +64,7 @@ crc32 hello.txt                       # zlib CRC-32 (from libarchive-zip-perl on
 
 + [hashingAlgorithm.md](hashingAlgorithm.md): how hash functions work, which are secure
 + [openssl_note.md](openssl_note.md): `openssl dgst` and other OpenSSL commands
-+ [shellScript/shellCmd_note.md](shellScript/shellCmd_note.md): Linux command cheat sheet
++ [shellScript/linux_cmds.md](shellScript/linux_cmds.md): Linux command cheat sheet
 
 ## Reference
 

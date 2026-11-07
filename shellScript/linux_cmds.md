@@ -51,7 +51,7 @@ chown user:group file; chmod 640 file; chmod u+x script.sh
 cmp file1 file2             # first differing byte (binary files)
 diff -u file1 file2         # unified diff; diff -y: side by side
 rsync -avu --delete /home/user/SRC/ /home/user/DEST     # see ../Linux/rsync_cmds.md
-wget -c -i urls.txt         # resume downloads from a list; see ../Linux/wget_intro.md
+wget -c -i urls.txt         # resume downloads from a list; see ../Linux/wget_cmds.md
 ```
 
 Archives (`tar`, `zip`, ...): [../Linux/archive_compression.md](../Linux/archive_compression.md).
@@ -148,7 +148,7 @@ sudo timedatectl set-timezone Asia/Taipei
 ## Related notes
 
 + [bash_basic.md](bash_basic.md), [bash_recipes.md](bash_recipes.md), [grep_intro.md](grep_intro.md)
-+ [../Linux/rsync_cmds.md](../Linux/rsync_cmds.md), [../Linux/wget_intro.md](../Linux/wget_intro.md), [../Linux/apt_dpkg_cmd.md](../Linux/apt_dpkg_cmd.md)
++ [../Linux/rsync_cmds.md](../Linux/rsync_cmds.md), [../Linux/wget_cmds.md](../Linux/wget_cmds.md), [../Linux/apt_dpkg_cmd.md](../Linux/apt_dpkg_cmd.md)
 + [../Linux/kernel_module.md](../Linux/kernel_module.md), [../Linux/archive_compression.md](../Linux/archive_compression.md)
 + [../network_cmds.md](../network_cmds.md), [../openssl_note.md](../openssl_note.md), [../checksumCmd.md](../checksumCmd.md)
 

@@ -40,7 +40,7 @@ Regex syntax itself: [regex_syntax.md](regex_syntax.md).
 
 ## Related notes
 
-+ [shellScript_basic.md](shellScript_basic.md), [brackets_note.md](brackets_note.md)
++ [shellScript_basic.md](shellScript_basic.md), [shellScript_brackets.md](shellScript_brackets.md)
 + [grep_intro.md](grep_intro.md), [sed_intro.md](sed_intro.md), [awk_intro.md](awk_intro.md)
 
 ## Reference

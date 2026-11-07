@@ -39,7 +39,7 @@ done
 ```
 
 `cmd1 || cmd2` runs `cmd2` when `cmd1` fails. `a && b || c` is **not** if/else: `c` also runs when `b` fails.
-More on `${...}`: [brackets_note.md](brackets_note.md#4-dollar-curly-braces).
+More on `${...}`: [shellScript_brackets.md](shellScript_brackets.md#5-parameter-expansion).
 
 ## 2. C
 
@@ -91,7 +91,7 @@ The `crc_hw` / `crc_sw` bodies are omitted. In a driver, the same pattern picks 
 
 ## Related notes
 
-+ [shellScript_basic.md](shellScript_basic.md), [brackets_note.md](brackets_note.md), [shellScript_recipes.md](shellScript_recipes.md)
++ [shellScript_basic.md](shellScript_basic.md), [shellScript_brackets.md](shellScript_brackets.md), [shellScript_recipes.md](shellScript_recipes.md)
 
 ## Reference
 

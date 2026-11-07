@@ -1,29 +1,32 @@
 # Bash brackets quick reference
 
-| Syntax | Name | Result |
-| --- | --- | --- |
-| `( cmds )` | Subshell | Runs `cmds` in a child shell; variable changes don't survive |
-| `{ cmds; }` | Group | Runs `cmds` in the current shell; changes survive |
-| `$( cmd )` | Command substitution | The **output** of `cmd` as a string |
-| `<( cmd )`, `>( cmd )` | Process substitution *(Bash)* | A file name (`/dev/fd/N`) connected to `cmd` |
-| `(( expr ))` | Arithmetic command *(Bash)* | Status 0 if `expr` ≠ 0; assignments stick |
-| `$(( expr ))` | Arithmetic expansion | The **value** of `expr` |
-| `[ expr ]` | `test` | POSIX condition |
-| `[[ expr ]]` | Conditional *(Bash)* | Condition with globs, regex, `&&`/`\|\|`, no word splitting |
-| `{a,b}`, `{1..5}` | Brace expansion | Generates words |
-| `${var...}` | Parameter expansion | Value of a variable, with optional operations |
-| `arr=( ... )`, `${arr[i]}` | Array *(Bash)* | See [shellScript_basic.md](shellScript_basic.md#21-arrays-bash) |
-
-**Spaces**: `[`, `]`, `[[`, `]]`, `{` and `}` (as a group) are separate words, so they need spaces around them,
-and a group needs `;` or a newline before `}`: `{ echo a; }`.
-Round brackets don't need spaces: `(cd /tmp && ls)`.
-Inside `${...}` there are no spaces.
-
+Every kind of bracket in Bash, grouped by shape: `( )`, `[ ]`, `{ }`, and `${ }`.
 All examples were run with GNU Bash 5.2.
 
-## 1. Parentheses
+| Syntax | Name | Result | Section |
+| --- | --- | --- | --- |
+| `( cmds )` | Subshell | Runs `cmds` in a child shell; variable changes don't survive | 2.1 |
+| `$( cmd )` | Command substitution | The **output** of `cmd` as a string | 2.2 |
+| `<( cmd )`, `>( cmd )` | Process substitution *(Bash)* | A file name (`/dev/fd/N`) connected to `cmd` | 2.3 |
+| `(( expr ))` | Arithmetic command *(Bash)* | Status 0 if `expr` ≠ 0; assignments stick | 2.4 |
+| `$(( expr ))` | Arithmetic expansion | The **value** of `expr` | 2.4 |
+| `[ expr ]` | `test` | POSIX condition | 3.1 |
+| `[[ expr ]]` | Conditional *(Bash)* | Condition with globs, regex, `&&`/`\|\|`, no word splitting | 3.2 |
+| `{ cmds; }` | Group | Runs `cmds` in the current shell; changes survive | 4.1 |
+| `{a,b}`, `{1..5}` | Brace expansion | Generates words | 4.2 |
+| `${var...}` | Parameter expansion | Value of a variable, with optional operations | 5 |
+| `arr=( ... )`, `${arr[i]}` | Array *(Bash)* | See [shellScript_basic.md](shellScript_basic.md#21-arrays-bash) | |
 
-### 1.1 `( cmds )`: subshell
+## 1. Spaces
+
++ `[`, `]`, `[[`, `]]`, `{` and `}` (as a group) are separate words, so they need spaces around them: `[ -f x ]`, not `[-f x]`.
++ A group needs `;` or a newline before `}`: `{ echo a; }`.
++ Round brackets don't need spaces: `(cd /tmp && ls)`, `$((1+2))`.
++ Inside `${...}` there are no spaces.
+
+## 2. Parentheses
+
+### 2.1 `( cmds )`: subshell
 
 ```shell
 a="original"
@@ -33,21 +36,21 @@ echo "$a"; pwd               # original, and the directory didn't change
 
 Use it to change directory, variables, or `set` options temporarily.
 
-### 1.2 `$( cmd )`: command substitution
+### 2.2 `$( cmd )`: command substitution
 
 ```shell
 intro="My name is $(whoami)"
-files_count=$(ls | wc -l)
-today="$(date +%F)"          # quote it when assigning or using it, to keep spaces and newlines
+today="$(date +%F)"          # quote it when using it, to keep spaces and newlines
+kernel=$(uname -r)
 ```
 
 + The result is **one string**, with trailing newlines removed. It is not an array.
   To get one array element per line, use `mapfile -t lines < <(cmd)` *(Bash 4+)*.
 + `` `cmd` `` (backticks) is the old form, which is hard to nest. Use `$( )`.
-+ The exit status of `cmd` is in `$?` afterwards. Testing it directly is clearer:
-  `if grep -q PATTERN file; then ...` instead of `echo $(grep -q PATTERN file)$?`.
++ The exit status of `cmd` is in `$?` afterwards. To test a command, run it directly:
+  `if grep -q PATTERN file; then ...`. No `$( )` is needed.
 
-### 1.3 `<( cmd )`: process substitution *(Bash)*
+### 2.3 `<( cmd )`: process substitution *(Bash)*
 
 The output of `cmd` appears as a file, for commands that need file names instead of stdin:
 
@@ -56,7 +59,7 @@ diff <(sort a.txt) <(sort b.txt)
 while read -r line; do echo "$line"; done < <(ls /etc)   # loop in the current shell (a pipe would use a subshell)
 ```
 
-### 1.4 `(( expr ))` and `$(( expr ))`: arithmetic
+### 2.4 `(( expr ))` and `$(( expr ))`: arithmetic
 
 ```shell
 i=7
@@ -66,11 +69,12 @@ legs=100
 echo "rabbits: $(( legs / 4 ))"   # expansion: substitutes the value (25)
 ```
 
-Integers only. Inside, variables don't need `$`. See [shellScript_basic.md](shellScript_basic.md#7-arithmetic).
++ Integers only. Inside, variables don't need `$`. See [shellScript_basic.md](shellScript_basic.md#7-arithmetic).
++ `(( expr ))` returns status 1 when the value is 0. With `set -e`, `i=0; (( i++ ))` exits the script; use `i=$(( i + 1 ))`.
 
-## 2. Square brackets
+## 3. Square brackets
 
-### 2.1 `[ expr ]`: POSIX test
+### 3.1 `[ expr ]`: POSIX test
 
 `[` is a command (a shell builtin, also `/usr/bin/[`) whose last argument must be `]`.
 
@@ -80,30 +84,32 @@ if [ -f "$file" ] && [ "$count" -gt 0 ]; then echo "ok"; fi
 
 Quote variables: `[ $x = y ]` fails with "unary operator expected" when `$x` is empty.
 
-### 2.2 `[[ expr ]]`: Bash conditional
+### 3.2 `[[ expr ]]`: Bash conditional
 
 ```shell
 name="John Doe"
+ver="6.14"
 [[ $name == J*Doe ]] && echo "glob match"            # right side unquoted = pattern
-[[ $ver =~ ^([0-9]+)\.([0-9]+)$ ]] && echo "major=${BASH_REMATCH[1]}"
+[[ $ver =~ ^([0-9]+)\.([0-9]+)$ ]] && echo "major=${BASH_REMATCH[1]}"   # regex (ERE): major=6
 [[ -f $f && $f != *.bak ]] && echo "use $f"          # && and || inside
 ```
 
-No word splitting or globbing inside `[[ ]]`, so unquoted variables are safe there.
-Quote the right side of `==` to compare literally: `[[ $a == "$b" ]]`.
++ No word splitting or globbing inside `[[ ]]`, so unquoted variables are safe there.
++ Quote the right side of `==` to compare literally: `[[ $a == "$b" ]]`.
++ Regex syntax: [regex_syntax.md](regex_syntax.md). Operator table: [shellScript_basic.md](shellScript_basic.md#4-exit-status-and-conditions).
 
-Operator table: [shellScript_basic.md](shellScript_basic.md#4-exit-status-and-conditions).
+## 4. Curly braces
 
-## 3. Curly braces
-
-### 3.1 `{ cmds; }`: group in the current shell
+### 4.1 `{ cmds; }`: group in the current shell
 
 ```shell
 { echo "header"; date; } > report.txt     # one redirection for several commands
 [ -f config ] || { echo "missing config" >&2; exit 1; }
 ```
 
-### 3.2 Brace expansion
+A group used in a pipeline (`cmd | { ...; }`) runs in a subshell, like any pipeline part.
+
+### 4.2 Brace expansion
 
 ```shell
 echo h{a,e,i,o,u}p           # hap hep hip hop hup
@@ -113,9 +119,9 @@ cp config.ini{,.bak}         # cp config.ini config.ini.bak
 mkdir -p proj/{src,include,test}
 ```
 
-Brace expansion happens before variable expansion: `{1..$n}` stays literal.
+Brace expansion happens before variable expansion: `{1..$n}` stays literal. Use `seq 1 "$n"` or `for (( i = 1; i <= n; i++ ))`.
 
-## 4. Dollar curly braces
+## 5. Parameter expansion
 
 `${...}` expands a variable. The braces delimit the name, and operators inside transform the value:
 
@@ -147,6 +153,7 @@ More on defaults: [fallbacks.md](fallbacks.md).
 ## Related notes
 
 + [shellScript_basic.md](shellScript_basic.md), [quotes_note.md](quotes_note.md), [shellScript_recipes.md](shellScript_recipes.md)
++ [fallbacks.md](fallbacks.md), [regex_syntax.md](regex_syntax.md)
 
 ## Reference
 

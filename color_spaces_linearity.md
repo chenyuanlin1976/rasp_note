@@ -231,7 +231,7 @@ The same functions work on OpenCV arrays; only the channel order (BGR) differs, 
 ## Related notes
 
 + [RGBA_alpha_channel.md](RGBA_alpha_channel.md): RGB with an alpha channel, and image formats that support it
-+ [VideoCodecs_note.md](VideoCodecs_note.md): video codecs, which store Y'CbCr with chroma subsampling
++ [video_containers_codecs.md](video_containers_codecs.md): video codecs, which store Y'CbCr with chroma subsampling
 + [Linux/ffmpeg_cmds.md](Linux/ffmpeg_cmds.md): ffmpeg, including pixel formats such as `yuv420p`
 
 ## Reference

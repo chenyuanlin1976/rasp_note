@@ -84,7 +84,7 @@ By default it refuses to run without `-f` (`clean.requireForce`).
 
 + [git_pull_rebase.md](git_pull_rebase.md): pull strategies and safe rebasing
 + [git_identity.md](git_identity.md)
-+ [Android/Googles_Repo.md](Android/Googles_Repo.md)
++ [../Android/Googles_Repo.md](../Android/Googles_Repo.md)
 
 ## Reference
 

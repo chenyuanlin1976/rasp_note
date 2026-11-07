@@ -68,7 +68,7 @@ finally:
     lgpio.gpiochip_close(h)         # releases the line
 ```
 
-**libgpiod Python bindings**: see [Linux/libgpiod_intro.md](Linux/libgpiod_intro.md). Bookworm's `python3-libgpiod` is v1. The `pip` package `gpiod` is v2.
+**libgpiod Python bindings**: see [../Linux/libgpiod_intro.md](../Linux/libgpiod_intro.md). Bookworm's `python3-libgpiod` is v1. The `pip` package `gpiod` is v2.
 
 ## 4. PWM
 
@@ -96,7 +96,7 @@ Plain `pip install` into the system Python is blocked on Bookworm (externally ma
 
 ## Related notes
 
-+ [Linux/libgpiod_intro.md](Linux/libgpiod_intro.md), [Linux/libgpiod_sysfs_cmp.md](Linux/libgpiod_sysfs_cmp.md)
++ [../Linux/libgpiod_intro.md](../Linux/libgpiod_intro.md), [../Linux/libgpiod_sysfs_cmp.md](../Linux/libgpiod_sysfs_cmp.md)
 + [OPi5_gpio_ctrl.md](OPi5_gpio_ctrl.md), [NV_jetson_gpio_ctrl.md](NV_jetson_gpio_ctrl.md)
 
 ## Reference

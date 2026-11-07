@@ -79,7 +79,7 @@ systemctl status ufw firewalld nftables                    # which manager start
 ## Related notes
 
 + [ufw_cmds.md](ufw_cmds.md): ufw commands and pitfalls
-+ [../network_cmds.md](../network_cmds.md), [ssh_login.md](ssh_login.md), [../docker_demo.md](../docker_demo.md)
++ [network_cmds.md](network_cmds.md), [ssh_login.md](ssh_login.md), [../DevTools/docker_demo.md](../DevTools/docker_demo.md)
 
 ## Reference
 

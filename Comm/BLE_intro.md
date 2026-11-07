@@ -108,7 +108,7 @@ bluetoothctl                  # interactive tool
 
 + [IoT_Network.md](IoT_Network.md): BLE compared with Wi-Fi, Zigbee, Thread, LoRaWAN, and others
 + [MQTT_intro.md](MQTT_intro.md): forwarding BLE sensor data to a server through a gateway
-+ [Antenna_FPC.md](Antenna_FPC.md), [Antenna_SMD.md](Antenna_SMD.md): 2.4 GHz antennas
++ [../HW/Antenna_FPC.md](../HW/Antenna_FPC.md), [../HW/Antenna_SMD.md](../HW/Antenna_SMD.md): 2.4 GHz antennas
 + [RF_IR_remote_ctrl.md](RF_IR_remote_ctrl.md): proprietary 2.4 GHz links compared with BLE
 
 ## Reference

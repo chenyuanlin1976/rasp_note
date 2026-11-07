@@ -90,14 +90,14 @@ In host role, the VBUS regulator (`vbus-supply` / `phy-supply` in the device tre
 + Device role is the default: adb, MTP, and USB tethering are gadget functions ([USB_CDC.md](USB_CDC.md#5-linux-or-android-as-the-usb-device-gadget)).
 + With a USB-C port and a PD controller: **Settings → Connected devices → USB → "USB controlled by"**: "Connected device" or "This device" swaps the data role.
 + On development boards, the BSP often offers a property or a Settings toggle that writes the kernel attribute above.
-  A development board with only one OTG port can't do adb over USB while it acts as a host; use adb over TCP ([Android/adb_intro.md](Android/adb_intro.md)).
+  A development board with only one OTG port can't do adb over USB while it acts as a host; use adb over TCP ([../Android/adb_intro.md](../Android/adb_intro.md)).
 
 ## Related notes
 
 + [USB_CDC.md](USB_CDC.md): CDC-ACM serial ports, gadget setup
-+ [Android/USB_port_speed.md](Android/USB_port_speed.md): USB 2.0 vs 3.0 host controllers
-+ [Linux/dts_node_regulator_fixed.md](Linux/dts_node_regulator_fixed.md): a GPIO-switched 5 V VBUS regulator
-+ [Linux/sysfs_intro.md](Linux/sysfs_intro.md)
++ [../Android/USB_port_speed.md](../Android/USB_port_speed.md): USB 2.0 vs 3.0 host controllers
++ [../Linux/dts_node_regulator_fixed.md](../Linux/dts_node_regulator_fixed.md): a GPIO-switched 5 V VBUS regulator
++ [../Linux/sysfs_intro.md](../Linux/sysfs_intro.md)
 
 ## Reference
 

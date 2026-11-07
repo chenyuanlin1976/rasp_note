@@ -175,8 +175,8 @@ No RTOS is preinstalled; programs normally run on bare metal with the Pico SDK.
 
 + [RPi_pico_Cxx_SDK.md](RPi_pico_Cxx_SDK.md): Pico C/C++ SDK (bare metal, `pico_multicore`)
 + [RPi_pico_PIO.md](RPi_pico_PIO.md): offloading timing-critical I/O to PIO instead of tasks
-+ [Linux/HAL_Std_Func.md](Linux/HAL_Std_Func.md): STM32 HAL functions, blocking vs `_IT`/`_DMA` variants
-+ [Linux/HAL_mmio_vs_sysfs.md](Linux/HAL_mmio_vs_sysfs.md): hardware access on Linux vs microcontrollers
++ [../Linux/HAL_Std_Func.md](../Linux/HAL_Std_Func.md): STM32 HAL functions, blocking vs `_IT`/`_DMA` variants
++ [../Linux/HAL_mmio_vs_sysfs.md](../Linux/HAL_mmio_vs_sysfs.md): hardware access on Linux vs microcontrollers
 
 ## Reference
 

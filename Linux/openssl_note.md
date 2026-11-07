@@ -10,7 +10,7 @@ openssl help                # list of commands
 openssl <command> -help     # options of one command, e.g. openssl x509 -help
 ```
 
-Java/Android keystores (`.jks`, `keytool`) are covered in [Android/keytool_cmds.md](Android/keytool_cmds.md).
+Java/Android keystores (`.jks`, `keytool`) are covered in [../Android/keytool_cmds.md](../Android/keytool_cmds.md).
 
 ## 1. File formats
 
@@ -137,7 +137,7 @@ openssl dgst -sha256 -verify pub.pem -signature file.sig file.bin   # "Verified 
 ```
 
 + `echo` adds a newline that becomes part of the input; use `printf` or `echo -n` when the exact bytes matter.
-+ Use SHA-256 or better; MD5 and SHA-1 are broken for security (see [hashingAlgorithm.md](hashingAlgorithm.md)).
++ Use SHA-256 or better; MD5 and SHA-1 are broken for security (see [../unclassified/hashingAlgorithm.md](../unclassified/hashingAlgorithm.md)).
 + An HMAC proves that someone with the key produced the data. A plain hash only detects changes if the hash itself is trusted.
 + For Ed25519 keys, `dgst -sign` doesn't work; use `openssl pkeyutl -sign -rawin`.
 
@@ -178,12 +178,12 @@ openssl list -cipher-algorithms        # available ciphers
 
 ## Related notes
 
-+ [hashingAlgorithm.md](hashingAlgorithm.md): hash functions and which ones are secure
++ [../unclassified/hashingAlgorithm.md](../unclassified/hashingAlgorithm.md): hash functions and which ones are secure
 + [checksumCmd.md](checksumCmd.md): `sha256sum`, `b2sum`, and checksum verification
-+ [Android/keytool_cmds.md](Android/keytool_cmds.md): Java keystores and `keytool`
-+ [Android/sign_apk.md](Android/sign_apk.md): converting AOSP `.pk8` keys and signing APKs
-+ [Android/verify_platformKeys.md](Android/verify_platformKeys.md): comparing certificate hashes of an AOSP build
-+ [Linux/ssh_login.md](Linux/ssh_login.md): SSH keys (a different key format and tool)
++ [../Android/keytool_cmds.md](../Android/keytool_cmds.md): Java keystores and `keytool`
++ [../Android/sign_apk.md](../Android/sign_apk.md): converting AOSP `.pk8` keys and signing APKs
++ [../Android/verify_platformKeys.md](../Android/verify_platformKeys.md): comparing certificate hashes of an AOSP build
++ [ssh_login.md](ssh_login.md): SSH keys (a different key format and tool)
 
 ## Reference
 

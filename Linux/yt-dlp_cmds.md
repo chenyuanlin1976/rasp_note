@@ -43,7 +43,7 @@ yt-dlp --merge-output-format mp4 URL           # merge into MP4 instead of MKV/W
 ```
 
 VP9 and AV1 give smaller files at the same quality; H.264 decodes in hardware on more devices,
-see [../video_containers_codecs.md](../video_containers_codecs.md).
+see [../Media/video_containers_codecs.md](../Media/video_containers_codecs.md).
 
 ## 3. Download part of a video
 
@@ -94,7 +94,7 @@ yt-dlp -r 2M URL                                 # limit the speed to 2 MB/s
 
 + [ffmpeg_cmds.md](ffmpeg_cmds.md): cut, convert and encode the downloaded files
 + [wget_cmds.md](wget_cmds.md): downloading ordinary files over HTTP
-+ [../video_containers_codecs.md](../video_containers_codecs.md): containers and codecs (MP4/WebM, H.264/VP9/AV1)
++ [../Media/video_containers_codecs.md](../Media/video_containers_codecs.md): containers and codecs (MP4/WebM, H.264/VP9/AV1)
 
 ## Reference
 

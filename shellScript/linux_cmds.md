@@ -87,7 +87,7 @@ hexdump mac.bin             # 0000000 2474 38ca e1a3   <- 16-bit words, little-e
 
 Use `hexdump -C` or `xxd`, which show bytes in file order. Plain `hexdump` (and `od -x`) groups bytes into host-endian 16-bit words.
 
-Hashes and HMAC (`openssl dgst`), checksums: [../openssl_note.md](../openssl_note.md), [../checksumCmd.md](../checksumCmd.md).
+Hashes and HMAC (`openssl dgst`), checksums: [../Linux/openssl_note.md](../Linux/openssl_note.md), [../Linux/checksumCmd.md](../Linux/checksumCmd.md).
 
 ## 7. Disks and file systems
 
@@ -120,7 +120,7 @@ nmcli device; nmcli device wifi list    # NetworkManager
 ping -c 4 8.8.8.8
 ```
 
-More: [../network_cmds.md](../network_cmds.md).
+More: [../Linux/network_cmds.md](../Linux/network_cmds.md).
 
 ## 9. Packages (Debian/Ubuntu)
 
@@ -150,7 +150,7 @@ sudo timedatectl set-timezone Asia/Taipei
 + [bash_basic.md](bash_basic.md), [bash_recipes.md](bash_recipes.md), [grep_intro.md](grep_intro.md)
 + [../Linux/rsync_cmds.md](../Linux/rsync_cmds.md), [../Linux/wget_cmds.md](../Linux/wget_cmds.md), [../Linux/apt_dpkg_cmds.md](../Linux/apt_dpkg_cmds.md)
 + [../Linux/kernel_module.md](../Linux/kernel_module.md), [../Linux/archive_compression.md](../Linux/archive_compression.md)
-+ [../network_cmds.md](../network_cmds.md), [../openssl_note.md](../openssl_note.md), [../checksumCmd.md](../checksumCmd.md)
++ [../Linux/network_cmds.md](../Linux/network_cmds.md), [../Linux/openssl_note.md](../Linux/openssl_note.md), [../Linux/checksumCmd.md](../Linux/checksumCmd.md)
 
 ## Reference
 

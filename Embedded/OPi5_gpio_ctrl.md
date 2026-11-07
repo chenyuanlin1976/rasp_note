@@ -48,7 +48,7 @@ finally:
     line.release()
 ```
 
-The v2 API (`pip install gpiod`) is shown in [Linux/libgpiod_intro.md](Linux/libgpiod_intro.md).
+The v2 API (`pip install gpiod`) is shown in [../Linux/libgpiod_intro.md](../Linux/libgpiod_intro.md).
 
 **Board-number wrappers**: wiringOP's Python binding (`wiringpi` for Orange Pi, from Orange Pi's GitHub)
 and community `RPi.GPIO`-style packages (for example `OPi5.GPIO`) let you use physical pin numbers.
@@ -66,7 +66,7 @@ Check that your board is in Blinka's supported list.
 
 ## Related notes
 
-+ [Linux/libgpiod_intro.md](Linux/libgpiod_intro.md), [Linux/dts_node_led_vs_gpio.md](Linux/dts_node_led_vs_gpio.md) (Rockchip pinctrl/GPIO in DT)
++ [../Linux/libgpiod_intro.md](../Linux/libgpiod_intro.md), [../Linux/dts_node_led_vs_gpio.md](../Linux/dts_node_led_vs_gpio.md) (Rockchip pinctrl/GPIO in DT)
 + [RPi5_gpio_ctrl.md](RPi5_gpio_ctrl.md), [NV_jetson_gpio_ctrl.md](NV_jetson_gpio_ctrl.md), [orangePi.md](orangePi.md)
 
 ## Reference

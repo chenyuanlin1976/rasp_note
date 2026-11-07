@@ -8,7 +8,13 @@ Personal technical notes (Markdown) on embedded Linux, Android/AOSP, and boards
 - `Android/`: AOSP, AIDL/HIDL/HAL, Binder, SELinux, VINTF, JNI, apps, signing
 - `Linux/`: kernel, device tree, drivers, GPIO, tools
 - `shellScript/`: Bash scripting notes (basics, brackets, quoting, recipes), regular expressions, text tools (grep, sed, awk), Linux command cheat sheet, small scripts
-- top level: misc topics (protocols, boards, RF, math, ...)
+- `Embedded/`: boards (Raspberry Pi, Pico, Orange Pi, Jetson) GPIO/SDK notes, RTOS
+- `Comm/`: communication protocols and interfaces (Modbus, MQTT, BLE, USB, RF/IR, IoT)
+- `HW/`: hardware/electronics (antennas, e-paper, voltage levels, rework)
+- `Media/`: color, pixel formats, video codecs, fonts
+- `DevTools/`: git, CMake, Docker, Python, YAML/Markdown, Mermaid, Claude Code, architecture
+- `unclassified/`: topics with fewer than 5 notes (math, physics, misc)
+- top level: only `CLAUDE.md`; put new notes into a folder
 - Some topics exist in both folders (e.g. `Linux/HAL_intro.md` vs `Android/HAL_intro.md`,
   libgpiod notes). Check both before writing, so they don't contradict each other.
 

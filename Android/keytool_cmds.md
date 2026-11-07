@@ -84,7 +84,7 @@ Converting AOSP `.pk8` + `.x509.pem` keys into a keystore needs `openssl` first;
 
 ## Related notes
 
-+ [sign_apk.md](sign_apk.md), [verify_platformKeys.md](verify_platformKeys.md), [../openssl_note.md](../openssl_note.md)
++ [sign_apk.md](sign_apk.md), [verify_platformKeys.md](verify_platformKeys.md), [../Linux/openssl_note.md](../Linux/openssl_note.md)
 
 ## Reference
 

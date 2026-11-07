@@ -28,7 +28,7 @@ The SDK is a set of CMake **INTERFACE libraries**: you link only the ones you us
 | `pico_stdlib` | GPIO, UART, time, `stdio` | Convenience bundle that most programs link |
 
 + `stdio_init_all()` connects `printf()` / `getchar()` to the `stdio` targets enabled in CMake: UART (GPIO 0/1 by default) and/or USB CDC.
-  On a Linux host, USB `stdio` appears as `/dev/ttyACM0`; see [USB_CDC.md](USB_CDC.md).
+  On a Linux host, USB `stdio` appears as `/dev/ttyACM0`; see [../Comm/USB_CDC.md](../Comm/USB_CDC.md).
 + `hardware_pio` programs the PIO state machines; see [RPi_pico_PIO.md](RPi_pico_PIO.md).
 
 ## 3. Example program
@@ -126,8 +126,8 @@ The command-line build in section 4 works the same way underneath.
 ## Related notes
 
 + [RPi_pico_PIO.md](RPi_pico_PIO.md): PIO state machines and `pioasm`
-+ [USB_CDC.md](USB_CDC.md): USB CDC serial (`stdio` over USB)
-+ [CMakeLists_syntax.md](CMakeLists_syntax.md): CMake syntax
++ [../Comm/USB_CDC.md](../Comm/USB_CDC.md): USB CDC serial (`stdio` over USB)
++ [../DevTools/CMakeLists_syntax.md](../DevTools/CMakeLists_syntax.md): CMake syntax
 + [RTOS_intro.md](RTOS_intro.md): running an RTOS (e.g. FreeRTOS) on microcontrollers
 
 ## Reference

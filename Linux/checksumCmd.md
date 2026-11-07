@@ -1,7 +1,7 @@
 # Linux checksum commands
 
 GNU coreutils has one command per algorithm. They all print `<hash>  <file>` and can verify a list of hashes with `-c`.
-For what the algorithms are and which ones are still secure, see [hashingAlgorithm.md](hashingAlgorithm.md).
+For what the algorithms are and which ones are still secure, see [../unclassified/hashingAlgorithm.md](../unclassified/hashingAlgorithm.md).
 
 ## 1. Commands
 
@@ -62,9 +62,9 @@ crc32 hello.txt                       # zlib CRC-32 (from libarchive-zip-perl on
 
 ## Related notes
 
-+ [hashingAlgorithm.md](hashingAlgorithm.md): how hash functions work, which are secure
++ [../unclassified/hashingAlgorithm.md](../unclassified/hashingAlgorithm.md): how hash functions work, which are secure
 + [openssl_note.md](openssl_note.md): `openssl dgst` and other OpenSSL commands
-+ [shellScript/linux_cmds.md](shellScript/linux_cmds.md): Linux command cheat sheet
++ [../shellScript/linux_cmds.md](../shellScript/linux_cmds.md): Linux command cheat sheet
 
 ## Reference
 

@@ -50,7 +50,7 @@ For older commits, use an interactive rebase and amend each one.
 ## Related notes
 
 + [git_pull_rebase.md](git_pull_rebase.md), [git_cmds.md](git_cmds.md)
-+ [Linux/ssh_login.md](Linux/ssh_login.md): SSH keys, which Git hosts use for authentication
++ [../Linux/ssh_login.md](../Linux/ssh_login.md): SSH keys, which Git hosts use for authentication
 
 ## Reference
 

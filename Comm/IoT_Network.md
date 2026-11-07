@@ -131,7 +131,7 @@ regional frequency rules, module and subscription cost, and whether you control 
 + [MQTT_intro.md](MQTT_intro.md): MQTT broker, topics, QoS, C examples
 + [Modbus_intro.md](Modbus_intro.md), [Modbus_RTU.md](Modbus_RTU.md), [Modbus_SunSpec.md](Modbus_SunSpec.md): Modbus protocol, RS-485 serial line, SunSpec models
 + [RF_IR_remote_ctrl.md](RF_IR_remote_ctrl.md): simple remote-control links (2.4 GHz, sub-GHz, infrared)
-+ [Antenna_FPC.md](Antenna_FPC.md), [Antenna_SMD.md](Antenna_SMD.md): antennas for IoT radios
++ [../HW/Antenna_FPC.md](../HW/Antenna_FPC.md), [../HW/Antenna_SMD.md](../HW/Antenna_SMD.md): antennas for IoT radios
 
 ## Reference
 

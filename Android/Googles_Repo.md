@@ -72,7 +72,7 @@ Run it again until it finishes cleanly before you build.
 
 ## Related notes
 
-+ [AOSP_build.md](AOSP_build.md), [AOSP_build_system.md](AOSP_build_system.md), [../git_pull_rebase.md](../git_pull_rebase.md), [../git_cmds.md](../git_cmds.md)
++ [AOSP_build.md](AOSP_build.md), [AOSP_build_system.md](AOSP_build_system.md), [../DevTools/git_pull_rebase.md](../DevTools/git_pull_rebase.md), [../DevTools/git_cmds.md](../DevTools/git_cmds.md)
 
 ## Reference
 

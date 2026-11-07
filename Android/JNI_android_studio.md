@@ -216,7 +216,7 @@ JNI type signatures: `I` int, `J` long, `Z` boolean, `B` byte, `C` char, `S` sho
 ## Related notes
 
 + [JNI_intro.md](JNI_intro.md), [JNI_C_code.md](JNI_C_code.md), [NDK_intro.md](NDK_intro.md)
-+ [CMakeLists_syntax.md](../CMakeLists_syntax.md)
++ [../DevTools/CMakeLists_syntax.md](../DevTools/CMakeLists_syntax.md)
 
 ## Reference
 

@@ -63,7 +63,7 @@ finally:
     GPIO.cleanup()            # release the pins
 ```
 
-The libgpiod Python bindings (`python3-libgpiod`, v1) also work; see [Linux/libgpiod_intro.md](Linux/libgpiod_intro.md).
+The libgpiod Python bindings (`python3-libgpiod`, v1) also work; see [../Linux/libgpiod_intro.md](../Linux/libgpiod_intro.md).
 
 ## 4. Hardware notes
 
@@ -75,7 +75,7 @@ The libgpiod Python bindings (`python3-libgpiod`, v1) also work; see [Linux/libg
 
 ## Related notes
 
-+ [Linux/libgpiod_intro.md](Linux/libgpiod_intro.md), [Linux/libgpiod_sysfs_cmp.md](Linux/libgpiod_sysfs_cmp.md)
++ [../Linux/libgpiod_intro.md](../Linux/libgpiod_intro.md), [../Linux/libgpiod_sysfs_cmp.md](../Linux/libgpiod_sysfs_cmp.md)
 + [RPi5_gpio_ctrl.md](RPi5_gpio_ctrl.md), [OPi5_gpio_ctrl.md](OPi5_gpio_ctrl.md)
 
 ## Reference

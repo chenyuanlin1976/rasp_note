@@ -76,7 +76,7 @@ sudo tail -f /var/log/ufw.log
 ## Related notes
 
 + [firewall_intro.md](firewall_intro.md): netfilter, iptables, nftables, firewalld, ufw
-+ [ssh_login.md](ssh_login.md), [../network_cmds.md](../network_cmds.md), [../docker_demo.md](../docker_demo.md)
++ [ssh_login.md](ssh_login.md), [network_cmds.md](network_cmds.md), [../DevTools/docker_demo.md](../DevTools/docker_demo.md)
 
 ## Reference
 

@@ -5,7 +5,7 @@ The name is a recursive acronym, "YAML Ain't Markup Language" (originally "Yet A
 
 + Current version: **YAML 1.2** (2009, revision 1.2.2 in 2021). Many widely used parsers (for example PyYAML, and Go's `yaml.v2`) still follow **YAML 1.1** typing rules, which matters for the pitfalls in section 6.
 + YAML 1.2 is designed as a superset of JSON, so almost any JSON document is also valid YAML.
-+ For a comparison with JSON and Markdown, see [comp_md_yml_json.md](comp_md_yml_json.md).
++ For a comparison with JSON and Markdown, see [cmp_md_yml_json.md](cmp_md_yml_json.md).
 
 ## 1. Why use YAML
 
@@ -138,7 +138,7 @@ Converting to JSON is a quick way to see what a parser really understood.
 + **Containers and DevOps**: Kubernetes manifests, Docker Compose (`compose.yaml`), Ansible playbooks, Helm charts.
 + **Application config**: Spring Boot (`application.yml`), Ruby on Rails (`database.yml`), Home Assistant, ROS 2 parameters.
 + **Docs and metadata**: front matter in Markdown files, MkDocs (`mkdocs.yml`), OpenAPI specs.
-+ **Linux device tree**: kernel binding schemas under `Documentation/devicetree/bindings/` are YAML (see [Linux/dts_intro.md](Linux/dts_intro.md)).
++ **Linux device tree**: kernel binding schemas under `Documentation/devicetree/bindings/` are YAML (see [../Linux/dts_intro.md](../Linux/dts_intro.md)).
 
 ## 9. Example: application config
 
@@ -167,9 +167,9 @@ Don't commit passwords or tokens in YAML config files. Reference an environment 
 
 ## Related notes
 
-+ [comp_md_yml_json.md](comp_md_yml_json.md): YAML compared with JSON and Markdown
++ [cmp_md_yml_json.md](cmp_md_yml_json.md): YAML compared with JSON and Markdown
 + [docker_demo.md](docker_demo.md): Docker examples
-+ [Linux/dts_intro.md](Linux/dts_intro.md): device tree, YAML binding schemas
++ [../Linux/dts_intro.md](../Linux/dts_intro.md): device tree, YAML binding schemas
 
 ## Reference
 

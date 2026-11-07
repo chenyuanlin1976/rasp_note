@@ -148,9 +148,9 @@ and the receiver stops the motors if no packet arrives for a while (a failsafe t
 
 + [BLE_intro.md](BLE_intro.md): Bluetooth Low Energy, the standard 2.4 GHz alternative
 + [IoT_Network.md](IoT_Network.md): Wi-Fi, Zigbee, Thread, LoRa and other IoT radios compared
-+ [Antenna_FPC.md](Antenna_FPC.md), [Antenna_SMD.md](Antenna_SMD.md): 2.4 GHz antennas
-+ [RPi_pico_Cxx_SDK.md](RPi_pico_Cxx_SDK.md): Pico C/C++ SDK, including Wi-Fi on the Pico W
-+ [RPi_pico_PIO.md](RPi_pico_PIO.md): PIO state machines, useful for IR timing
++ [../HW/Antenna_FPC.md](../HW/Antenna_FPC.md), [../HW/Antenna_SMD.md](../HW/Antenna_SMD.md): 2.4 GHz antennas
++ [../Embedded/RPi_pico_Cxx_SDK.md](../Embedded/RPi_pico_Cxx_SDK.md): Pico C/C++ SDK, including Wi-Fi on the Pico W
++ [../Embedded/RPi_pico_PIO.md](../Embedded/RPi_pico_PIO.md): PIO state machines, useful for IR timing
 
 ## Reference
 

@@ -131,7 +131,7 @@ The key pair matches if the 2 hashes are equal.
 
 ## Related notes
 
-+ [keytool_cmds.md](keytool_cmds.md), [verify_platformKeys.md](verify_platformKeys.md), [../openssl_note.md](../openssl_note.md)
++ [keytool_cmds.md](keytool_cmds.md), [verify_platformKeys.md](verify_platformKeys.md), [../Linux/openssl_note.md](../Linux/openssl_note.md)
 + [sharedUserId.md](sharedUserId.md): platform shared UIDs and signature permissions
 + [AOSP_preinstalled_apps.md](AOSP_preinstalled_apps.md), [gradle_build.md](gradle_build.md), [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md)
 + [keystore_intro.md](keystore_intro.md): the runtime Android Keystore, a different topic

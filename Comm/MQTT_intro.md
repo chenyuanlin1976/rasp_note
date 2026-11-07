@@ -249,8 +249,8 @@ int main(void)
 + [IoT_Network.md](IoT_Network.md): the network links MQTT runs over, and other IoT application protocols
 + [Modbus_intro.md](Modbus_intro.md): polling industrial devices; gateways often forward Modbus data to MQTT
 + [BLE_intro.md](BLE_intro.md): BLE sensors behind an MQTT gateway
-+ [Linux/socket_intro.md](Linux/socket_intro.md): TCP sockets underneath MQTT
-+ [network_cmds.md](network_cmds.md): network troubleshooting commands
++ [../Linux/socket_intro.md](../Linux/socket_intro.md): TCP sockets underneath MQTT
++ [../Linux/network_cmds.md](../Linux/network_cmds.md): network troubleshooting commands
 
 ## Reference
 

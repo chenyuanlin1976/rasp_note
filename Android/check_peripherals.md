@@ -116,7 +116,7 @@ adb shell ip link set eth0 down                     # root: simulate a cable pul
 
 + `carrier` = 1 but `speed` = 100 on a gigabit port: check the cable, the PHY strapping, and the RGMII delay settings in the device tree.
 + A random MAC after every boot means the MAC isn't programmed (eFuse, EEPROM, or vendor storage) and the driver made one up.
-+ Linux network tools in general: [../network_cmds.md](../network_cmds.md).
++ Linux network tools in general: [../Linux/network_cmds.md](../Linux/network_cmds.md).
 
 ## 5. USB
 
@@ -144,7 +144,7 @@ adb shell cat /sys/class/udc/*/state                # configured = enumerated by
 adb shell dumpsys usb                               # current functions, port status, connected accessories
 ```
 
-Switching an OTG port between host and device role: [../USB_OTG.md](../USB_OTG.md).
+Switching an OTG port between host and device role: [../Comm/USB_OTG.md](../Comm/USB_OTG.md).
 
 ## 6. USB-C and Power Delivery (PD)
 
@@ -184,7 +184,7 @@ adb shell dmesg | grep -iE 'tcpm|fusb302|husb311'
 
 + Kernels 6.0+ also export the PD capabilities (source and sink PDOs) under `/sys/class/usb_power_delivery/`, if the driver registers them.
 + Test with chargers that offer 5, 9, 12, and 15 V, and with a PD-capable USB-C power meter between charger and board.
-+ CC-pin roles, DRP, and `DR_Swap`/`PR_Swap`: [../USB_OTG.md](../USB_OTG.md#22-usb-c-the-cc-pins).
++ CC-pin roles, DRP, and `DR_Swap`/`PR_Swap`: [../Comm/USB_OTG.md](../Comm/USB_OTG.md#22-usb-c-the-cc-pins).
 
 ## 7. Battery and charger
 
@@ -287,8 +287,8 @@ echo "== rtc:       $(s 'cat /sys/class/rtc/rtc0/date /sys/class/rtc/rtc0/time |
 
 + [adb_intro.md](adb_intro.md), [adb_shell_cmds.md](adb_shell_cmds.md), [logcat_intro.md](logcat_intro.md)
 + [wifi_default.md](wifi_default.md), [time_detection.md](time_detection.md), [SettingsProvider_intro.md](SettingsProvider_intro.md)
-+ [USB_port_speed.md](USB_port_speed.md), [../USB_OTG.md](../USB_OTG.md), [../USB_CDC.md](../USB_CDC.md)
-+ [../network_cmds.md](../network_cmds.md), [../BLE_intro.md](../BLE_intro.md), [../Linux/sysfs_intro.md](../Linux/sysfs_intro.md)
++ [USB_port_speed.md](USB_port_speed.md), [../Comm/USB_OTG.md](../Comm/USB_OTG.md), [../Comm/USB_CDC.md](../Comm/USB_CDC.md)
++ [../Linux/network_cmds.md](../Linux/network_cmds.md), [../Comm/BLE_intro.md](../Comm/BLE_intro.md), [../Linux/sysfs_intro.md](../Linux/sysfs_intro.md)
 
 ## Reference
 

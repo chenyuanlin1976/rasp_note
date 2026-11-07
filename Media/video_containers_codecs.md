@@ -107,13 +107,13 @@ and the Jetson Orin Nano has no hardware encoder (NVENC) either, so encoding the
 See the vendor documentation for the exact codec list of each board.
 
 ffmpeg encoder names for the codecs above: `libx264`, `libx265`, `libvpx-vp9`, `libaom-av1` / `libsvtav1`, `prores_ks`, `dnxhd`
-(`ffmpeg -encoders` lists what your build supports). See [Linux/ffmpeg_cmds.md](Linux/ffmpeg_cmds.md) for commands.
+(`ffmpeg -encoders` lists what your build supports). See [../Linux/ffmpeg_cmds.md](../Linux/ffmpeg_cmds.md) for commands.
 
 ## Related notes
 
-+ [Linux/ffmpeg_cmds.md](Linux/ffmpeg_cmds.md): cutting, converting and encoding videos with ffmpeg
++ [../Linux/ffmpeg_cmds.md](../Linux/ffmpeg_cmds.md): cutting, converting and encoding videos with ffmpeg
 + [color_spaces_linearity.md](color_spaces_linearity.md): Y'CbCr and chroma subsampling
-+ [Linux/yt-dlp_cmds.md](Linux/yt-dlp_cmds.md): downloading videos, which often come as VP9 or AV1
++ [../Linux/yt-dlp_cmds.md](../Linux/yt-dlp_cmds.md): downloading videos, which often come as VP9 or AV1
 
 ## Reference
 

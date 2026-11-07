@@ -109,7 +109,7 @@ The second `-i` adds the audio file. `-shortest` ends the output when the shorte
 
 ## Related notes
 
-+ [yt-dlp_note.md](yt-dlp_note.md): downloading videos; yt-dlp uses ffmpeg to merge and convert
++ [yt-dlp_cmds.md](yt-dlp_cmds.md): downloading videos; yt-dlp uses ffmpeg to merge and convert
 + [../orangePi.md](../orangePi.md): hardware decoders on the Orange Pi (`ffmpeg -decoders`)
 
 ## Reference

@@ -113,7 +113,7 @@ ffmpeg encoder names for the codecs above: `libx264`, `libx265`, `libvpx-vp9`, `
 
 + [Linux/ffmpeg_cmds.md](Linux/ffmpeg_cmds.md): cutting, converting and encoding videos with ffmpeg
 + [color_spaces_linearity.md](color_spaces_linearity.md): Y'CbCr and chroma subsampling
-+ [Linux/yt-dlp_note.md](Linux/yt-dlp_note.md): downloading videos, which often come as VP9 or AV1
++ [Linux/yt-dlp_cmds.md](Linux/yt-dlp_cmds.md): downloading videos, which often come as VP9 or AV1
 
 ## Reference
 

@@ -11,7 +11,7 @@ All examples were run with GNU Bash 5.2.
 | Brackets: `()`, `$()`, `(( ))`, `[ ]`, `[[ ]]`, `{}`, `${}` | [brackets_note.md](brackets_note.md) |
 | Quoting | [quotes_note.md](quotes_note.md) |
 | Ready-made recipes (read a file, rename files, `source`, ...) | [shellScript_recipes.md](shellScript_recipes.md) |
-| Text tools | [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_intro.md](awk_intro.md) |
+| Text tools | [grep_intro.md](grep_intro.md), [sed_intro.md](sed_intro.md), [awk_intro.md](awk_intro.md) |
 
 ## 1. A script
 
@@ -228,7 +228,7 @@ Use `printf` instead of `echo -e` for escapes and formats: `printf '%s=%d\n' "$n
 ## Related notes
 
 + [brackets_note.md](brackets_note.md), [quotes_note.md](quotes_note.md), [shellScript_recipes.md](shellScript_recipes.md), [fallbacks.md](fallbacks.md)
-+ [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [awk_intro.md](awk_intro.md), [linux_cmds.md](linux_cmds.md)
++ [grep_intro.md](grep_intro.md), [sed_intro.md](sed_intro.md), [awk_intro.md](awk_intro.md), [linux_cmds.md](linux_cmds.md)
 
 ## Reference
 

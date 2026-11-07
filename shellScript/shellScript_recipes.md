@@ -114,7 +114,7 @@ shift $((OPTIND - 1))              # "$@" now holds the remaining arguments
 ## Related notes
 
 + [shellScript_basic.md](shellScript_basic.md), [brackets_note.md](brackets_note.md), [quotes_note.md](quotes_note.md), [fallbacks.md](fallbacks.md)
-+ [grep_demo.md](grep_demo.md), [awk_intro.md](awk_intro.md), [sed_demo.md](sed_demo.md)
++ [grep_intro.md](grep_intro.md), [awk_intro.md](awk_intro.md), [sed_intro.md](sed_intro.md)
 
 ## Reference
 

@@ -89,7 +89,7 @@ For sizes: `find . -type f -size +1M`.
 
 ## Related notes
 
-+ [grep_demo.md](grep_demo.md), [sed_demo.md](sed_demo.md), [regex_syntax.md](regex_syntax.md), [quotes_note.md](quotes_note.md)
++ [grep_intro.md](grep_intro.md), [sed_intro.md](sed_intro.md), [regex_syntax.md](regex_syntax.md), [quotes_note.md](quotes_note.md)
 + [sumup_1st_col.sh](sumup_1st_col.sh): the same column sum in pure Bash (integers only)
 
 ## Reference

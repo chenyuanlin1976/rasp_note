@@ -80,7 +80,7 @@ Regex syntax: [regex_syntax.md](regex_syntax.md).
 
 ## Related notes
 
-+ [grep_demo.md](grep_demo.md), [awk_intro.md](awk_intro.md), [quotes_note.md](quotes_note.md)
++ [grep_intro.md](grep_intro.md), [awk_intro.md](awk_intro.md), [quotes_note.md](quotes_note.md)
 
 ## Reference
 

@@ -93,7 +93,7 @@ And it shouldn't: the consumer driver owns the rail.
 If you really need user-space control, there are 3 options:
 
 1. **No kernel consumer**: describe the pin as a plain GPIO (not a regulator) and switch it from a daemon or HAL with libgpiod
-   (see [dts_node_led_vs_gpio.md](dts_node_led_vs_gpio.md#2-as-a-plain-gpio) and [../Android/AIDL_HAL_gpio.md](../Android/AIDL_HAL_gpio.md)).
+   (see [dts_node_led_vs_gpio.md](dts_node_led_vs_gpio.md#2-as-a-plain-gpio) and [../Android/HAL/AIDL_HAL_gpio.md](../Android/HAL/AIDL_HAL_gpio.md)).
 2. **Kernel `userspace-consumer` regulator driver** (`CONFIG_REGULATOR_USERSPACE_CONSUMER`).
    A consumer node creates a device with a **writable** `state` attribute that enables or disables its supply.
    In current kernels, the node is described as a power output (binding `regulator-output.yaml`):
@@ -108,7 +108,7 @@ If you really need user-space control, there are 3 options:
 
 On Android, apps never write these files.
 A vendor HAL or daemon does, with its own SELinux domain and a `genfs_contexts` label for the node.
-The pattern is in [../Android/hw_control_sysfs.md](../Android/hw_control_sysfs.md) and [../Android/neverallow_error.md](../Android/neverallow_error.md).
+The pattern is in [../Android/HW/hw_control_sysfs.md](../Android/HW/hw_control_sysfs.md) and [../Android/SELinux/neverallow_error.md](../Android/SELinux/neverallow_error.md).
 Rules such as `allow platform_app sysfs_regulator:file write` are the wrong design.
 
 ### Hardware safety

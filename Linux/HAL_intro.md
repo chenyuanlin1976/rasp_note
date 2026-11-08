@@ -48,7 +48,7 @@ class Stm32GpioPin : public IGpioPin {
 };
 ```
 
-What `HAL_GPIO_WritePin` does at the register level is shown in [../Android/HAL_STM32_example.md](../Android/HAL_STM32_example.md).
+What `HAL_GPIO_WritePin` does at the register level is shown in [../Android/HAL/HAL_STM32_example.md](../Android/HAL/HAL_STM32_example.md).
 
 ### 2.2 Embedded Linux (libgpiod v1, character device)
 
@@ -166,7 +166,7 @@ Interfaces (section 3) are simpler when you need runtime choice or mocks without
 + **Embedded Linux products**: a C++ HAL library over libgpiod, `/sys/class/leds`, IIO, and `/dev/i2c-N`.
 + **Android**: HALs are defined by **stable AIDL** interfaces and implemented as C++ (NDK backend) or Rust services,
   called over Binder from the framework. The older `libhardware` HALs were C structs of function pointers.
-  See [../Android/HAL_intro.md](../Android/HAL_intro.md).
+  See [../Android/HAL/HAL_intro.md](../Android/HAL/HAL_intro.md).
 
 ## Related notes
 

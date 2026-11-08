@@ -54,7 +54,7 @@ git log --oneline --graph --all -20      # see both histories before you choose
 
 + [git_identity.md](git_identity.md): `user.name`, `user.email`, per-directory identity
 + [git_cmds.md](git_cmds.md): log views, reflog, blame, `add -p`, `clean`
-+ [../Android/Googles_Repo.md](../Android/Googles_Repo.md): `repo`, which runs Git across many repositories
++ [../Android/Build/Googles_Repo.md](../Android/Build/Googles_Repo.md): `repo`, which runs Git across many repositories
 
 ## Reference
 

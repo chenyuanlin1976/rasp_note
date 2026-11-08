@@ -27,7 +27,7 @@ A "HAL" on Linux is usually a **user-space library or daemon** on top of those i
 Examples:
 
 + Android HALs (camera, lights, sensors) in their own processes, called over Binder.
-  See [../Android/HAL_intro.md](../Android/HAL_intro.md).
+  See [../Android/HAL/HAL_intro.md](../Android/HAL/HAL_intro.md).
 + Middleware in a product (an `ILed`/`IGpio` C++ library, a hardware daemon with a D-Bus API).
 + Libraries such as libgpiod, libiio, or libcamera, which wrap one subsystem.
 

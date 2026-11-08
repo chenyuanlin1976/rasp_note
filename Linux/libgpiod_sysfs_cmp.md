@@ -90,12 +90,12 @@ Advantages:
 
 Use **`/dev/gpiochipN` + libgpiod** for scripts, daemons, and HALs. That includes RK3566 Linux and Android builds.
 Use `/sys/class/gpio` only on old kernels or for quick throwaway tests where it's still enabled.
-On Android, the HAL design is in [../Android/HAL_libgpiod.md](../Android/HAL_libgpiod.md) and [../Android/AIDL_HAL_gpio.md](../Android/AIDL_HAL_gpio.md).
+On Android, the HAL design is in [../Android/HAL/HAL_libgpiod.md](../Android/HAL/HAL_libgpiod.md) and [../Android/HAL/AIDL_HAL_gpio.md](../Android/HAL/AIDL_HAL_gpio.md).
 
 ## Related notes
 
 + [libgpiod_intro.md](libgpiod_intro.md), [sysfs_intro.md](sysfs_intro.md), [HAL_mmio_vs_sysfs.md](HAL_mmio_vs_sysfs.md)
-+ [../Android/hw_control_sysfs.md](../Android/hw_control_sysfs.md): sysfs GPIO on Android (permissions, SELinux)
++ [../Android/HW/hw_control_sysfs.md](../Android/HW/hw_control_sysfs.md): sysfs GPIO on Android (permissions, SELinux)
 
 ## Reference
 

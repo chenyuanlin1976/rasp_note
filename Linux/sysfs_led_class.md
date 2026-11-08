@@ -61,7 +61,7 @@ echo heartbeat | sudo tee $LED/trigger
 ```
 
 Writing needs root by default. To give a service access, use a udev rule (`RUN+="/bin/chmod g+w /sys%p/brightness"` with `chgrp`),
-or `ueventd.rc` on Android (see [../Android/HAL_sysfsNodes.md](../Android/HAL_sysfsNodes.md)).
+or `ueventd.rc` on Android (see [../Android/HAL/HAL_sysfsNodes.md](../Android/HAL/HAL_sysfsNodes.md)).
 
 ## 4. Settings don't persist
 
@@ -82,7 +82,7 @@ Everything above is lost at reboot. To set the state at boot:
 ## 6. If you think you need a character device
 
 Usually you don't. Write the sysfs files from your daemon or HAL.
-That is how Android's Lights HAL implementations work (see [../Android/AIDL_ndk_led_sysfs.md](../Android/AIDL_ndk_led_sysfs.md)).
+That is how Android's Lights HAL implementations work (see [../Android/IPC/AIDL_ndk_led_sysfs.md](../Android/IPC/AIDL_ndk_led_sysfs.md)).
 If you still need another interface:
 
 1. **A custom kernel module** that registers a `/dev/my_led` misc device and calls the in-kernel LED API
@@ -97,7 +97,7 @@ If you still need another interface:
 + [sysfs_intro.md](sysfs_intro.md): sysfs in general
 + [HAL_DeviceTree.md](HAL_DeviceTree.md): `gpio-leds` in the device tree, and a C++ HAL over `/sys/class/leds`
 + [dts_node_led_vs_gpio.md](dts_node_led_vs_gpio.md), [dts_provider_consumer.md](dts_provider_consumer.md)
-+ [../Android/Led_control.md](../Android/Led_control.md): LEDs on Android (Lights HAL, vendor HAL, kernel blinking)
++ [../Android/HW/Led_control.md](../Android/HW/Led_control.md): LEDs on Android (Lights HAL, vendor HAL, kernel blinking)
 
 ## Reference
 

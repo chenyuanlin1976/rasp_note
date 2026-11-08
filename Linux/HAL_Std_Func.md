@@ -98,7 +98,7 @@ The `pData` parameter of `HAL_UART_Transmit` is `const uint8_t*` in current STM3
 
 + **Overhead**: the HAL is generic: it does parameter checks, keeps a state machine, and adds layers.
   For tight timing or small flash, ST also provides **LL (Low-Layer)** drivers, which are thin inline register helpers.
-  You can also write the registers directly (see [../Android/HAL_STM32_example.md](../Android/HAL_STM32_example.md)).
+  You can also write the registers directly (see [../Android/HAL/HAL_STM32_example.md](../Android/HAL/HAL_STM32_example.md)).
 + **Blocking calls**: `HAL_UART_Transmit()` busy-waits. Use the `_IT` or `_DMA` variants in real firmware, or with an RTOS.
 + **Vendor lock-in**: code written against `HAL_UART_*` doesn't port to NXP or TI.
   To port across vendors, wrap it in your own interface (see [HAL_intro.md](HAL_intro.md)),
@@ -108,7 +108,7 @@ The `pData` parameter of `HAL_UART_Transmit` is `const uint8_t*` in current STM3
 
 + [HAL_intro.md](HAL_intro.md): C++ interfaces over a vendor HAL
 + [HAL_mmio_vs_sysfs.md](HAL_mmio_vs_sysfs.md): why Linux uses kernel drivers instead
-+ [../Android/HAL_STM32_example.md](../Android/HAL_STM32_example.md): `HAL_GPIO_WritePin` at the register level
++ [../Android/HAL/HAL_STM32_example.md](../Android/HAL/HAL_STM32_example.md): `HAL_GPIO_WritePin` at the register level
 
 ## Reference
 

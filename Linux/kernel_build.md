@@ -5,7 +5,7 @@ Two systems drive a kernel build:
 + **Kconfig** decides **what** is built. `Kconfig` files declare options, and the `make *config` targets write the choices to **`.config`**.
 + **Kbuild** decides **how**. The `Makefile` in each directory lists objects depending on those options, and the top-level `make` compiles them.
 
-Loadable modules (`.ko`) are in [kernel_module.md](kernel_module.md). Android kernels use Kleaf (Bazel) on top of this; see [../Android/Bazel_intro.md](../Android/Bazel_intro.md).
+Loadable modules (`.ko`) are in [kernel_module.md](kernel_module.md). Android kernels use Kleaf (Bazel) on top of this; see [../Android/Build/Bazel_intro.md](../Android/Build/Bazel_intro.md).
 
 ## 1. Configure
 
@@ -81,7 +81,7 @@ Vendor BSP kernels (Rockchip SDK, Raspberry Pi tree) use their own defconfigs an
 ## Related notes
 
 + [kernel_module.md](kernel_module.md), [kernel_coding_style.md](kernel_coding_style.md), [dts_intro.md](dts_intro.md)
-+ [../Android/Bazel_intro.md](../Android/Bazel_intro.md): Kleaf for Android kernels
++ [../Android/Build/Bazel_intro.md](../Android/Build/Bazel_intro.md): Kleaf for Android kernels
 
 ## Reference
 

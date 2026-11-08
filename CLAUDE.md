@@ -5,7 +5,11 @@ Personal technical notes (Markdown) on embedded Linux, Android/AOSP, and boards
 "product" is accurate, readable notes.
 
 ## Layout
-- `Android/`: AOSP, AIDL/HIDL/HAL, Binder, SELinux, VINTF, JNI, apps, signing
+- `Android/`: subfolders `IPC/` (AIDL, Binder, servicemanager), `HAL/` (HAL, HIDL,
+  AIDL HAL, VINTF), `HW/` (GPIO, LED, ADC, input on RK3566), `SELinux/`, `Native/`
+  (JNI, NDK, native daemons), `Build/` (AOSP build, Soong, Bazel, repo), `AOSP_cfg/`
+  (default settings, preinstalled apps, virtual A/B), `App/` (app development,
+  Gradle), `Signing/` (keys, keystore, sharedUserId), `Debug/` (adb, logcat)
 - `Linux/`: kernel, device tree, drivers, GPIO, tools
 - `shellScript/`: Bash scripting notes (basics, brackets, quoting, recipes), regular expressions, text tools (grep, sed, awk), Linux command cheat sheet, small scripts
 - `Embedded/`: boards (Raspberry Pi, Pico, Orange Pi, Jetson) GPIO/SDK notes, RTOS
@@ -15,7 +19,7 @@ Personal technical notes (Markdown) on embedded Linux, Android/AOSP, and boards
 - `DevTools/`: git, CMake, Docker, Python, YAML/Markdown, Mermaid, Claude Code, architecture
 - `unclassified/`: topics with fewer than 5 notes (math, physics, misc)
 - top level: only `CLAUDE.md`; put new notes into a folder
-- Some topics exist in both folders (e.g. `Linux/HAL_intro.md` vs `Android/HAL_intro.md`,
+- Some topics exist in both folders (e.g. `Linux/HAL_intro.md` vs `Android/HAL/HAL_intro.md`,
   libgpiod notes). Check both before writing, so they don't contradict each other.
 
 ## Typical task: "review <prefix>_* files, correct and refactor"

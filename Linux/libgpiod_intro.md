@@ -42,7 +42,7 @@ There are 2 incompatible generations. Check which one you have first: `gpiodetec
 | Python module | `gpiod` 1.x (`python3-libgpiod` on Debian 12 / Raspberry Pi OS Bookworm) | `gpiod` 2.x (`pip install gpiod`, newer distros) |
 | Typical in | Debian 12, Ubuntu 22.04, older Yocto/Buildroot | Debian 13, Ubuntu 24.04+, Fedora, current Yocto/Buildroot |
 
-The other notes in this repo use the **v1** C API (for example [../Android/AIDL_HAL_gpio.md](../Android/AIDL_HAL_gpio.md)).
+The other notes in this repo use the **v1** C API (for example [../Android/HAL/AIDL_HAL_gpio.md](../Android/HAL/AIDL_HAL_gpio.md)).
 
 ## 3. What's in the package
 
@@ -216,7 +216,7 @@ The offset is the **BCM GPIO number** (17 = header pin 11), not the physical pin
 
 + [libgpiod_sysfs_cmp.md](libgpiod_sysfs_cmp.md): chardev vs legacy sysfs GPIO
 + [HAL_mmio_vs_sysfs.md](HAL_mmio_vs_sysfs.md), [HAL_intro.md](HAL_intro.md): a C++ HAL on top of libgpiod
-+ [../Android/libgpiod_android.md](../Android/libgpiod_android.md): libgpiod on Android (build, test, HAL)
++ [../Android/HW/libgpiod_android.md](../Android/HW/libgpiod_android.md): libgpiod on Android (build, test, HAL)
 
 ## Reference
 

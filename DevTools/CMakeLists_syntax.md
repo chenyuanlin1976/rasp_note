@@ -223,15 +223,15 @@ target_link_libraries(native-lib PRIVATE ${log-lib})   # add "android" only for 
 ```
 
 Outside Gradle: `cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-24 ...`.
-See [../Android/JNI_android_studio.md](../Android/JNI_android_studio.md) for a full project.
+See [../Android/Native/JNI_android_studio.md](../Android/Native/JNI_android_studio.md) for a full project.
 
 ## Related notes
 
 + [../Embedded/RPi_pico_Cxx_SDK.md](../Embedded/RPi_pico_Cxx_SDK.md): Pico SDK project and build
 + [../Embedded/RPi_pico_PIO.md](../Embedded/RPi_pico_PIO.md): `pico_generate_pio_header()` and PIO programs
-+ [../Android/JNI_android_studio.md](../Android/JNI_android_studio.md): CMake in an Android Studio JNI project
-+ [../Android/NDK_intro.md](../Android/NDK_intro.md): NDK overview
-+ [../Android/AOSP_build_system.md](../Android/AOSP_build_system.md): AOSP's own build system (Soong, `Android.bp`), which doesn't use CMake
++ [../Android/Native/JNI_android_studio.md](../Android/Native/JNI_android_studio.md): CMake in an Android Studio JNI project
++ [../Android/Native/NDK_intro.md](../Android/Native/NDK_intro.md): NDK overview
++ [../Android/Build/AOSP_build_system.md](../Android/Build/AOSP_build_system.md): AOSP's own build system (Soong, `Android.bp`), which doesn't use CMake
 
 ## Reference
 

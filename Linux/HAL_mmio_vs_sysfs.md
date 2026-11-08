@@ -122,7 +122,7 @@ A user-space HAL (a library or daemon that wraps hardware for applications) shou
 
 + [HAL_DeviceTree.md](HAL_DeviceTree.md), [HAL_intro.md](HAL_intro.md), [HAL_Std_Func.md](HAL_Std_Func.md)
 + [libgpiod_intro.md](libgpiod_intro.md), [libgpiod_sysfs_cmp.md](libgpiod_sysfs_cmp.md), [sysfs_intro.md](sysfs_intro.md)
-+ [../Android/HAL_sysfsNodes.md](../Android/HAL_sysfsNodes.md): the same layering on Android
++ [../Android/HAL/HAL_sysfsNodes.md](../Android/HAL/HAL_sysfsNodes.md): the same layering on Android
 
 ## Reference
 

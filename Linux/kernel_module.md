@@ -109,7 +109,7 @@ On Android 12+ devices with a **Generic Kernel Image (GKI)**, Google builds the 
 and SoC and device drivers are **vendor modules** in `vendor_dlkm` (and boot-critical ones in `vendor_boot`).
 The **KMI** (kernel module interface) is a stable list of exported symbols, with ABI checking, for each GKI branch.
 Vendor modules built against it keep loading after GKI security updates within the same branch.
-They are built with Kleaf/DDK ([../Android/Bazel_intro.md](../Android/Bazel_intro.md)).
+They are built with Kleaf/DDK ([../Android/Build/Bazel_intro.md](../Android/Build/Bazel_intro.md)).
 
 ## Related notes
 

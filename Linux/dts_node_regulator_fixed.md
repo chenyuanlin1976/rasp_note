@@ -120,6 +120,7 @@ Check the schematic for the enable polarity, the rail voltage, and any power-seq
 
 + [dts_provider_consumer.md](dts_provider_consumer.md) (`-supply` convention), [dts_driver_probe.md](dts_driver_probe.md)
 + [dts_node_led_vs_gpio.md](dts_node_led_vs_gpio.md), [dts_syntax.md](dts_syntax.md)
++ [dts_node_mmc_pwrseq.md](dts_node_mmc_pwrseq.md) (power sequence for SDIO Wi-Fi chips)
 
 ## Reference
 

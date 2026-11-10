@@ -60,7 +60,7 @@ See [../HW/gpio_control.md](../HW/gpio_control.md) and [../HAL/AIDL_HAL_intro.md
 ## Related notes
 
 + [../Debug/adb_shell_cmds.md](../Debug/adb_shell_cmds.md), [../App/ContentProvider_sharing.md](../App/ContentProvider_sharing.md)
-+ [wifi_default.md](wifi_default.md), [timezone_default.md](timezone_default.md)
++ [wifi_default.md](wifi_default.md), [timezone_default.md](timezone_default.md), [dream_screensaver.md](dream_screensaver.md)
 
 ## Reference
 

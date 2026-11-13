@@ -120,11 +120,12 @@ When a GPIO switches a **power rail**, describe it as a regulator (for example `
 The consumer driver then calls `regulator_enable()`.
 The regulator framework handles reference counting (several consumers on one rail), delays, and sequencing.
 A GPIO-switched fixed regulator is part of the regulator framework too, not an alternative to it.
-See [dts_node_regulator_fixed.md](dts_node_regulator_fixed.md).
+See [dts_node_regulator_fixed.md](dts_node_regulator_fixed.md), and [regulators.md](regulators.md) for the framework itself.
 
 ## Related notes
 
 + [dts_intro.md](dts_intro.md), [dts_syntax.md](dts_syntax.md), [dts_driver_probe.md](dts_driver_probe.md)
++ [regulators.md](regulators.md) (regulator framework and PMICs)
 
 ## Reference
 

@@ -142,6 +142,7 @@ adb shell svc power shutdown
 
 Run `adb shell svc` to see the subcommands that this release supports.
 `svc` is handy in test scripts, and on boards without a usable UI.
+`svc power shutdown` takes the full framework path; see [../AOSP_cfg/shutdown_flow.md](../AOSP_cfg/shutdown_flow.md).
 
 ## 7. Properties
 
@@ -236,6 +237,7 @@ Converting ADC values: [../HW/ADC_values.md](../HW/ADC_values.md). GPIO ownershi
 ## Related notes
 
 + [adb_intro.md](adb_intro.md), [logcat_intro.md](logcat_intro.md)
++ [../AOSP_cfg/shutdown_flow.md](../AOSP_cfg/shutdown_flow.md): what happens after `svc power shutdown` or `reboot -p`
 + [../AOSP_cfg/SettingsProvider_intro.md](../AOSP_cfg/SettingsProvider_intro.md), [../HW/ADC_values.md](../HW/ADC_values.md), [../HW/gpio_control.md](../HW/gpio_control.md)
 
 ## Reference

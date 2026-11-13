@@ -55,6 +55,8 @@ Deep sleep goes one step further than s2idle. After freezing tasks and suspendin
 + **Pros:** usually the lowest power draw short of powering off.
 + **Cons:** slower resume (firmware path, restoring power rails and CPU state, bringing the other CPUs back online); needs platform support.
 
+The step-by-step kernel flow for both states is in [suspend_resume_flow.md](../../Linux/suspend_resume_flow.md).
+
 ## 5. s2idle vs. deep
 
 | Feature | s2idle (suspend-to-idle) | deep (suspend-to-RAM) |
@@ -133,6 +135,9 @@ On a Linux PC, `echo deep | sudo tee /sys/power/mem_sleep` selects deep for the 
 ## Related notes
 
 + [dream_screensaver.md](dream_screensaver.md): dreams, doze dream, and Doze mode
++ [../../Linux/suspend_resume_flow.md](../../Linux/suspend_resume_flow.md): kernel suspend and resume, step by step
++ [shutdown_flow.md](shutdown_flow.md): from "Power off" to the PMIC
++ [../../Linux/regulators.md](../../Linux/regulators.md): PMICs and power rails
 + [../App/app_background_limits.md](../App/app_background_limits.md): wake locks and background limits for apps
 + [../Debug/adb_shell_cmds.md](../Debug/adb_shell_cmds.md)
 + [../../Linux/sysfs_intro.md](../../Linux/sysfs_intro.md): `/sys/power/`

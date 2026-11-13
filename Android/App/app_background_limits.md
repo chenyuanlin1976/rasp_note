@@ -109,6 +109,7 @@ For a call or alarm, use a high-priority notification with a full-screen intent.
 
 + [../AOSP_cfg/AOSP_preinstalled_apps.md](../AOSP_cfg/AOSP_preinstalled_apps.md): system apps, `priv-app`, factory reset behavior
 + [../IPC/AIDL_app_bound_svc.md](../IPC/AIDL_app_bound_svc.md): bound services and foreground services
++ [app_components.md](app_components.md): started vs. bound services, broadcast receivers
 + [AndroidManifest.md](AndroidManifest.md): declaring services, receivers and permissions
 + [../Signing/sharedUserId.md](../Signing/sharedUserId.md): shared UIDs for platform apps
 + [android_class_hierarchy.md](android_class_hierarchy.md): why `this` is a `Context` in an `Activity` or `Service`

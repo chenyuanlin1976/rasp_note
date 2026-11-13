@@ -155,6 +155,7 @@ playerView.player = player        // PlayerView only needs the Player interface
 
 ## Related notes
 
++ [app_components.md](app_components.md): what activities, services, receivers and providers do
 + [View_binding.md](View_binding.md): activities and fragments with View Binding
 + [AndroidManifest.md](AndroidManifest.md): declaring activities, services and the application class
 + [../IPC/AIDL_app_bound_svc.md](../IPC/AIDL_app_bound_svc.md): binding an `Activity` to a `Service`

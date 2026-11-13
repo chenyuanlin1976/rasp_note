@@ -236,6 +236,7 @@ More `aapt2` commands: [aapt_note.md](aapt_note.md). `dumpsys` and `pm`: [../Deb
 
 ## Related notes
 
++ [app_components.md](app_components.md), [app_architecture.md](app_architecture.md)
 + [app_project_structure.md](app_project_structure.md), [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md), [../Build/Android_bp_intro.md](../Build/Android_bp_intro.md), [jar_aar_intro.md](jar_aar_intro.md)
 + [../IPC/AIDL_app_bound_svc.md](../IPC/AIDL_app_bound_svc.md), [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md), [ContentProvider_sharing.md](ContentProvider_sharing.md)
 + [../Signing/sharedUserId.md](../Signing/sharedUserId.md), [../Signing/sign_apk.md](../Signing/sign_apk.md), [aapt_note.md](aapt_note.md), [../Debug/adb_shell_cmds.md](../Debug/adb_shell_cmds.md)

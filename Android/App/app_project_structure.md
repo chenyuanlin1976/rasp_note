@@ -110,6 +110,7 @@ Each module has its own `build.gradle.kts` and `src/` tree and is listed in `set
 
 ## Related notes
 
++ [app_architecture.md](app_architecture.md): UI, domain and data layers
 + [AndroidManifest.md](AndroidManifest.md): the manifest in `src/main/` and manifest merging
 + [gradle_build.md](gradle_build.md): dependencies, repositories, R8
 + [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md): the `android { }` block and the version catalog

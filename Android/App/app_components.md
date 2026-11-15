@@ -143,7 +143,7 @@ How the four components work together in a music streaming app:
 ## Related notes
 
 + [AndroidManifest.md](AndroidManifest.md), [android_class_hierarchy.md](android_class_hierarchy.md), [app_architecture.md](app_architecture.md)
-+ [app_background_limits.md](app_background_limits.md), [mediaPlayer_note.md](mediaPlayer_note.md)
++ [app_background_limits.md](app_background_limits.md), [mediaPlayer_note.md](mediaPlayer_note.md), [boot_completed_receiver.md](boot_completed_receiver.md)
 + [ContentProvider_sharing.md](ContentProvider_sharing.md), [../IPC/AIDL_app_bound_svc.md](../IPC/AIDL_app_bound_svc.md)
 
 ## Reference

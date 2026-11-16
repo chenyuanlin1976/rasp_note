@@ -24,7 +24,8 @@ PowerManagerService (system_server)
         |  -> yes: CPUs keep running, screen stays off, nothing suspends
         v  -> no
 system_suspend (android.system.suspend)
-  + read /sys/power/wakeup_count, write it back, write "mem" to /sys/power/state
+  + read /sys/power/wakeup_count, wait for no wake locks, write the count back,
+    write "mem" to /sys/power/state
         |
         v
 Linux kernel
@@ -88,11 +89,14 @@ Wake-lock rules for app developers are in [app_background_limits.md](../App/app_
 
 `system_suspend` (`system/hardware/interfaces/suspend/`, service `android.system.suspend`) runs a loop while autosuspend is enabled:
 
-1. Wait until no wake lock is held.
-2. Read `/sys/power/wakeup_count`, then write the same value back.
-   The write fails if a kernel wakeup event happened in between, and the attempt is dropped.
-3. Write `mem` to `/sys/power/state`. The kernel suspends into the mode selected in `/sys/power/mem_sleep` (`s2idle` or `deep`).
-4. When the write returns (after resume or an aborted suspend), back off briefly and start again.
+1. Read `/sys/power/wakeup_count`. The read blocks while a kernel wakeup event is still being processed.
+2. Wait until no wake lock is held.
+3. Write the value from step 1 back to `/sys/power/wakeup_count`.
+   The write fails if a kernel wakeup event was reported since the read (including while waiting in step 2), and the attempt is dropped.
+4. Write `mem` to `/sys/power/state`. The kernel suspends into the mode selected in `/sys/power/mem_sleep` (`s2idle` or `deep`).
+5. When the write returns (after resume or an aborted suspend), back off briefly and start again.
+
+Reading the count **before** waiting is what makes the handshake work: any wakeup event during the wait makes step 3 fail. Details in [wakeup_count.md](../../Linux/wakeup_count.md).
 
 This is **opportunistic suspend**: Android suspends whenever it can and doesn't wait for a fixed idle time.
 What the kernel does after step 3 is in [suspend_resume_flow.md](../../Linux/suspend_resume_flow.md).
@@ -127,6 +131,7 @@ adb shell cat /sys/kernel/debug/wakeup_sources       # root, debugfs
 
 + [power_saving.md](power_saving.md): s2idle vs. deep, Doze, App Standby, Battery Saver
 + [../../Linux/suspend_resume_flow.md](../../Linux/suspend_resume_flow.md): kernel suspend and resume, step by step
++ [../../Linux/wakeup_count.md](../../Linux/wakeup_count.md): the wakeup_count handshake used by `system_suspend`
 + [dream_screensaver.md](dream_screensaver.md): wakefulness states, dreams, doze dream
 + [shutdown_flow.md](shutdown_flow.md): the power-off path
 + [../App/app_background_limits.md](../App/app_background_limits.md): wake locks for apps

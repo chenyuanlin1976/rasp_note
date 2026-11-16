@@ -29,7 +29,7 @@ echo mem > /sys/power/state        (Android: system_suspend)
 ## 2. Entering suspend
 
 1. **Trigger**: a write to `/sys/power/state`.
-   Android's `system_suspend` first reads and writes `/sys/power/wakeup_count`, so a wakeup event that arrives during the decision isn't lost.
+   Android's `system_suspend` first reads and writes `/sys/power/wakeup_count`, so a wakeup event that arrives during the decision isn't lost. See [wakeup_count.md](wakeup_count.md).
 2. **Preparation**: the kernel calls the `PM_SUSPEND_PREPARE` notifiers and syncs file systems (unless `CONFIG_SUSPEND_SKIP_SYNC` is set).
 3. **Freeze tasks**: `freeze_processes()` stops all user-space tasks, then `freeze_kernel_threads()` stops the kernel threads marked freezable.
    After this, no task reads or writes files or touches hardware. The console is suspended next.
@@ -115,6 +115,7 @@ dmesg | grep -E "PM:|suspend|resume"
 
 + [../Android/AOSP_cfg/power_saving.md](../Android/AOSP_cfg/power_saving.md): sleep states, s2idle vs. deep, Android opportunistic suspend
 + [../Android/AOSP_cfg/sleep_flow.md](../Android/AOSP_cfg/sleep_flow.md): the Android framework side, from screen off to the write to `/sys/power/state`
++ [wakeup_count.md](wakeup_count.md): the wakeup_count handshake before a suspend
 + [../Android/AOSP_cfg/shutdown_flow.md](../Android/AOSP_cfg/shutdown_flow.md): the power-off path
 + [regulators.md](regulators.md): PMICs, `regulator-state-mem`
 + [../Android/HW/input_key_flow.md](../Android/HW/input_key_flow.md): `gpio-keys` and `wakeup-source`

@@ -20,7 +20,7 @@ The kernel uses it to export its **device model** (devices, drivers, buses, clas
 | `/sys/module/<name>/` | Loaded modules and built-in code: `parameters/` (module parameters), `refcnt`, ... |
 | `/sys/firmware/` | Firmware data: `devicetree/base/` (the live device tree, also at `/proc/device-tree`), `acpi/`, ... |
 | `/sys/kernel/` | Kernel-wide knobs: `debug/` (debugfs mount point), `tracing/`, `mm/`, `security/` |
-| `/sys/power/` | System sleep: `state`, `mem_sleep`, `wakeup_count` |
+| `/sys/power/` | System sleep: `state`, `mem_sleep`, [`wakeup_count`](wakeup_count.md) |
 | `/sys/fs/` | Filesystem-specific knobs and mount points: `cgroup/`, `bpf/`, `selinux/`, `ext4/`, `pstore/` |
 
 `/sys/class` is usually the easiest place to look.

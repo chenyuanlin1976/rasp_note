@@ -141,6 +141,7 @@ If the board stays powered after that, no working power-off handler is registere
 ## Related notes
 
 + [power_saving.md](power_saving.md): suspend states and Android power modes
++ [sleep_flow.md](sleep_flow.md): the sleep path, from screen off to kernel suspend
 + [../../Linux/suspend_resume_flow.md](../../Linux/suspend_resume_flow.md): what the kernel does for suspend-to-RAM
 + [../../Linux/regulators.md](../../Linux/regulators.md): PMICs and the regulator framework
 + [../HW/input_key_flow.md](../HW/input_key_flow.md): how a key press reaches the framework

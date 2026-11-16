@@ -114,6 +114,7 @@ dmesg | grep -E "PM:|suspend|resume"
 ## Related notes
 
 + [../Android/AOSP_cfg/power_saving.md](../Android/AOSP_cfg/power_saving.md): sleep states, s2idle vs. deep, Android opportunistic suspend
++ [../Android/AOSP_cfg/sleep_flow.md](../Android/AOSP_cfg/sleep_flow.md): the Android framework side, from screen off to the write to `/sys/power/state`
 + [../Android/AOSP_cfg/shutdown_flow.md](../Android/AOSP_cfg/shutdown_flow.md): the power-off path
 + [regulators.md](regulators.md): PMICs, `regulator-state-mem`
 + [../Android/HW/input_key_flow.md](../Android/HW/input_key_flow.md): `gpio-keys` and `wakeup-source`

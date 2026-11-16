@@ -135,6 +135,7 @@ On a Linux PC, `echo deep | sudo tee /sys/power/mem_sleep` selects deep for the 
 ## Related notes
 
 + [dream_screensaver.md](dream_screensaver.md): dreams, doze dream, and Doze mode
++ [sleep_flow.md](sleep_flow.md): from screen off to kernel suspend (PowerManagerService, wake locks, system_suspend)
 + [../../Linux/suspend_resume_flow.md](../../Linux/suspend_resume_flow.md): kernel suspend and resume, step by step
 + [shutdown_flow.md](shutdown_flow.md): from "Power off" to the PMIC
 + [../../Linux/regulators.md](../../Linux/regulators.md): PMICs and power rails

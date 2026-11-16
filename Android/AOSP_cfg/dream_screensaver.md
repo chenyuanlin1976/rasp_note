@@ -136,6 +136,8 @@ adb shell dumpsys battery reset
 ## Related notes
 
 + [SettingsProvider_intro.md](SettingsProvider_intro.md), [AOSP_preinstalled_apps.md](AOSP_preinstalled_apps.md)
++ [sleep_flow.md](sleep_flow.md): what happens after DOZING / ASLEEP, down to kernel suspend
++ [power_saving.md](power_saving.md): Doze mode next to the kernel sleep states
 + [../Debug/adb_shell_cmds.md](../Debug/adb_shell_cmds.md), [../HW/Led_control.md](../HW/Led_control.md) (Doze vs. kernel LED triggers)
 
 ## Reference

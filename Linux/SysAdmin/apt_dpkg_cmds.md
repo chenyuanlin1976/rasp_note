@@ -80,7 +80,7 @@ dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n
 ## Related notes
 
 + [update-alternatives_cmds.md](update-alternatives_cmds.md): switching default commands; part of dpkg
-+ [../others/static_shared_lib.md](../others/static_shared_lib.md): `-dev` packages that provide headers and linker names
++ [../Others/static_shared_lib.md](../Others/static_shared_lib.md): `-dev` packages that provide headers and linker names
 + [../shellScript/linux_cmds.md](../../shellScript/linux_cmds.md): Linux command cheat sheet
 
 ## Reference

@@ -14,7 +14,7 @@ Personal technical notes (Markdown) on embedded Linux, Android/AOSP, and boards
   `Power/` (regulators, suspend/resume, wakeup), `HAL/` (user-space and MCU HAL design),
   `HW/` (sysfs, LED class, platform devices, libgpiod), `Network/` (ssh, firewall, Samba,
   sockets, wget, openssl), `SysAdmin/` (packages, boot logs, install media, desktop setup),
-  `Files/` (archives, checksums, rsync), `others/` (topics with fewer than 3 notes)
+  `Files/` (archives, checksums, rsync), `Others/` (topics with fewer than 3 notes)
 - `shellScript/`: Bash scripting notes (basics, brackets, quoting, recipes), regular expressions, text tools (grep, sed, awk), Linux command cheat sheet, small scripts
 - `Embedded/`: boards (Raspberry Pi, Pico, Orange Pi, Jetson) GPIO/SDK notes, RTOS
 - `Comm/`: communication protocols and interfaces (Modbus, MQTT, BLE, USB, RF/IR, IoT)

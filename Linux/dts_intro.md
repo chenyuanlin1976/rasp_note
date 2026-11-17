@@ -125,6 +125,7 @@ The base DTB must be built with `-@` (symbols) so that `&i2c1` can be resolved.
 + [dts_syntax.md](dts_syntax.md): syntax and standard properties
 + [dts_provider_consumer.md](dts_provider_consumer.md): provider/consumer conventions (`-gpios`, `-supply`, `clocks`, pinctrl)
 + [dts_coding_style.md](dts_coding_style.md): kernel DTS coding style
++ [dts_board_checklist.md](dts_board_checklist.md): workflow and checklist for editing a board `.dts` (RK3566)
 + [dts_driver_probe.md](dts_driver_probe.md): how drivers match and read nodes
 + [dts_node_led_vs_gpio.md](dts_node_led_vs_gpio.md), [dts_node_regulator_fixed.md](dts_node_regulator_fixed.md), [dts_node_mmc_pwrseq.md](dts_node_mmc_pwrseq.md): concrete nodes
 + [HAL_DeviceTree.md](HAL_DeviceTree.md): DT → driver → user-space HAL

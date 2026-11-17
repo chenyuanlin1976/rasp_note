@@ -99,6 +99,7 @@ udevadm info -a -p /sys/class/net/eth0
 
 ## Related notes
 
++ [sysfs_platform_devices.md](sysfs_platform_devices.md): `/sys/devices/platform` and platform devices (RK3566 example)
 + [sysfs_led_class.md](sysfs_led_class.md): the LED class, a typical sysfs-only subsystem
 + [HAL_mmio_vs_sysfs.md](HAL_mmio_vs_sysfs.md): sysfs/chardev vs direct register access
 + [kernel_module.md](kernel_module.md): loadable modules; `/sys/module/` shows the loaded ones

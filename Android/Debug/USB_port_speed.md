@@ -116,7 +116,7 @@ A driver directory only shows that the driver is built in or loaded. The device 
 
 + [../../Comm/USB_OTG.md](../../Comm/USB_OTG.md): host, device, and dual-role ports
 + [../../Comm/USB_CDC.md](../../Comm/USB_CDC.md): USB serial (CDC-ACM)
-+ [../../Linux/sysfs_intro.md](../../Linux/sysfs_intro.md), [adb_intro.md](adb_intro.md)
++ [../../Linux/HW/sysfs_intro.md](../../Linux/HW/sysfs_intro.md), [adb_intro.md](adb_intro.md)
 
 ## Reference
 

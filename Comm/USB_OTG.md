@@ -96,8 +96,8 @@ In host role, the VBUS regulator (`vbus-supply` / `phy-supply` in the device tre
 
 + [USB_CDC.md](USB_CDC.md): CDC-ACM serial ports, gadget setup
 + [../Android/Debug/USB_port_speed.md](../Android/Debug/USB_port_speed.md): USB 2.0 vs 3.0 host controllers
-+ [../Linux/dts_node_regulator_fixed.md](../Linux/dts_node_regulator_fixed.md): a GPIO-switched 5 V VBUS regulator
-+ [../Linux/sysfs_intro.md](../Linux/sysfs_intro.md)
++ [../Linux/DeviceTree/dts_node_regulator_fixed.md](../Linux/DeviceTree/dts_node_regulator_fixed.md): a GPIO-switched 5 V VBUS regulator
++ [../Linux/HW/sysfs_intro.md](../Linux/HW/sysfs_intro.md)
 
 ## Reference
 

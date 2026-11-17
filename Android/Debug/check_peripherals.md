@@ -116,7 +116,7 @@ adb shell ip link set eth0 down                     # root: simulate a cable pul
 
 + `carrier` = 1 but `speed` = 100 on a gigabit port: check the cable, the PHY strapping, and the RGMII delay settings in the device tree.
 + A random MAC after every boot means the MAC isn't programmed (eFuse, EEPROM, or vendor storage) and the driver made one up.
-+ Linux network tools in general: [../../Linux/network_cmds.md](../../Linux/network_cmds.md).
++ Linux network tools in general: [../../Linux/Network/network_cmds.md](../../Linux/Network/network_cmds.md).
 
 ## 5. USB
 
@@ -288,7 +288,7 @@ echo "== rtc:       $(s 'cat /sys/class/rtc/rtc0/date /sys/class/rtc/rtc0/time |
 + [adb_intro.md](adb_intro.md), [adb_shell_cmds.md](adb_shell_cmds.md), [logcat_intro.md](logcat_intro.md)
 + [../AOSP_cfg/wifi_default.md](../AOSP_cfg/wifi_default.md), [../AOSP_cfg/time_detection.md](../AOSP_cfg/time_detection.md), [../AOSP_cfg/SettingsProvider_intro.md](../AOSP_cfg/SettingsProvider_intro.md)
 + [USB_port_speed.md](USB_port_speed.md), [../../Comm/USB_OTG.md](../../Comm/USB_OTG.md), [../../Comm/USB_CDC.md](../../Comm/USB_CDC.md)
-+ [../../Linux/network_cmds.md](../../Linux/network_cmds.md), [../../Comm/BLE_intro.md](../../Comm/BLE_intro.md), [../../Linux/sysfs_intro.md](../../Linux/sysfs_intro.md)
++ [../../Linux/Network/network_cmds.md](../../Linux/Network/network_cmds.md), [../../Comm/BLE_intro.md](../../Comm/BLE_intro.md), [../../Linux/HW/sysfs_intro.md](../../Linux/HW/sysfs_intro.md)
 
 ## Reference
 

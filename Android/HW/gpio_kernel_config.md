@@ -52,12 +52,12 @@ The full rules are in [gpio_control.md](gpio_control.md) (section 5.3).
 
 If a driver should own the pin (LED, button, regulator enable), describe it as that driver's node instead:
 
-+ LED: `gpio-leds` ([../../Linux/dts_node_led_vs_gpio.md](../../Linux/dts_node_led_vs_gpio.md))
++ LED: `gpio-leds` ([../../Linux/DeviceTree/dts_node_led_vs_gpio.md](../../Linux/DeviceTree/dts_node_led_vs_gpio.md))
 + Button: `gpio-keys` ([input_key_flow.md](input_key_flow.md))
-+ Power rail: `regulator-fixed` ([../../Linux/dts_node_regulator_fixed.md](../../Linux/dts_node_regulator_fixed.md))
++ Power rail: `regulator-fixed` ([../../Linux/DeviceTree/dts_node_regulator_fixed.md](../../Linux/DeviceTree/dts_node_regulator_fixed.md))
 + Fixed level at boot that nobody changes: `gpio-hog` in the GPIO controller node
 
-Syntax and the provider/consumer pattern: [../../Linux/dts_provider_consumer.md](../../Linux/dts_provider_consumer.md).
+Syntax and the provider/consumer pattern: [../../Linux/DeviceTree/dts_provider_consumer.md](../../Linux/DeviceTree/dts_provider_consumer.md).
 
 ## 3. Kernel config
 
@@ -76,7 +76,7 @@ Vendor defconfigs for a supported SoC usually have all of these already. Check t
 adb shell "zcat /proc/config.gz | grep -E 'GPIO_(CDEV|SYSFS|ROCKCHIP)'"   # needs CONFIG_IKCONFIG_PROC
 ```
 
-To change a value, edit the defconfig (or the vendor's config fragment) and regenerate it with `make savedefconfig`; see [../../Linux/kernel_build.md](../../Linux/kernel_build.md).
+To change a value, edit the defconfig (or the vendor's config fragment) and regenerate it with `make savedefconfig`; see [../../Linux/Kernel/kernel_build.md](../../Linux/Kernel/kernel_build.md).
 On **GKI** kernels (Android 12+ with kernel 5.10+), the core kernel config is fixed by Google.
 Vendors can only add drivers as modules, so a change to a built-in option like `GPIO_SYSFS` may not be possible.
 
@@ -121,7 +121,7 @@ adb shell gpioinfo gpiochip4                                          # line 10 
 
 + **Check before you build.** On most vendor kernels the GPIO driver and the character device are already enabled, so only the device tree changes. The first step should be `zcat /proc/config.gz` and `gpioinfo`, not a defconfig edit.
 + **Decide who owns the pin first.** If a kernel driver fits (LED, button, regulator), use it: you get the standard sysfs/input interfaces and Android frameworks for free. Use libgpiod only for plain signals with no matching driver.
-+ **Prefer an overlay for board variants.** On Android, a `dtbo` overlay lets one base DTB serve several board revisions; see [../../Linux/dts_intro.md](../../Linux/dts_intro.md) (section 6).
++ **Prefer an overlay for board variants.** On Android, a `dtbo` overlay lets one base DTB serve several board revisions; see [../../Linux/DeviceTree/dts_intro.md](../../Linux/DeviceTree/dts_intro.md) (section 6).
 + **Keep iterations short.** Rebuild only the DTB (`make rockchip/<board>.dtb`) and flash only the partition that holds it. A full `m` is needed only when the Android side changes.
 + **The kernel is only half the work.** An app can't open `/dev/gpiochipN`. A product also needs a `ueventd.rc` entry, SELinux rules, and usually a vendor AIDL HAL ([../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md), [../HAL/HAL_libgpiod.md](../HAL/HAL_libgpiod.md)).
 
@@ -130,7 +130,7 @@ adb shell gpioinfo gpiochip4                                          # line 10 
 + [gpio_control.md](gpio_control.md): using GPIOs and LEDs at run time
 + [libgpiod_android.md](libgpiod_android.md), [../HAL/HAL_libgpiod.md](../HAL/HAL_libgpiod.md), [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md)
 + [../Build/AOSP_build.md](../Build/AOSP_build.md), [../Build/Bazel_intro.md](../Build/Bazel_intro.md): building AOSP and the kernel (Kleaf)
-+ [../../Linux/kernel_build.md](../../Linux/kernel_build.md), [../../Linux/dts_intro.md](../../Linux/dts_intro.md), [../../Linux/dts_provider_consumer.md](../../Linux/dts_provider_consumer.md)
++ [../../Linux/Kernel/kernel_build.md](../../Linux/Kernel/kernel_build.md), [../../Linux/DeviceTree/dts_intro.md](../../Linux/DeviceTree/dts_intro.md), [../../Linux/DeviceTree/dts_provider_consumer.md](../../Linux/DeviceTree/dts_provider_consumer.md)
 
 ## Reference
 

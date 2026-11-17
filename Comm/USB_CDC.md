@@ -99,7 +99,7 @@ ls /sys/class/udc | sudo tee UDC           # bind the gadget to the device contr
 + [../Android/Debug/USB_port_speed.md](../Android/Debug/USB_port_speed.md): USB 2.0 vs 3.0 ports
 + [Modbus_RTU.md](Modbus_RTU.md): RS-485 over USB serial adapters
 + [../Embedded/RPi_pico_Cxx_SDK.md](../Embedded/RPi_pico_Cxx_SDK.md): `stdio` over USB CDC on the Pico
-+ [../Linux/sysfs_intro.md](../Linux/sysfs_intro.md): configfs
++ [../Linux/HW/sysfs_intro.md](../Linux/HW/sysfs_intro.md): configfs
 
 ## Reference
 

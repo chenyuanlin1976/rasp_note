@@ -149,7 +149,7 @@ adb shell "echo heartbeat > /sys/class/leds/dvb-rf/trigger"      # blink in the 
 ```
 
 These pins are **owned by `leds-gpio`**, so exporting 123 or 148 through sysfs fails with `EBUSY`. That is expected.
-More on the LED class: [../../Linux/sysfs_led_class.md](../../Linux/sysfs_led_class.md) and [../../Linux/dts_node_led_vs_gpio.md](../../Linux/dts_node_led_vs_gpio.md).
+More on the LED class: [../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md) and [../../Linux/DeviceTree/dts_node_led_vs_gpio.md](../../Linux/DeviceTree/dts_node_led_vs_gpio.md).
 
 ### RGB LEDs
 
@@ -172,7 +172,7 @@ adb shell gpioset --mode=signal gpiochip4 10=1 &     # GPIO4_B2 high; v1 needs -
 
 There's no global numbering: a global number like 80 becomes **chip + offset**: 80 − 64 = `gpiochip2` line 16.
 A plain v1 `gpioset gpiochip4 10=1` (without `--mode`) releases the line when it exits, so the level isn't guaranteed afterwards.
-Building and using the tools on Android is covered in [libgpiod_android.md](libgpiod_android.md), and the tools in general in [../../Linux/libgpiod_intro.md](../../Linux/libgpiod_intro.md).
+Building and using the tools on Android is covered in [libgpiod_android.md](libgpiod_android.md), and the tools in general in [../../Linux/HW/libgpiod_intro.md](../../Linux/HW/libgpiod_intro.md).
 
 ### 5.2 Legacy: `/sys/class/gpio` export
 
@@ -193,7 +193,7 @@ adb shell "echo 138 > /sys/class/gpio/unexport"               # release when don
 ```
 
 The export stays until `unexport` or a reboot, even if the process that created it exits.
-That's one reason this interface is deprecated; see [../../Linux/libgpiod_sysfs_cmp.md](../../Linux/libgpiod_sysfs_cmp.md).
+That's one reason this interface is deprecated; see [../../Linux/HW/libgpiod_sysfs_cmp.md](../../Linux/HW/libgpiod_sysfs_cmp.md).
 
 ### 5.3 Device-tree requirements for a free pin
 
@@ -219,7 +219,7 @@ For user space to request a pin, **no kernel consumer may own it**:
 ```
 
 Optionally, add `gpio-line-names` to `&gpio4` so that `gpioinfo`, `gpiofind` (v1), and the v2 tools can use a name.
-The full example is in [../../Linux/dts_node_led_vs_gpio.md](../../Linux/dts_node_led_vs_gpio.md#2-as-a-plain-gpio).
+The full example is in [../../Linux/DeviceTree/dts_node_led_vs_gpio.md](../../Linux/DeviceTree/dts_node_led_vs_gpio.md#2-as-a-plain-gpio).
 
 ### 5.4 Common errors
 
@@ -250,7 +250,7 @@ Shell commands and `adb root` are for bring-up only. In a product:
 + [Led_control.md](Led_control.md)
 + [gpio_kernel_config.md](gpio_kernel_config.md): device tree, kernel config and build for a GPIO
 + [input_key_flow.md](input_key_flow.md): buttons as `gpio-keys` input devices, from the kernel to an app
-+ [../../Linux/libgpiod_sysfs_cmp.md](../../Linux/libgpiod_sysfs_cmp.md), [../../Linux/dts_node_led_vs_gpio.md](../../Linux/dts_node_led_vs_gpio.md)
++ [../../Linux/HW/libgpiod_sysfs_cmp.md](../../Linux/HW/libgpiod_sysfs_cmp.md), [../../Linux/DeviceTree/dts_node_led_vs_gpio.md](../../Linux/DeviceTree/dts_node_led_vs_gpio.md)
 
 ## Reference
 

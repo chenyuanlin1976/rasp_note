@@ -10,7 +10,11 @@ Personal technical notes (Markdown) on embedded Linux, Android/AOSP, and boards
   (JNI, NDK, native daemons), `Build/` (AOSP build, Soong, Bazel, repo), `AOSP_cfg/`
   (default settings, preinstalled apps, virtual A/B), `App/` (app development,
   Gradle), `Signing/` (keys, keystore, sharedUserId), `Debug/` (adb, logcat)
-- `Linux/`: kernel, device tree, drivers, GPIO, tools
+- `Linux/`: subfolders `DeviceTree/` (dts_*), `Kernel/` (build, modules, coding style),
+  `Power/` (regulators, suspend/resume, wakeup), `HAL/` (user-space and MCU HAL design),
+  `HW/` (sysfs, LED class, platform devices, libgpiod), `Network/` (ssh, firewall, Samba,
+  sockets, wget, openssl), `SysAdmin/` (packages, boot logs, install media, desktop setup),
+  `Files/` (archives, checksums, rsync), `others/` (topics with fewer than 3 notes)
 - `shellScript/`: Bash scripting notes (basics, brackets, quoting, recipes), regular expressions, text tools (grep, sed, awk), Linux command cheat sheet, small scripts
 - `Embedded/`: boards (Raspberry Pi, Pico, Orange Pi, Jetson) GPIO/SDK notes, RTOS
 - `Comm/`: communication protocols and interfaces (Modbus, MQTT, BLE, USB, RF/IR, IoT)
@@ -19,7 +23,7 @@ Personal technical notes (Markdown) on embedded Linux, Android/AOSP, and boards
 - `DevTools/`: git, CMake, Docker, Python, YAML/Markdown, Mermaid, Claude Code, architecture
 - `unclassified/`: topics with fewer than 5 notes (math, physics, misc)
 - top level: only `CLAUDE.md`; put new notes into a folder
-- Some topics exist in both folders (e.g. `Linux/HAL_intro.md` vs `Android/HAL/HAL_intro.md`,
+- Some topics exist in both folders (e.g. `Linux/HAL/HAL_intro.md` vs `Android/HAL/HAL_intro.md`,
   libgpiod notes). Check both before writing, so they don't contradict each other.
 
 ## Typical task: "review <prefix>_* files, correct and refactor"

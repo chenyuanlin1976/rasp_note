@@ -138,7 +138,7 @@ Converting to JSON is a quick way to see what a parser really understood.
 + **Containers and DevOps**: Kubernetes manifests, Docker Compose (`compose.yaml`), Ansible playbooks, Helm charts.
 + **Application config**: Spring Boot (`application.yml`), Ruby on Rails (`database.yml`), Home Assistant, ROS 2 parameters.
 + **Docs and metadata**: front matter in Markdown files, MkDocs (`mkdocs.yml`), OpenAPI specs.
-+ **Linux device tree**: kernel binding schemas under `Documentation/devicetree/bindings/` are YAML (see [../Linux/dts_intro.md](../Linux/dts_intro.md)).
++ **Linux device tree**: kernel binding schemas under `Documentation/devicetree/bindings/` are YAML (see [../Linux/DeviceTree/dts_intro.md](../Linux/DeviceTree/dts_intro.md)).
 
 ## 9. Example: application config
 
@@ -169,7 +169,7 @@ Don't commit passwords or tokens in YAML config files. Reference an environment 
 
 + [cmp_md_yml_json.md](cmp_md_yml_json.md): YAML compared with JSON and Markdown
 + [docker_demo.md](docker_demo.md): Docker examples
-+ [../Linux/dts_intro.md](../Linux/dts_intro.md): device tree, YAML binding schemas
++ [../Linux/DeviceTree/dts_intro.md](../Linux/DeviceTree/dts_intro.md): device tree, YAML binding schemas
 
 ## Reference
 

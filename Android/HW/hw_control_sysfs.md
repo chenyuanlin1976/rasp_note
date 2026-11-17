@@ -14,7 +14,7 @@ adb shell zcat /proc/config.gz | grep GPIO_SYSFS   # if /proc/config.gz is enabl
 ```
 
 If the interface is missing, use the character device (`/dev/gpiochipN`) with libgpiod instead.
-See [../HAL/HAL_libgpiod.md](../HAL/HAL_libgpiod.md), [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md), and [../../Linux/libgpiod_sysfs_cmp.md](../../Linux/libgpiod_sysfs_cmp.md).
+See [../HAL/HAL_libgpiod.md](../HAL/HAL_libgpiod.md), [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md), and [../../Linux/HW/libgpiod_sysfs_cmp.md](../../Linux/HW/libgpiod_sysfs_cmp.md).
 
 ## 2. Why an app can't use it
 
@@ -117,7 +117,7 @@ The full example is in [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md).
 
 + [../HAL/HAL_sysfsNodes.md](../HAL/HAL_sysfsNodes.md), [../HAL/HAL_libgpiod.md](../HAL/HAL_libgpiod.md), [../Native/JNI_C_code.md](../Native/JNI_C_code.md)
 + [../SELinux/SELinux_policy.md](../SELinux/SELinux_policy.md), [../SELinux/neverallow_error.md](../SELinux/neverallow_error.md), [gpio_control.md](gpio_control.md)
-+ [../../Linux/libgpiod_sysfs_cmp.md](../../Linux/libgpiod_sysfs_cmp.md), [../../Linux/sysfs_intro.md](../../Linux/sysfs_intro.md)
++ [../../Linux/HW/libgpiod_sysfs_cmp.md](../../Linux/HW/libgpiod_sysfs_cmp.md), [../../Linux/HW/sysfs_intro.md](../../Linux/HW/sysfs_intro.md)
 
 ## Reference
 

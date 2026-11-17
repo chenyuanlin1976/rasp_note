@@ -3,7 +3,7 @@
 libgpiod works on Android the same way it does on Linux: the kernel provides `/dev/gpiochipN`, and libgpiod is a user-space library on top of it.
 AOSP does **not** include it, though, and access is restricted by permissions and SELinux.
 This note covers how to add it, how to test a pin from the shell, and how to use it from a service.
-For the library and tools themselves, see [../../Linux/libgpiod_intro.md](../../Linux/libgpiod_intro.md).
+For the library and tools themselves, see [../../Linux/HW/libgpiod_intro.md](../../Linux/HW/libgpiod_intro.md).
 
 ## 1. Add libgpiod to the AOSP tree
 
@@ -106,7 +106,7 @@ Rules that those notes follow, and that this note's old example broke:
 
 ## Related notes
 
-+ [../../Linux/libgpiod_intro.md](../../Linux/libgpiod_intro.md), [../../Linux/libgpiod_sysfs_cmp.md](../../Linux/libgpiod_sysfs_cmp.md)
++ [../../Linux/HW/libgpiod_intro.md](../../Linux/HW/libgpiod_intro.md), [../../Linux/HW/libgpiod_sysfs_cmp.md](../../Linux/HW/libgpiod_sysfs_cmp.md)
 + [../HAL/HAL_libgpiod.md](../HAL/HAL_libgpiod.md), [hw_control_sysfs.md](hw_control_sysfs.md)
 
 ## Reference

@@ -110,7 +110,7 @@ They still differ in what they cover:
 + [uart_console.md](uart_console.md): the serial console, for boot failures and panics
 + [adb_intro.md](adb_intro.md): `adb root`, bug reports
 + [../SELinux/avc_denied.md](../SELinux/avc_denied.md): reading SELinux denials
-+ [../../Linux/dts_driver_probe.md](../../Linux/dts_driver_probe.md): debugging a driver that doesn't probe
++ [../../Linux/DeviceTree/dts_driver_probe.md](../../Linux/DeviceTree/dts_driver_probe.md): debugging a driver that doesn't probe
 
 ## Reference
 

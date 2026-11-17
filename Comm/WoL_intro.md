@@ -144,9 +144,9 @@ sudo tcpdump -i enp3s0 -XX 'udp port 9 or ether proto 0x0842'
 ## Related notes
 
 + [IoT_Network.md](IoT_Network.md): Wi-Fi, Zigbee, Thread, LoRa and other IoT networks
-+ [../Linux/network_cmds.md](../Linux/network_cmds.md): `ip`, `arp` and other network commands
-+ [../Linux/socket_intro.md](../Linux/socket_intro.md): sockets, including UDP
-+ [../Linux/ssh_login.md](../Linux/ssh_login.md): SSH into an always-on sender to wake PCs remotely
++ [../Linux/Network/network_cmds.md](../Linux/Network/network_cmds.md): `ip`, `arp` and other network commands
++ [../Linux/Network/socket_intro.md](../Linux/Network/socket_intro.md): sockets, including UDP
++ [../Linux/Network/ssh_login.md](../Linux/Network/ssh_login.md): SSH into an always-on sender to wake PCs remotely
 
 ## Reference
 

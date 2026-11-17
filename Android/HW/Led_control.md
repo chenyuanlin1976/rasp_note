@@ -5,7 +5,7 @@ The details are in other notes:
 
 | Topic | Note |
 | --- | --- |
-| LED class attributes and triggers (`brightness`, `trigger`, `delay_on`, ...) | [../../Linux/sysfs_led_class.md](../../Linux/sysfs_led_class.md) |
+| LED class attributes and triggers (`brightness`, `trigger`, `delay_on`, ...) | [../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md) |
 | Board LEDs on RK3566 (`gpio-leds`), notification LED, `LightsManager` | [gpio_control.md](gpio_control.md) |
 | Complete C++ (NDK) AIDL service that writes `/sys/class/leds` | [../IPC/AIDL_ndk_led_sysfs.md](../IPC/AIDL_ndk_led_sysfs.md) |
 | Turning it into a stable vendor HAL (VINTF, SELinux) | [../HAL/AIDL_HAL_impl.md](../HAL/AIDL_HAL_impl.md) |
@@ -144,7 +144,7 @@ Check this on the target with `ls -lZ` after `trigger=timer`.
 
 ## Related notes
 
-+ [../../Linux/sysfs_led_class.md](../../Linux/sysfs_led_class.md), [../../Linux/dts_node_led_vs_gpio.md](../../Linux/dts_node_led_vs_gpio.md)
++ [../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md), [../../Linux/DeviceTree/dts_node_led_vs_gpio.md](../../Linux/DeviceTree/dts_node_led_vs_gpio.md)
 + [gpio_control.md](gpio_control.md), [../IPC/AIDL_ndk_led_sysfs.md](../IPC/AIDL_ndk_led_sysfs.md), [../HAL/AIDL_HAL_impl.md](../HAL/AIDL_HAL_impl.md)
 + [hw_control_sysfs.md](hw_control_sysfs.md), [../HAL/HAL_sysfsNodes.md](../HAL/HAL_sysfsNodes.md), [../SELinux/neverallow_error.md](../SELinux/neverallow_error.md)
 + [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md): exposing the LED to 3rd-party apps through a system app

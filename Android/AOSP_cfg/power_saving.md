@@ -55,7 +55,7 @@ Deep sleep goes one step further than s2idle. After freezing tasks and suspendin
 + **Pros:** usually the lowest power draw short of powering off.
 + **Cons:** slower resume (firmware path, restoring power rails and CPU state, bringing the other CPUs back online); needs platform support.
 
-The step-by-step kernel flow for both states is in [suspend_resume_flow.md](../../Linux/suspend_resume_flow.md).
+The step-by-step kernel flow for both states is in [../../Linux/Power/suspend_resume_flow.md](../../Linux/Power/suspend_resume_flow.md).
 
 ## 5. s2idle vs. deep
 
@@ -136,12 +136,12 @@ On a Linux PC, `echo deep | sudo tee /sys/power/mem_sleep` selects deep for the 
 
 + [dream_screensaver.md](dream_screensaver.md): dreams, doze dream, and Doze mode
 + [sleep_flow.md](sleep_flow.md): from screen off to kernel suspend (PowerManagerService, wake locks, system_suspend)
-+ [../../Linux/suspend_resume_flow.md](../../Linux/suspend_resume_flow.md): kernel suspend and resume, step by step
++ [../../Linux/Power/suspend_resume_flow.md](../../Linux/Power/suspend_resume_flow.md): kernel suspend and resume, step by step
 + [shutdown_flow.md](shutdown_flow.md): from "Power off" to the PMIC
-+ [../../Linux/regulators.md](../../Linux/regulators.md): PMICs and power rails
++ [../../Linux/Power/regulators.md](../../Linux/Power/regulators.md): PMICs and power rails
 + [../App/app_background_limits.md](../App/app_background_limits.md): wake locks and background limits for apps
 + [../Debug/adb_shell_cmds.md](../Debug/adb_shell_cmds.md)
-+ [../../Linux/sysfs_intro.md](../../Linux/sysfs_intro.md): `/sys/power/`
++ [../../Linux/HW/sysfs_intro.md](../../Linux/HW/sysfs_intro.md): `/sys/power/`
 + [../../Comm/WoL_intro.md](../../Comm/WoL_intro.md): waking a PC from sleep or soft off
 
 ## Reference

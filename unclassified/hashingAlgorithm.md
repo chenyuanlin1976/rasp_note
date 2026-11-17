@@ -167,12 +167,12 @@ openssl dgst -sha3-256 file.iso  # SHA-3
 xxhsum -H3 file.iso              # XXH3 (package xxhash)
 ```
 
-More in [../Linux/checksumCmd.md](../Linux/checksumCmd.md) and [../Linux/openssl_note.md](../Linux/openssl_note.md).
+More in [../Linux/Files/checksumCmd.md](../Linux/Files/checksumCmd.md) and [../Linux/Network/openssl_note.md](../Linux/Network/openssl_note.md).
 
 ## Related notes
 
-+ [../Linux/checksumCmd.md](../Linux/checksumCmd.md): Linux checksum commands (`cksum`, `md5sum`, `sha*sum`)
-+ [../Linux/openssl_note.md](../Linux/openssl_note.md): `openssl dgst` and other OpenSSL commands
++ [../Linux/Files/checksumCmd.md](../Linux/Files/checksumCmd.md): Linux checksum commands (`cksum`, `md5sum`, `sha*sum`)
++ [../Linux/Network/openssl_note.md](../Linux/Network/openssl_note.md): `openssl dgst` and other OpenSSL commands
 + [../Comm/Modbus_RTU.md](../Comm/Modbus_RTU.md): CRC-16/MODBUS, an error-detecting checksum
 
 ## Reference

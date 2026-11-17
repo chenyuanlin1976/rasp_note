@@ -100,7 +100,7 @@ It is also **not** a kernel feature: the kernel provides `/dev/gpiochipN`, and l
 libgpiod has 2 incompatible API generations:
 
 + **v1.x**: `gpiod_chip_get_line()`, `gpiod_line_request_output()`, `gpiod_line_set_value()`.
-  The other notes here use this one (see [../../Linux/libgpiod_intro.md](../../Linux/libgpiod_intro.md)).
+  The other notes here use this one (see [../../Linux/HW/libgpiod_intro.md](../../Linux/HW/libgpiod_intro.md)).
 + **v2.x** (2022+): `gpiod_line_settings`, `gpiod_line_config`, `gpiod_chip_request_lines()`, `gpiod_line_request_set_value()`.
 
 ## 4. The same "set a pin high" in both interfaces
@@ -195,7 +195,7 @@ Standard AOSP has **no** public GPIO API. You build your own vendor HAL plus a s
 ## Related notes
 
 + [AIDL_HAL_gpio.md](AIDL_HAL_gpio.md): full AIDL + libgpiod GPIO HAL
-+ [../../Linux/libgpiod_intro.md](../../Linux/libgpiod_intro.md), [../HW/libgpiod_android.md](../HW/libgpiod_android.md), [../Native/JNI_intro.md](../Native/JNI_intro.md)
++ [../../Linux/HW/libgpiod_intro.md](../../Linux/HW/libgpiod_intro.md), [../HW/libgpiod_android.md](../HW/libgpiod_android.md), [../Native/JNI_intro.md](../Native/JNI_intro.md)
 + [../HW/hw_control_sysfs.md](../HW/hw_control_sysfs.md), [../HW/gpio_control.md](../HW/gpio_control.md)
 + [HAL_intro.md](HAL_intro.md), [HAL_sysfsNodes.md](HAL_sysfsNodes.md)
 

@@ -17,7 +17,7 @@ For the full generic HAL plumbing (VINTF matrix, client code), see [AIDL_HAL_imp
 | Interface | `IGpioControl` |
 | Instance | `vendor.example.hardware.gpio.IGpioControl/default` |
 | Executable | `/vendor/bin/hw/vendor.example.hardware.gpio-service` |
-| libgpiod API | **v1** (`gpiod_line_*`), see [../../Linux/libgpiod_intro.md](../../Linux/libgpiod_intro.md); v2 replaced it with `gpiod_chip_request_lines()` / `gpiod_line_request_*` |
+| libgpiod API | **v1** (`gpiod_line_*`), see [../../Linux/HW/libgpiod_intro.md](../../Linux/HW/libgpiod_intro.md); v2 replaced it with `gpiod_chip_request_lines()` / `gpiod_line_request_*` |
 
 ## 1. The AIDL interface
 
@@ -358,7 +358,7 @@ Third-party apps go through that system app; see [../IPC/AIDL_app_3rdParty_acces
 ## Related notes
 
 + [AIDL_HAL_impl.md](AIDL_HAL_impl.md), [../IPC/AIDL_ndk_led_sysfs.md](../IPC/AIDL_ndk_led_sysfs.md)
-+ [../../Linux/libgpiod_intro.md](../../Linux/libgpiod_intro.md), [../HW/libgpiod_android.md](../HW/libgpiod_android.md), [HAL_libgpiod.md](HAL_libgpiod.md), [../HW/gpio_control.md](../HW/gpio_control.md)
++ [../../Linux/HW/libgpiod_intro.md](../../Linux/HW/libgpiod_intro.md), [../HW/libgpiod_android.md](../HW/libgpiod_android.md), [HAL_libgpiod.md](HAL_libgpiod.md), [../HW/gpio_control.md](../HW/gpio_control.md)
 
 ## Reference
 

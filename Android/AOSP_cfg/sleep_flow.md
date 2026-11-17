@@ -7,7 +7,7 @@ Two steps are easy to mix up:
 2. **Suspending** (kernel): the `system_suspend` service writes `mem` to `/sys/power/state`, but only when **no wake lock** is held.
 
 The device can be asleep (screen off) for a long time without suspending, for example while music plays under a partial wake lock.
-For the sleep states themselves (s2idle vs. deep) see [power_saving.md](power_saving.md); for the kernel steps see [suspend_resume_flow.md](../../Linux/suspend_resume_flow.md).
+For the sleep states themselves (s2idle vs. deep) see [power_saving.md](power_saving.md); for the kernel steps see [../../Linux/Power/suspend_resume_flow.md](../../Linux/Power/suspend_resume_flow.md).
 
 ## 1. Overview
 
@@ -96,10 +96,10 @@ Wake-lock rules for app developers are in [app_background_limits.md](../App/app_
 4. Write `mem` to `/sys/power/state`. The kernel suspends into the mode selected in `/sys/power/mem_sleep` (`s2idle` or `deep`).
 5. When the write returns (after resume or an aborted suspend), back off briefly and start again.
 
-Reading the count **before** waiting is what makes the handshake work: any wakeup event during the wait makes step 3 fail. Details in [wakeup_count.md](../../Linux/wakeup_count.md).
+Reading the count **before** waiting is what makes the handshake work: any wakeup event during the wait makes step 3 fail. Details in [../../Linux/Power/wakeup_count.md](../../Linux/Power/wakeup_count.md).
 
 This is **opportunistic suspend**: Android suspends whenever it can and doesn't wait for a fixed idle time.
-What the kernel does after step 3 is in [suspend_resume_flow.md](../../Linux/suspend_resume_flow.md).
+What the kernel does after step 3 is in [../../Linux/Power/suspend_resume_flow.md](../../Linux/Power/suspend_resume_flow.md).
 
 ## 6. Waking up
 
@@ -130,8 +130,8 @@ adb shell cat /sys/kernel/debug/wakeup_sources       # root, debugfs
 ## Related notes
 
 + [power_saving.md](power_saving.md): s2idle vs. deep, Doze, App Standby, Battery Saver
-+ [../../Linux/suspend_resume_flow.md](../../Linux/suspend_resume_flow.md): kernel suspend and resume, step by step
-+ [../../Linux/wakeup_count.md](../../Linux/wakeup_count.md): the wakeup_count handshake used by `system_suspend`
++ [../../Linux/Power/suspend_resume_flow.md](../../Linux/Power/suspend_resume_flow.md): kernel suspend and resume, step by step
++ [../../Linux/Power/wakeup_count.md](../../Linux/Power/wakeup_count.md): the wakeup_count handshake used by `system_suspend`
 + [dream_screensaver.md](dream_screensaver.md): wakefulness states, dreams, doze dream
 + [shutdown_flow.md](shutdown_flow.md): the power-off path
 + [../App/app_background_limits.md](../App/app_background_limits.md): wake locks for apps

@@ -31,7 +31,7 @@ sudo insmod ./mydrv.ko      # load one .ko by path, no dependency handling (for 
 sudo dmesg -w | grep -i iwlwifi        # kernel log (follow)
 ```
 
-`dkms` rebuilds out-of-tree modules automatically for new kernels. Module details: [../Linux/kernel_module.md](../Linux/kernel_module.md).
+`dkms` rebuilds out-of-tree modules automatically for new kernels. Module details: [../Linux/Kernel/kernel_module.md](../Linux/Kernel/kernel_module.md).
 
 ## 3. Processes
 
@@ -50,11 +50,11 @@ kill -TERM "$pid"; kill -KILL "$pid"                   # ask to stop / force
 chown user:group file; chmod 640 file; chmod u+x script.sh
 cmp file1 file2             # first differing byte (binary files)
 diff -u file1 file2         # unified diff; diff -y: side by side
-rsync -avu --delete /home/user/SRC/ /home/user/DEST     # see ../Linux/rsync_cmds.md
-wget -c -i urls.txt         # resume downloads from a list; see ../Linux/wget_cmds.md
+rsync -avu --delete /home/user/SRC/ /home/user/DEST     # see ../Linux/Files/rsync_cmds.md
+wget -c -i urls.txt         # resume downloads from a list; see ../Linux/Network/wget_cmds.md
 ```
 
-Archives (`tar`, `zip`, ...): [../Linux/archive_compression.md](../Linux/archive_compression.md).
+Archives (`tar`, `zip`, ...): [../Linux/Files/archive_compression.md](../Linux/Files/archive_compression.md).
 
 ## 5. Find files and commands
 
@@ -87,7 +87,7 @@ hexdump mac.bin             # 0000000 2474 38ca e1a3   <- 16-bit words, little-e
 
 Use `hexdump -C` or `xxd`, which show bytes in file order. Plain `hexdump` (and `od -x`) groups bytes into host-endian 16-bit words.
 
-Hashes and HMAC (`openssl dgst`), checksums: [../Linux/openssl_note.md](../Linux/openssl_note.md), [../Linux/checksumCmd.md](../Linux/checksumCmd.md).
+Hashes and HMAC (`openssl dgst`), checksums: [../Linux/Network/openssl_note.md](../Linux/Network/openssl_note.md), [../Linux/Files/checksumCmd.md](../Linux/Files/checksumCmd.md).
 
 ## 7. Disks and file systems
 
@@ -120,7 +120,7 @@ nmcli device; nmcli device wifi list    # NetworkManager
 ping -c 4 8.8.8.8
 ```
 
-More: [../Linux/network_cmds.md](../Linux/network_cmds.md).
+More: [../Linux/Network/network_cmds.md](../Linux/Network/network_cmds.md).
 
 ## 9. Packages (Debian/Ubuntu)
 
@@ -132,7 +132,7 @@ sudo dpkg -i package.deb                      # low level: no dependency resolut
 dpkg -L package; dpkg -S /usr/bin/xxd         # files of a package; which package owns a file
 ```
 
-More: [../Linux/apt_dpkg_cmds.md](../Linux/apt_dpkg_cmds.md).
+More: [../Linux/SysAdmin/apt_dpkg_cmds.md](../Linux/SysAdmin/apt_dpkg_cmds.md).
 
 ## 10. Date and time
 
@@ -148,9 +148,9 @@ sudo timedatectl set-timezone Asia/Taipei
 ## Related notes
 
 + [bash_basic.md](bash_basic.md), [bash_recipes.md](bash_recipes.md), [grep_intro.md](grep_intro.md)
-+ [../Linux/rsync_cmds.md](../Linux/rsync_cmds.md), [../Linux/wget_cmds.md](../Linux/wget_cmds.md), [../Linux/apt_dpkg_cmds.md](../Linux/apt_dpkg_cmds.md)
-+ [../Linux/kernel_module.md](../Linux/kernel_module.md), [../Linux/archive_compression.md](../Linux/archive_compression.md)
-+ [../Linux/network_cmds.md](../Linux/network_cmds.md), [../Linux/openssl_note.md](../Linux/openssl_note.md), [../Linux/checksumCmd.md](../Linux/checksumCmd.md)
++ [../Linux/Files/rsync_cmds.md](../Linux/Files/rsync_cmds.md), [../Linux/Network/wget_cmds.md](../Linux/Network/wget_cmds.md), [../Linux/SysAdmin/apt_dpkg_cmds.md](../Linux/SysAdmin/apt_dpkg_cmds.md)
++ [../Linux/Kernel/kernel_module.md](../Linux/Kernel/kernel_module.md), [../Linux/Files/archive_compression.md](../Linux/Files/archive_compression.md)
++ [../Linux/Network/network_cmds.md](../Linux/Network/network_cmds.md), [../Linux/Network/openssl_note.md](../Linux/Network/openssl_note.md), [../Linux/Files/checksumCmd.md](../Linux/Files/checksumCmd.md)
 
 ## Reference
 

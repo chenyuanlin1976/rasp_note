@@ -125,6 +125,7 @@ The setting is lost on reboot. To make it permanent, add `loglevel=<n>` to the k
 
 + [adb_intro.md](adb_intro.md): adb setup, including adb over TCP started from the serial console
 + [logcat_intro.md](logcat_intro.md): logcat buffers, kernel log, pstore
++ [logcat_dmesg_cmp.md](logcat_dmesg_cmp.md): logcat vs dmesg over adb
 + [adb_shell_cmds.md](adb_shell_cmds.md): commands to run in the shell
 + [../../Linux/dts_intro.md](../../Linux/dts_intro.md): enabling `&uart2` in the board device tree
 + [../../Linux/suspend_resume_flow.md](../../Linux/suspend_resume_flow.md): `no_console_suspend` for debugging suspend

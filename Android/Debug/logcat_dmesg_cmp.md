@@ -3,7 +3,7 @@
 `adb logcat` and `adb shell dmesg` read two different logs.
 **logcat** reads the user-space log that `logd` keeps (apps, framework, native daemons, HALs).
 **dmesg** reads the **kernel ring buffer** (drivers, hardware, kernel errors).
-The examples refer to an RK3566 board running Android 14.
+The examples refer to an RK3566 board running Android 14. Section 6 compares dmesg with the UART console, which prints the same kernel messages.
 
 ```text
 apps (android.util.Log), framework (Slog),        kernel, drivers (printk, dev_err)
@@ -85,6 +85,24 @@ adb logcat -v monotonic               # seconds since boot, like the dmesg times
 | Peripheral not detected (touch, camera sensor, Wi-Fi) | dmesg | Probe errors, I2C/SDIO/USB errors, firmware loading |
 | Random hard reboots, kernel panic | pstore after reboot, or the UART console | The panic message isn't in `dmesg` after the reboot |
 | Stuck before Android starts (no adb) | [UART console](uart_console.md) | Neither log is reachable without adb |
+
+## 6. dmesg vs the UART console
+
+While Android runs, the [UART console](uart_console.md) often shows the same text as `dmesg`.
+That's because the kernel writes each message to its ring buffer **and** prints it on the console device (`console=` on the kernel command line).
+They still differ in what they cover:
+
+| | `adb shell dmesg` | UART console |
+| --- | --- | --- |
+| What it is | A command that reads the kernel ring buffer, run over adb or in any shell on the device | A serial port the kernel prints to, read through a USB-to-UART adapter |
+| Before the kernel | Nothing | Boot ROM loader and U-Boot output |
+| Kernel messages | All levels, from kernel start, until the buffer wraps | Only messages more urgent than the console log level (`loglevel=`, `quiet`, `dmesg -n`) |
+| Needs | A running system and a shell | Only power and the three wires |
+| Kernel panic | Lost on reboot (read pstore instead) | Printed live, up to the last message before the reset |
+
++ **Only UART helps** when the board never reaches a shell: a bad `.dtb`, a U-Boot misconfiguration, a panic before `adbd` starts, or a bootloop.
+  The error (for example, eMMC fails to initialize, or the root filesystem can't be mounted) is printed right before the hang or reset.
++ **dmesg is better** for messages the console log level filters out, for searching with `grep`, and on boards without access to the debug UART.
 
 ## Related notes
 

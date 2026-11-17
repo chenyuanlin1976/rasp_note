@@ -15,6 +15,8 @@ How `.dts` and `.dtsi` files are layered is in [dts_intro.md](dts_intro.md#3-fil
      That's why a sensor under `&i2c1` appears only after the I2C controller driver is working.
    + Nodes with `status = "disabled"` are **skipped**: no device is created.
 4. **Matching**: the bus compares the node's `compatible` list with each driver's `of_match_table`, and calls `probe()` on a match.
+   `probe()` receives the bus device (`struct platform_device *`, `struct i2c_client *`, ...), not the node itself.
+   The node is reachable as `dev->of_node`.
 5. **Dependencies**: if `probe()` needs a resource that isn't ready yet (a clock, regulator, or GPIO), it returns **`-EPROBE_DEFER`**, and the kernel retries later.
    `fw_devlink` (`fw_devlink=on`, the default) orders probing from the phandle references, so most of this happens automatically.
 
@@ -106,7 +108,13 @@ static int my_i2c_probe(struct platform_device *pdev)
 | `<name>-supply` | `devm_regulator_get(dev, "name")` + `regulator_enable()` |
 | `resets` | `devm_reset_control_get_exclusive(dev, "name")` |
 | scalar/string properties | `device_property_read_u32/_bool/_string()` (or the DT-only `of_property_read_*()`) |
-| child nodes | `device_for_each_child_node(dev, child)` |
+| child nodes | `device_for_each_child_node(dev, child)`, `device_get_named_child_node(dev, "name")` |
+| other nodes (DT-only) | `of_get_child_by_name(np, "name")`, `of_find_node_by_path("/path")`, `of_parse_phandle()` |
+
++ The `of_*` node lookups return a node with a raised reference count. Release it with `of_node_put()` when done.
+  Prefer phandle properties (`<name>-gpios`, `clocks`, `<name>-supply`) over looking up other nodes by path.
++ A driver-specific property needs a **vendor prefix** (`mycompany,settle-time-ms`, not `settle-time-ms`)
+  and belongs in the driver's binding YAML. Check the return value, or set a default first as with `freq` above.
 
 ## 4. Example: a GPIO consumer, with polarity handled by the device tree
 

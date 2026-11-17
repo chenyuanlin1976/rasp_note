@@ -112,6 +112,7 @@ Using fields is safer than a fixed column such as `grep -E '^.{31}E'`, which bre
 ## Related notes
 
 + [adb_intro.md](adb_intro.md), [adb_shell_cmds.md](adb_shell_cmds.md)
++ [uart_console.md](uart_console.md): the UART debug console, for boot-time and kernel logs
 + [../SELinux/avc_denied.md](../SELinux/avc_denied.md): reading SELinux denials from the log
 
 ## Reference

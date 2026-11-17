@@ -49,9 +49,11 @@ adb disconnect 192.168.1.50:5555
 adb usb                              # back to USB mode
 ```
 
-On a development board (userdebug, no USB OTG), adbd can be put on TCP from a serial console:
+On a development board (userdebug, no USB OTG), adbd can be put on TCP from the [serial console](uart_console.md).
+The console shell runs as user `shell`, so switch to root first:
 
 ```shell
+su
 setprop service.adb.tcp.port 5555
 stop adbd && start adbd
 ```
@@ -182,6 +184,7 @@ After editing `~/.bashrc`, run `source ~/.bashrc` or open a new terminal.
 
 + [adb_shell_cmds.md](adb_shell_cmds.md): `am`, `pm`, `cmd`, `settings`, `dumpsys`, `svc`, `input`, ...
 + [logcat_intro.md](logcat_intro.md)
++ [uart_console.md](uart_console.md): the UART debug console, for when adb isn't available yet
 + [../Build/AOSP_envsetup_cmds.md](../Build/AOSP_envsetup_cmds.md), [../AOSP_cfg/virtual_AB.md](../AOSP_cfg/virtual_AB.md)
 
 ## Reference

@@ -12,7 +12,7 @@ Most framework tools are thin clients of a system service:
 | `cmd <service> ...` | Any service that implements a shell command | Generic front end (Android 7+). `am` ≈ `cmd activity`, `pm` ≈ `cmd package` |
 | `dumpsys <service>` | Any service's `dump()` | Print state; a few services also accept commands (`battery`) |
 | `settings` | SettingsProvider | Read and write `system` / `secure` / `global` settings |
-| `svc` | Connectivity, power, and USB services | Toggle Wi-Fi, data, USB functions, stay-awake |
+| `svc` | Wi-Fi, connectivity, Bluetooth, USB, and power services | Toggle Wi-Fi, data, Bluetooth, USB functions, stay-awake; reboot, shut down |
 | `getprop` / `setprop` | Property service | System properties |
 | `wm`, `input` | Window manager, input manager | Screen size and density; inject keys and touches |
 
@@ -107,6 +107,23 @@ How the 3 namespaces are stored and protected: [../AOSP_cfg/SettingsProvider_int
 
 ## 5. `dumpsys`
 
+`dumpsys <service>` calls the `dump()` method of a Binder service and prints the result to stdout (not to logcat).
+Without a service name, it dumps every service, which is long and slow. Always name one.
+
+| Service | Shows |
+| --- | --- |
+| `battery` | AC/USB powered, status, health, level, voltage (mV), temperature (0.1 °C) |
+| `meminfo [<pkg>\|<pid>]` | Per-process PSS summary, or one app's Java heap, native heap, graphics memory |
+| `cpuinfo` | Recent CPU load per process |
+| `power` | Screen state, wake locks (what keeps the CPU awake), stay-on and Battery Saver state |
+| `deviceidle` | Doze state and the idle allowlist |
+| `activity` | Activities, services, broadcasts, processes (`activity top`: view hierarchy of the top activity) |
+| `window` | Windows, focus, display size |
+| `package <pkg>` | Version, paths, permissions, components of one package |
+| `wifi`, `connectivity` | Wi-Fi state and networks, default network |
+| `sensorservice` | Sensors, active connections, recent events |
+| `SurfaceFlinger` | Layers and displays |
+
 ```shell
 adb shell dumpsys -l                      # list services (same names as "service list")
 adb shell dumpsys activity -h             # per-service help, where supported
@@ -114,6 +131,7 @@ adb shell dumpsys package com.example.app # one package
 adb shell dumpsys activity activities | grep ResumedActivity            # foreground activity
 adb shell dumpsys window | grep -E 'mCurrentFocus|mFocusedApp'                        # focused window
 adb shell dumpsys meminfo com.example.app
+adb shell dumpsys power | grep -A 20 'Wake Locks'   # who blocks suspend
 adb shell dumpsys SurfaceFlinger --display-id
 ```
 
@@ -129,20 +147,34 @@ adb shell dumpsys battery reset           # back to the real values
 
 ## 6. `svc`
 
+`svc` asks the framework services (Wi-Fi, connectivity, Bluetooth, USB, power manager) to change state, the same way the Settings UI does.
+It is handy in test scripts, and on boards without a usable UI.
+
 ```shell
 adb shell svc wifi enable                 # disable
-adb shell svc data enable                 # disable (mobile data)
+adb shell svc data enable                 # disable (mobile data; needs a modem)
 adb shell svc bluetooth enable            # disable
 adb shell svc usb getFunctions
 adb shell svc usb setFunctions mtp        # mtp, ptp, rndis, midi, ... (empty: charging only)
 adb shell svc power stayon usb            # true | false | usb | ac | wireless
 adb shell svc power reboot
-adb shell svc power shutdown
+adb shell svc power shutdown              # powers the device off (not screen off / sleep)
 ```
 
-Run `adb shell svc` to see the subcommands that this release supports.
-`svc` is handy in test scripts, and on boards without a usable UI.
-`svc power shutdown` takes the full framework path; see [../AOSP_cfg/shutdown_flow.md](../AOSP_cfg/shutdown_flow.md).
++ Run `adb shell svc` to see the subcommands that this release supports.
++ `svc power shutdown` powers off through the full framework path; see [../AOSP_cfg/shutdown_flow.md](../AOSP_cfg/shutdown_flow.md).
+  To turn only the screen off, use `input keyevent KEYCODE_SLEEP` (section 8).
++ `svc power stayon` writes the `stay_on_while_plugged_in` global setting (section 4).
++ `setFunctions` doesn't control adb. adb follows the `adb_enabled` global setting (Developer options → USB debugging).
+  Changing the USB functions briefly re-enumerates the port, so the adb connection may drop and come back.
+
+Check that a change took effect:
+
+```shell
+adb shell dumpsys wifi | grep 'Wi-Fi is'                  # Wi-Fi is enabled / disabled
+adb shell settings get global stay_on_while_plugged_in    # 0 off, 1 AC, 2 USB, 4 wireless (bitmask)
+adb shell svc usb getFunctions
+```
 
 ## 7. Properties
 

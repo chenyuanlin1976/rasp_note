@@ -132,6 +132,7 @@ adb shell cat /sys/kernel/debug/wakeup_sources       # root, debugfs
 + [power_saving.md](power_saving.md): s2idle vs. deep, Doze, App Standby, Battery Saver
 + [../../Linux/Power/suspend_resume_flow.md](../../Linux/Power/suspend_resume_flow.md): kernel suspend and resume, step by step
 + [../../Linux/Power/wakeup_count.md](../../Linux/Power/wakeup_count.md): the wakeup_count handshake used by `system_suspend`
++ [../../Linux/Power/rk3566_suspend.md](../../Linux/Power/rk3566_suspend.md): what the kernel suspend does on RK3566 (deep, PMIC, wakeup sources)
 + [dream_screensaver.md](dream_screensaver.md): wakefulness states, dreams, doze dream
 + [shutdown_flow.md](shutdown_flow.md): the power-off path
 + [../App/app_background_limits.md](../App/app_background_limits.md): wake locks for apps

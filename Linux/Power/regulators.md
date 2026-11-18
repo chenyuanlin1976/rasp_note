@@ -190,6 +190,7 @@ Option names change between kernel versions (`CONFIG_MFD_RK8XX_I2C` replaced the
 + [../DeviceTree/dts_node_mmc_pwrseq.md](../DeviceTree/dts_node_mmc_pwrseq.md) (power sequence for SDIO Wi-Fi chips)
 + [../Android/AOSP_cfg/power_saving.md](../../Android/AOSP_cfg/power_saving.md) (suspend states; the PMIC's role in suspend-to-RAM)
 + [suspend_resume_flow.md](suspend_resume_flow.md) (how `regulator-state-mem` is applied during suspend)
++ [rk3566_suspend.md](rk3566_suspend.md) (RK809 sleep pin, rails left on, standby current on RK3566)
 + [../Android/AOSP_cfg/shutdown_flow.md](../../Android/AOSP_cfg/shutdown_flow.md) (PMIC power-off and `system-power-controller`)
 + [../HW/voltage_mismatch.md](../../HW/voltage_mismatch.md) (I/O voltage levels)
 

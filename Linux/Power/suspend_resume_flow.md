@@ -118,6 +118,7 @@ dmesg | grep -E "PM:|suspend|resume"
 + [wakeup_count.md](wakeup_count.md): the wakeup_count handshake before a suspend
 + [../Android/AOSP_cfg/shutdown_flow.md](../../Android/AOSP_cfg/shutdown_flow.md): the power-off path
 + [regulators.md](regulators.md): PMICs, `regulator-state-mem`
++ [rk3566_suspend.md](rk3566_suspend.md): s2idle vs. deep, PMIC, and wakeup sources on RK3566
 + [../Android/HW/input_key_flow.md](../../Android/HW/input_key_flow.md): `gpio-keys` and `wakeup-source`
 + [../HW/sysfs_intro.md](../HW/sysfs_intro.md): `/sys/power/`
 

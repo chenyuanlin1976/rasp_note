@@ -54,6 +54,10 @@ adb shell am broadcast -a com.example.app.ACTION_TEST -p com.example.app --es ms
 Since Android 8, **implicit** broadcasts don't reach receivers declared in the manifest (except a few system broadcasts).
 Add `-p <package>` or `-n <package>/<receiver>` to make the broadcast explicit.
 
+System broadcasts such as `android.intent.action.BOOT_COMPLETED` are **protected**: only the system can send them.
+`am broadcast -a android.intent.action.BOOT_COMPLETED` from the `shell` user fails with a `SecurityException`, unless adbd runs as root (`adb root`, section 7).
+To test your own boot receiver, reboot, or send the broadcast as root with `-n <package>/<receiver>`.
+
 ## 2. `pm`: packages and permissions
 
 ```shell
@@ -84,6 +88,18 @@ adb shell cmd -l                          # services that can be addressed
 adb shell cmd package list packages -3    # same as pm
 adb shell cmd activity force-stop com.example.app
 adb shell cmd <service> help              # usage for one service
+
+# Which activity handles an Intent (here: all launcher entries)
+adb shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
+adb shell cmd package query-activities --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER
+
+adb shell cmd statusbar expand-notifications   # also: expand-settings, collapse
+
+# Doze testing: the device must look unplugged first
+adb shell dumpsys battery unplug
+adb shell cmd deviceidle force-idle       # enter deep Doze now
+adb shell cmd deviceidle unforce
+adb shell dumpsys battery reset
 ```
 
 `svc` (section 6) is narrower: it only toggles Wi-Fi, data, Bluetooth, NFC, USB, and power.
@@ -96,6 +112,12 @@ adb shell settings get system screen_brightness
 adb shell settings put system screen_brightness 120
 adb shell settings get secure android_id
 adb shell settings put global stay_on_while_plugged_in 7     # AC|USB|wireless: keep screen on while charging
+
+# Animation scales (Developer options); 0 disables animations, useful for UI tests
+adb shell settings get global window_animation_scale
+adb shell settings put global window_animation_scale 0
+adb shell settings put global transition_animation_scale 0
+adb shell settings put global animator_duration_scale 0
 
 # Battery Saver: 1 = on, 0 = off (a device that is charging won't enter it, so simulate unplugging)
 adb shell dumpsys battery unplug
@@ -184,11 +206,25 @@ adb shell getprop ro.build.version.release   # e.g. 14
 adb shell getprop ro.build.version.sdk       # e.g. 34
 adb shell getprop ro.build.type              # user / userdebug / eng
 adb shell getprop ro.product.cpu.abilist
-adb shell getprop | grep -i hardware
+adb shell getprop | grep -iE 'board|hardware|rk35'   # SoC and board properties
 adb shell setprop log.tag.MyApp D            # allowed for shell; most other properties are restricted by SELinux
 ```
 
-+ `ro.*` properties are read-only after boot. `persist.*` properties survive a reboot.
+`setprop <name> <value>` asks init's property service to change a property. Rules:
+
+| Prefix | Behavior |
+| --- | --- |
+| `ro.*` | Set once (from `build.prop` files or init, at boot). Any later `setprop` fails |
+| `persist.*` | Survives a reboot; init saves it to `/data/property/persistent_properties` |
+| `ctl.*` | Not a value: `ctl.start` / `ctl.stop` / `ctl.restart` tell init to control a service (root only) |
+| others | Runtime only; lost at reboot |
+
++ Who may set a property is decided by SELinux: `property_contexts` gives each property a type, and the caller's domain needs `set_prop` on it.
+  The `shell` domain can set only a few types (`log.tag.*`, some `debug.*`); for the rest, `setprop` fails silently or logs `avc: denied`.
++ `adb root` restarts adbd as root (domain `su`) and works only on `userdebug` and `eng` builds (`ro.debuggable=1`).
+  On a `user` build it prints `adbd cannot run as root in production builds`.
++ Prefer the framework commands over writing properties directly.
+  For example, use `svc usb setFunctions mtp` (section 6) instead of `setprop persist.sys.usb.config mtp,adb`: on recent releases the USB HAL and `UsbDeviceManager` own that property.
 + Network MAC addresses are not properties. Use `adb shell ip link` or `adb shell cat /sys/class/net/eth0/address`.
 
 ## 8. Screen and input

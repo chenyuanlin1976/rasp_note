@@ -144,6 +144,7 @@ If the board stays powered after that, no working power-off handler is registere
 + [sleep_flow.md](sleep_flow.md): the sleep path, from screen off to kernel suspend
 + [../../Linux/Power/suspend_resume_flow.md](../../Linux/Power/suspend_resume_flow.md): what the kernel does for suspend-to-RAM
 + [../../Linux/Power/regulators.md](../../Linux/Power/regulators.md): PMICs and the regulator framework
++ [../../Linux/Power/tf-a_psci.md](../../Linux/Power/tf-a_psci.md): TF-A and PSCI `SYSTEM_OFF` / `SYSTEM_RESET`
 + [../HW/input_key_flow.md](../HW/input_key_flow.md): how a key press reaches the framework
 + [../Debug/adb_shell_cmds.md](../Debug/adb_shell_cmds.md)
 

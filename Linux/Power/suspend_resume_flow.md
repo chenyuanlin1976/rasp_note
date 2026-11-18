@@ -113,13 +113,14 @@ dmesg | grep -E "PM:|suspend|resume"
 
 ## Related notes
 
-+ [../Android/AOSP_cfg/power_saving.md](../../Android/AOSP_cfg/power_saving.md): sleep states, s2idle vs. deep, Android opportunistic suspend
-+ [../Android/AOSP_cfg/sleep_flow.md](../../Android/AOSP_cfg/sleep_flow.md): the Android framework side, from screen off to the write to `/sys/power/state`
++ [../../Android/AOSP_cfg/power_saving.md](../../Android/AOSP_cfg/power_saving.md): sleep states, s2idle vs. deep, Android opportunistic suspend
++ [../../Android/AOSP_cfg/sleep_flow.md](../../Android/AOSP_cfg/sleep_flow.md): the Android framework side, from screen off to the write to `/sys/power/state`
 + [wakeup_count.md](wakeup_count.md): the wakeup_count handshake before a suspend
-+ [../Android/AOSP_cfg/shutdown_flow.md](../../Android/AOSP_cfg/shutdown_flow.md): the power-off path
++ [../../Android/AOSP_cfg/shutdown_flow.md](../../Android/AOSP_cfg/shutdown_flow.md): the power-off path
 + [regulators.md](regulators.md): PMICs, `regulator-state-mem`
 + [rk3566_suspend.md](rk3566_suspend.md): s2idle vs. deep, PMIC, and wakeup sources on RK3566
-+ [../Android/HW/input_key_flow.md](../../Android/HW/input_key_flow.md): `gpio-keys` and `wakeup-source`
++ [tf-a_psci.md](tf-a_psci.md): TF-A (BL31) and the PSCI calls behind deep suspend
++ [../../Android/HW/input_key_flow.md](../../Android/HW/input_key_flow.md): `gpio-keys` and `wakeup-source`
 + [../HW/sysfs_intro.md](../HW/sysfs_intro.md): `/sys/power/`
 
 ## Reference

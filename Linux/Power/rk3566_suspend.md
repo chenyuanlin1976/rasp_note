@@ -126,10 +126,29 @@ adb shell dmesg | grep -i -E "PM:|suspend|resume|wakeup"
 + Watch the UART console while suspending. With `no_console_suspend` on the kernel command line, late kernel messages are kept; with `rockchip,sleep-debug-en`, TF-A prints which domains were off and what woke the SoC. See [uart_console.md](../../Android/Debug/uart_console.md).
 + Measure the board's input current in both modes. If deep is no better than s2idle, check the sleep config (§5) and the rails left on (§4).
 
+## 8. Peripherals that don't work after resume
+
+USB ports, the Ethernet PHY, or HDMI not working after a wakeup is a common problem on RK356x boards.
+The usual causes:
+
+| Symptom | Common cause | Where to look |
+| --- | --- | --- |
+| USB host ports dead, devices not re-enumerated | the VBUS or PHY supply rail was off in suspend and isn't enabled again on resume, or the DWC3 controller doesn't restore its role (host/peripheral) | the rail's `regulator-state-mem`, the `vbus-supply` of the USB PHY, the BSP's DWC3 and USB PHY patches |
+| Ethernet link doesn't come back | the PHY lost power or its clock and wasn't reset again on resume | PHY `reset-gpios` and reset timing in the DT, the PHY rail's suspend state, the MAC driver's resume path |
+| No HDMI output | the HDMI PHY supplies or the display pipeline aren't restored | the HDMI supply rails' suspend state, the display driver's resume path |
+
+How to narrow it down:
+
+1. Compare `s2idle` and `deep` (§3). If the device survives s2idle but not deep, the cause is power that deep removes: a rail's `regulator-state-mem` (§4) or the `rockchip-suspend` sleep config (§5).
+   As a test, keep the suspect rail on in suspend (`regulator-on-in-suspend`) and check whether the problem goes away.
+2. Look in `dmesg` after resume for errors from that driver, and in `last_failed_dev` for suspend errors (§7).
+3. Update to the latest Rockchip BSP kernel for your SDK; many PMIC and suspend/resume fixes for these drivers are only there.
+
 ## Related notes
 
 + [suspend_resume_flow.md](suspend_resume_flow.md): kernel suspend and resume, step by step
 + [wakeup_count.md](wakeup_count.md): the handshake `system_suspend` does before each suspend
++ [tf-a_psci.md](tf-a_psci.md): TF-A (BL31) and PSCI `SYSTEM_SUSPEND`
 + [regulators.md](regulators.md): RK809 rails and `regulator-state-mem`
 + [../../Android/AOSP_cfg/sleep_flow.md](../../Android/AOSP_cfg/sleep_flow.md): from screen off to `/sys/power/state` on Android
 + [../../Android/AOSP_cfg/power_saving.md](../../Android/AOSP_cfg/power_saving.md): sleep states, s2idle vs. deep in general, Doze

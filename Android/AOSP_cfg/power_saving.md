@@ -138,6 +138,7 @@ On a Linux PC, `echo deep | sudo tee /sys/power/mem_sleep` selects deep for the 
 + [sleep_flow.md](sleep_flow.md): from screen off to kernel suspend (PowerManagerService, wake locks, system_suspend)
 + [../../Linux/Power/suspend_resume_flow.md](../../Linux/Power/suspend_resume_flow.md): kernel suspend and resume, step by step
 + [../../Linux/Power/rk3566_suspend.md](../../Linux/Power/rk3566_suspend.md): s2idle vs. deep on RK3566, selecting the mode, standby current
++ [../../Linux/Power/tf-a_psci.md](../../Linux/Power/tf-a_psci.md): TF-A and PSCI `SYSTEM_SUSPEND` on Arm
 + [shutdown_flow.md](shutdown_flow.md): from "Power off" to the PMIC
 + [../../Linux/Power/regulators.md](../../Linux/Power/regulators.md): PMICs and power rails
 + [../App/app_background_limits.md](../App/app_background_limits.md): wake locks and background limits for apps

@@ -31,11 +31,41 @@ Logs are in [logcat_intro.md](logcat_intro.md).
 Enable **Developer options → USB debugging** on the device, plug it in, and accept the RSA key prompt.
 
 ```shell
-adb devices          # "unauthorized": accept the prompt on the device; "no permissions": udev rule missing
+adb devices          # "unauthorized": accept the prompt on the device (no screen: §2.2); "no permissions": udev rule missing
 adb devices -l       # also show product, model, transport_id
 ```
 
-### 2.2 Over the network
+### 2.2 "unauthorized" on a board without a screen
+
+adbd accepts a host only if the host's public key is listed in `/data/misc/adb/adb_keys`.
+Normally the key gets there when someone taps "Allow" on the RSA prompt.
+On a headless board (no display or touch), write the key by hand from the [serial console](uart_console.md).
+This needs root on the console, so a userdebug or eng build.
+
+1. **Host**: find the key pair in `~/.android/` (Windows: `%USERPROFILE%\.android\`).
+   If `adbkey.pub` doesn't exist, run any adb command (for example `adb devices`); the server creates `adbkey` and `adbkey.pub` when it starts.
+   Copy the one line in `adbkey.pub`.
+2. **Device**, on the UART console:
+
+   ```shell
+   su
+   mkdir -p /data/misc/adb
+   echo "QAAAA...= user@host" >> /data/misc/adb/adb_keys   # the line from adbkey.pub; >> keeps other hosts' keys
+   chown system:shell /data/misc/adb/adb_keys
+   chmod 640 /data/misc/adb/adb_keys
+   restorecon /data/misc/adb/adb_keys                        # SELinux label adb_keys_file
+   ls -lZ /data/misc/adb/adb_keys
+   ```
+
+3. **Restart and check**: `stop adbd && start adbd` on the device, `adb kill-server` on the host, re-plug USB, then `adb devices`.
+   The state should change from `unauthorized` to `device`.
+
+Alternatives for development builds:
+
++ Set `PRODUCT_ADB_KEYS` in the product makefile to the path of an `adbkey.pub`; the build puts the key into the image, so every flashed board trusts that host.
++ `ro.adb.secure=0` in the build properties turns off key authentication completely. Never ship a user build like that.
+
+### 2.3 Over the network
 
 ```shell
 # Android 11+: Developer options -> Wireless debugging -> Pair device with pairing code
@@ -58,7 +88,7 @@ setprop service.adb.tcp.port 5555
 stop adbd && start adbd
 ```
 
-### 2.3 Choose a device
+### 2.4 Choose a device
 
 When more than one device is connected, every command needs a target:
 
@@ -71,7 +101,7 @@ When more than one device is connected, every command needs a target:
 
 Global options go **before** the command: `adb -s 1234abcd install app.apk`.
 
-### 2.4 Server and state
+### 2.5 Server and state
 
 ```shell
 adb kill-server && adb start-server  # restart the host server (fixes most "device offline" cases)

@@ -183,16 +183,35 @@ To turn a rail on or off from user space or Android, see [../DeviceTree/dts_node
 
 Option names change between kernel versions (`CONFIG_MFD_RK8XX_I2C` replaced the older `CONFIG_MFD_RK808`). Check the `Kconfig` of your kernel.
 
+## 8. Which rails stay on during system suspend
+
+Which rails are switched off is decided per board by the `regulator-state-mem` nodes (§3) and by the drivers' suspend callbacks, not by a fixed rule.
+A typical split in suspend-to-RAM (`deep`):
+
+| Rail | Typical state in deep | Why |
+| --- | --- | --- |
+| DRAM supplies (VDD_DDR / VDDQ) | on | DRAM is in self-refresh and must keep its contents |
+| Always-on / PMU domain (VDD_AO, PMU I/O) | on | wakeup logic, the wakeup GPIO bank (GPIO0 on RK3566) |
+| PMIC internal logic, RTC | on | timekeeping, RTC alarm, power key |
+| Supplies of wakeup devices | on, if that device is a wakeup source | e.g. Wi-Fi for wake-on-WLAN, a modem's ring line |
+| Logic / retention rail | on at a lower voltage, or off | depends on the SoC and the sleep config |
+| CPU cluster (VDD_CPU / VDD_ARM) | off | CPUs don't run; the firmware restores them on resume |
+| GPU, NPU | off | not used |
+| USB, PCIe, SD/SDIO, camera, audio, display and backlight, touch | off | not needed; drivers re-enable them on resume |
+
+In `s2idle`, the PMIC isn't told to enter its sleep state: rails stay in their run state, apart from those that drivers switched off in their suspend callbacks.
+For the two modes compared, see [rk3566_suspend.md](rk3566_suspend.md#2-s2idle-vs-deep-on-rk3566) and [power_saving.md](../../Android/AOSP_cfg/power_saving.md#5-s2idle-vs-deep).
+
 ## Related notes
 
 + [../DeviceTree/dts_node_regulator_fixed.md](../DeviceTree/dts_node_regulator_fixed.md) (GPIO-switched rails, boot-time behavior, user-space control)
 + [../DeviceTree/dts_provider_consumer.md](../DeviceTree/dts_provider_consumer.md) (`<name>-supply` and other provider/consumer properties)
 + [../DeviceTree/dts_node_mmc_pwrseq.md](../DeviceTree/dts_node_mmc_pwrseq.md) (power sequence for SDIO Wi-Fi chips)
-+ [../Android/AOSP_cfg/power_saving.md](../../Android/AOSP_cfg/power_saving.md) (suspend states; the PMIC's role in suspend-to-RAM)
++ [../../Android/AOSP_cfg/power_saving.md](../../Android/AOSP_cfg/power_saving.md) (suspend states; the PMIC's role in suspend-to-RAM)
 + [suspend_resume_flow.md](suspend_resume_flow.md) (how `regulator-state-mem` is applied during suspend)
 + [rk3566_suspend.md](rk3566_suspend.md) (RK809 sleep pin, rails left on, standby current on RK3566)
-+ [../Android/AOSP_cfg/shutdown_flow.md](../../Android/AOSP_cfg/shutdown_flow.md) (PMIC power-off and `system-power-controller`)
-+ [../HW/voltage_mismatch.md](../../HW/voltage_mismatch.md) (I/O voltage levels)
++ [../../Android/AOSP_cfg/shutdown_flow.md](../../Android/AOSP_cfg/shutdown_flow.md) (PMIC power-off and `system-power-controller`)
++ [../../HW/voltage_mismatch.md](../../HW/voltage_mismatch.md) (I/O voltage levels)
 
 ## Reference
 

@@ -82,8 +82,8 @@ cat /sys/power/suspend_stats/fail
 ## Related notes
 
 + [suspend_resume_flow.md](suspend_resume_flow.md): what the kernel does after the write to `/sys/power/state`
-+ [../Android/AOSP_cfg/sleep_flow.md](../../Android/AOSP_cfg/sleep_flow.md): `system_suspend` and wake locks on Android
-+ [../Android/AOSP_cfg/power_saving.md](../../Android/AOSP_cfg/power_saving.md): sleep states, s2idle vs. deep
++ [../../Android/AOSP_cfg/sleep_flow.md](../../Android/AOSP_cfg/sleep_flow.md): `system_suspend` and wake locks on Android
++ [../../Android/AOSP_cfg/power_saving.md](../../Android/AOSP_cfg/power_saving.md): sleep states, s2idle vs. deep
 + [../HW/sysfs_intro.md](../HW/sysfs_intro.md): `/sys/power/`
 
 ## Reference

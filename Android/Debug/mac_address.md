@@ -1,6 +1,6 @@
 # MAC addresses on an RK3566 Android board (Bluetooth, Wi-Fi, Ethernet)
 
-This note explains how to read the Bluetooth, Wi-Fi, and Ethernet MAC addresses of an RK3566 board running Android 14, and how to tell whether an address is a real factory address or a locally administered (random or generated) one.
+This note explains how to read the Bluetooth, Wi-Fi, and Ethernet MAC addresses of an RK3566 board running Android 14, how to tell whether an address is a real factory address or a locally administered (random or generated) one, and how a platform-signed app can read the factory addresses (section 7).
 
 | Interface | Randomized by Android? | Typical result when no MAC is provisioned | Read it with |
 | --- | --- | --- | --- |
@@ -144,12 +144,155 @@ adb shell 'dumpsys bluetooth_manager | grep "address:"'
 | Local address, same after reboot | Generated once and stored (e.g. Bluetooth `22:22:...`), or set by a script |
 | Local address, new after every reboot | Not provisioned; the driver makes one up at each boot |
 
+## 7. Read the factory MACs from a platform-signed app
+
+Normal apps can't read the real addresses:
+
++ Since Android 6, `BluetoothAdapter.getAddress()` and `WifiInfo.getMacAddress()` return the placeholder `02:00:00:00:00:00` to apps without `LOCAL_MAC_ADDRESS`.
++ Since Android 11, SELinux blocks the netlink query behind `NetworkInterface.getHardwareAddress()` for apps targeting API 30+, so it returns `null`.
+
+An app signed with the device's **platform key** gets the signature permissions that unlock the real addresses.
+The APIs return whatever the driver or Bluetooth stack reports, so on a board without provisioned MACs they still return the locally administered fallbacks from section 2.
+
+| Interface | API | Permissions | Notes |
+| --- | --- | --- | --- |
+| Bluetooth | `BluetoothAdapter.getAddress()` | `LOCAL_MAC_ADDRESS`, plus `BLUETOOTH_CONNECT` on Android 12+ | `BLUETOOTH_CONNECT` is a runtime permission; the platform key doesn't grant it |
+| Wi-Fi | `WifiManager.getFactoryMacAddresses()` (`@SystemApi`, Android 10+) | `NETWORK_SETTINGS` | `WifiInfo.getMacAddress()` returns the MAC in use, which is usually randomized |
+| Ethernet | `/sys/class/net/eth0/address`, then `NetworkInterface` | none; SELinux decides | Not randomized, so the address in use is the device address |
+
+### 7.1 Manifest and signing
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.deviceinfo">
+    <!-- Optional: android:sharedUserId="android.uid.system" runs the app as UID 1000 -->
+
+    <!-- Signature permissions: granted because the APK is signed with the platform key -->
+    <uses-permission android:name="android.permission.LOCAL_MAC_ADDRESS" />
+    <uses-permission android:name="android.permission.NETWORK_SETTINGS" />
+
+    <!-- Bluetooth: legacy permission up to Android 11, runtime permission on Android 12+ -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+</manifest>
+```
+
++ Sign the APK with the platform key of the image that's flashed on the device (the certificate of the `android` package); see [../Signing/sign_apk.md](../Signing/sign_apk.md). A test-key APK on a release-key build gets none of these permissions.
++ The APK doesn't have to be preinstalled in `/system/priv-app`. A plain `adb install` to `/data/app` gets the signature permissions too, as long as the certificate matches.
++ Without `sharedUserId` the app runs in the SELinux domain `platform_app`. With `android:sharedUserId="android.uid.system"` it runs as UID 1000 in `system_app`, which passes almost every permission check but is deprecated since API 29 and can't be removed from an installed app later. See [../Signing/sharedUserId.md](../Signing/sharedUserId.md) and [../SELinux/SELinux_domains.md](../SELinux/SELinux_domains.md).
+
+### 7.2 Bluetooth
+
+`BluetoothAdapter.getAddress()` checks `LOCAL_MAC_ADDRESS`; without it the call returns `02:00:00:00:00:00`.
+On Android 12+ it also needs `BLUETOOTH_CONNECT` and throws `SecurityException` without it.
+
+```kotlin
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothManager
+import android.content.Context
+
+@SuppressLint("HardwareIds", "MissingPermission")
+fun getBluetoothMacAddress(context: Context): String? {
+    val adapter = context.getSystemService(BluetoothManager::class.java)?.adapter ?: return null
+    val mac = try {
+        adapter.address
+    } catch (e: SecurityException) {   // BLUETOOTH_CONNECT not granted (Android 12+)
+        null
+    }
+    return mac?.takeIf { it.isNotBlank() && it != "02:00:00:00:00:00" }?.uppercase()
+}
+```
+
++ Ways to get `BLUETOOTH_CONNECT`: request it at runtime (apps with UI), pre-grant it for a preinstalled app with a default-permissions XML in `/system/etc/default-permissions/`, use `android.uid.system`, or for testing run `adb shell pm grant com.example.deviceinfo android.permission.BLUETOOTH_CONNECT`.
++ When Bluetooth is off, the call returns the last known address that `BluetoothManagerService` cached (the same value as `settings get secure bluetooth_address`, see section 3). On a device that never turned Bluetooth on it can be `null`.
+
+### 7.3 Wi-Fi
+
+Don't use `WifiInfo.getMacAddress()`: even with `LOCAL_MAC_ADDRESS` it returns the MAC on `wlan0` right now, which is the per-network randomized MAC (section 4).
+`WifiManager.getFactoryMacAddresses()` returns the device MAC of each Wi-Fi interface and requires `NETWORK_SETTINGS`.
+
+It's a `@SystemApi`, so it isn't in the public SDK.
+In an Android Studio project, call it through reflection; apps signed with the platform key are exempt from the non-SDK interface restrictions.
+In the AOSP tree, build the app with `platform_apis: true` (or `sdk_version: "system_current"`) and call `wifiManager.factoryMacAddresses` directly.
+
+```kotlin
+import android.content.Context
+import android.net.wifi.WifiManager
+
+fun getWifiFactoryMacAddress(context: Context): String? {
+    return try {
+        val wifiManager = context.applicationContext.getSystemService(WifiManager::class.java)
+        val method = WifiManager::class.java.getMethod("getFactoryMacAddresses")
+        val macs = method.invoke(wifiManager) as? Array<*>
+        (macs?.firstOrNull() as? String)?.uppercase()
+    } catch (e: Exception) {
+        // NoSuchMethodException, or InvocationTargetException wrapping a
+        // SecurityException when NETWORK_SETTINGS isn't granted
+        null
+    }
+}
+```
+
+### 7.4 Ethernet
+
+Android has no permission for the Ethernet MAC; access depends on SELinux.
+Read sysfs first, since it works whether a cable is plugged in or not, and fall back to `NetworkInterface`.
+
+```kotlin
+import java.io.File
+import java.net.NetworkInterface
+
+fun getEthernetMacAddress(ifname: String = "eth0"): String? {
+    // 1. sysfs: needs SELinux read access to sysfs_net for the app's domain
+    try {
+        val mac = File("/sys/class/net/$ifname/address").readText().trim()
+        if (mac.isNotEmpty()) return mac.uppercase()
+    } catch (_: Exception) {
+        // file missing or access denied; try the next method
+    }
+
+    // 2. NetworkInterface: blocked for untrusted_app (targetSdk 30+), works for platform_app/system_app
+    return try {
+        NetworkInterface.getByName(ifname)
+            ?.hardwareAddress
+            ?.joinToString(":") { "%02X".format(it) }
+    } catch (_: Exception) {
+        null
+    }
+}
+```
+
++ `NetworkInterface.getByName()` returns `null` if no interface has that name. Check the name with `adb shell ip link` (section 5).
++ If the sysfs read fails, look for `avc: denied` with `tcontext=u:object_r:sysfs_net:s0` in `adb logcat` or `dmesg`. Fix it with a policy rule for the app's own domain (`platform_app` or `system_app`), never for `untrusted_app`.
+
+### 7.5 Check the app on the device
+
+```shell
+# signature permissions granted? granted=false means the APK isn't signed with this device's platform key
+adb shell dumpsys package com.example.deviceinfo | grep -E "LOCAL_MAC_ADDRESS|NETWORK_SETTINGS|BLUETOOTH_CONNECT"
+
+# SELinux domain of the running app
+adb shell ps -AZ | grep com.example.deviceinfo
+```
+
+| Domain | Meaning |
+| --- | --- |
+| `u:r:platform_app:s0` | Platform-signed, no `sharedUserId` |
+| `u:r:system_app:s0` | Platform-signed with `android.uid.system` |
+| `u:r:untrusted_app:s0` (or `untrusted_app_<n>`) | Not signed with this device's platform key |
+
+To compare the APK certificate with the build's keys, see [../Signing/verify_platformKeys.md](../Signing/verify_platformKeys.md).
+
 ## Related notes
 
 + [check_peripherals.md](check_peripherals.md): bring-up checks for Bluetooth, Wi-Fi, and Ethernet
 + [adb_intro.md](adb_intro.md), [adb_shell_cmds.md](adb_shell_cmds.md)
 + [../AOSP_cfg/wifi_default.md](../AOSP_cfg/wifi_default.md), [../AOSP_cfg/SettingsProvider_intro.md](../AOSP_cfg/SettingsProvider_intro.md)
 + [../../Linux/Network/network_cmds.md](../../Linux/Network/network_cmds.md), [../../Linux/HW/sysfs_intro.md](../../Linux/HW/sysfs_intro.md)
++ [../Signing/sign_apk.md](../Signing/sign_apk.md), [../Signing/sharedUserId.md](../Signing/sharedUserId.md), [../Signing/verify_platformKeys.md](../Signing/verify_platformKeys.md): platform key and `android.uid.system`
++ [../SELinux/SELinux_domains.md](../SELinux/SELinux_domains.md): `platform_app` and `system_app`
 + [../../Comm/BLE_intro.md](../../Comm/BLE_intro.md), [../../Comm/WoL_intro.md](../../Comm/WoL_intro.md)
 
 ## Reference
@@ -157,6 +300,10 @@ adb shell 'dumpsys bluetooth_manager | grep "address:"'
 + [MAC randomization behavior (AOSP)](https://source.android.com/docs/core/connect/wifi-mac-randomization-behavior)
 + [Bluetooth (AOSP)](https://source.android.com/docs/core/connect/bluetooth)
 + [dumpsys](https://developer.android.com/tools/dumpsys)
++ [Android 6.0 changes: access to hardware identifiers](https://developer.android.com/about/versions/marshmallow/android-6.0-changes#behavior-hardware-id)
++ [Restrictions on non-SDK interfaces](https://developer.android.com/guide/app-compatibility/restrictions-non-sdk-interfaces)
++ [Bluetooth permissions (`BLUETOOTH_CONNECT`)](https://developer.android.com/develop/connectivity/bluetooth/bt-permissions)
++ [`BluetoothAdapter.getAddress()`](https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#getAddress())
 + [sysfs ABI, including `sysfs-class-net` (`address`, `addr_assign_type`) (kernel docs)](https://docs.kernel.org/admin-guide/abi-testing.html)
 + [IEEE Registration Authority (OUI assignments)](https://standards.ieee.org/products-programs/regauth/)
 + Rockchip BSP documentation for vendor storage and RKDevInfoWriteTool (ships with the SDK)

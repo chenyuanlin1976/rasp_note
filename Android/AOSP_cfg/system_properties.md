@@ -142,17 +142,31 @@ on property:vendor.rk_action.trigger=1
 
 ## 5. System properties vs a system service with AIDL
 
+The two work at different layers. System properties are **shared key-value strings**.
+AIDL is a **typed Binder RPC interface** with methods, data structures (`Parcelable`), error handling, and callbacks.
+For a **customer-facing interface**, a system service with AIDL is usually the better choice; properties fit configuration, `init` triggers, and internal plumbing.
+
 | | System properties (`vendor.*`, `persist.vendor.*`) | System service + AIDL |
 | --- | --- | --- |
-| Data | Short strings (≤ 91 bytes); flags, modes, IDs | Typed values, `Parcelable`s, lists, error codes |
+| API for customers | Raw string keys; no method signatures or types | Typed methods, easy to wrap in an SDK (JAR/AAR) |
+| Data | Short strings (≤ 91 bytes); flags, modes, IDs | Typed values, `Parcelable`s, lists, file descriptors |
 | Access control | SELinux domains only (`property_contexts` + `.te`); can't tell apps apart | Android permissions (e.g. `signature`), UID/package checks, plus SELinux |
-| Change notification | Polling, native wait, or `init` triggers; no public app callback | AIDL callback interfaces |
-| Validation | None: anyone allowed to write can set any string | The service checks arguments and state before acting |
+| Change notification | Polling, native wait, or `init` triggers; no public app callback | AIDL callback interfaces (`oneway`, so a slow client can't block the service) |
+| Validation and errors | None: anyone allowed to write can set any string; the writer can't tell whether it took effect | The service checks arguments and state, and returns values or errors (`ServiceSpecificException`) |
 | Evolution | Customers hard-code property names; hard to change later | Versioned AIDL interfaces |
 | Effort | Low | Higher: service, SELinux domain, AIDL, client library |
 
+Why AIDL usually wins for customer interfaces:
+
++ **Security boundary.** To let an app write a property, SELinux must allow the app's whole domain to set it, so every app in that domain can flip it.
+  A service sits in the middle: it checks the caller's permission or identity, validates the arguments, and decides whether to act.
++ **Developer experience.** Customers call documented methods such as `setRelayState(id, enabled)` or `registerStatusCallback(cb)`
+  instead of writing magic strings and polling to see whether the change happened.
++ **No hidden API workarounds.** `android.os.SystemProperties` is `@hide`, which pushes app developers toward reflection or JNI (section 3).
+
 **Use properties** when the interaction is simple and close to `init` or native code:
-boot-time configuration, `persist.vendor.*` flags read at boot, starting/stopping `init` services, read-only device metadata or a readiness flag,
+boot-time configuration (including early boot, before framework services run), `persist.vendor.*` flags read at boot, starting/stopping `init` services,
+read-only device metadata or a readiness flag with write access locked down,
 and internal plumbing where your own privileged service writes a property to wake a daemon or HAL.
 
 **Use a system service + AIDL** when customers build real applications on the device:

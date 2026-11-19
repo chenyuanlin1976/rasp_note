@@ -212,6 +212,8 @@ For the two modes compared, see [rk3566_suspend.md](rk3566_suspend.md#2-s2idle-v
 + [rk3566_suspend.md](rk3566_suspend.md) (RK809 sleep pin, rails left on, standby current on RK3566)
 + [../../Android/AOSP_cfg/shutdown_flow.md](../../Android/AOSP_cfg/shutdown_flow.md) (PMIC power-off and `system-power-controller`)
 + [../../HW/voltage_mismatch.md](../../HW/voltage_mismatch.md) (I/O voltage levels)
++ [../../HW/power_tree.md](../../HW/power_tree.md) (power tree, power-on/off sequencing, back-powering)
++ [../../HW/electronic_components.md](../../HW/electronic_components.md) (buck vs. LDO basics)
 
 ## Reference
 

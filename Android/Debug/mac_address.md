@@ -51,7 +51,7 @@ vendor storage (SN, WIFI MAC, LAN MAC, BT MAC)
         +--> Bluetooth HAL / stack      --- missing ---> stack generates 22:22:xx:xx:xx:xx
 ```
 
-+ Some Wi-Fi/Bluetooth modules also carry their own address in on-chip OTP. Which source wins depends on the BSP and the module driver.
++ Some Wi-Fi/Bluetooth modules also carry their own address in on-chip OTP. Which source wins depends on the BSP and the module driver; for Broadcom/Cypress (AP6xxx) Bluetooth see `USE_CONTROLLER_BDADDR` in section 3.1.
 + An Ethernet MAC can also come from the device tree (`local-mac-address`) or from U-Boot (`ethaddr`).
 + Every fallback above produces a **locally administered** address. Seeing one usually means vendor storage wasn't written.
 
@@ -80,9 +80,53 @@ adb shell grep -A3 '^\[Adapter\]' /data/misc/bluedroid/bt_config.conf   # "Addre
 
 + `settings get secure bluetooth_address` isn't read from the hardware. `BluetoothManagerService` saves the address there after the adapter reports it, so it's the **last known** address, and it may be empty on a fresh device that never turned Bluetooth on.
 + An address that starts with **`22:22`** is the AOSP Bluetooth stack's fallback. When no address is provisioned (no `ro.bt.bdaddr_path` file and no stored property), the stack generates `22:22` + 4 random bytes, stores it in `persist.service.bdroid.bdaddr`, and keeps using it. So it stays the same across reboots, but it changes after a factory reset (a wipe of `/data`).
-+ To get a real address, write the BT MAC into vendor storage (or the module's OTP) and make sure the Bluetooth HAL/vendor library passes it to the controller.
++ To get a real address, write the BT MAC into vendor storage (or the module's OTP) and make sure the Bluetooth HAL/vendor library passes it to the controller (section 3.1).
 + Settings UI: **Settings > About tablet > Bluetooth address** (the exact menu names vary by BSP). Bluetooth must be on.
 + BLE privacy (resolvable private addresses) changes the address that **other devices see** while advertising and connecting. The identity address shown above doesn't change. See [../../Comm/BLE_intro.md](../../Comm/BLE_intro.md).
+
+### 3.1 Controller address vs host address (`USE_CONTROLLER_BDADDR`)
+
+The address that `dumpsys bluetooth_manager` reports is the one the **controller** (the Bluetooth chip) returns: after the chip starts, the stack reads it with the HCI `Read_BD_ADDR` command and saves it as the adapter address.
+Which address the chip holds at that point is decided by the vendor library (`libbt-vendor.so`) that sets up the chip, on BSPs whose Bluetooth HAL loads one (the HIDL 1.x default HAL does).
+
+`USE_CONTROLLER_BDADDR` is a build option of the Broadcom/Cypress vendor library ([`hardware/broadcom/libbt`](https://android.googlesource.com/platform/hardware/broadcom/libbt/)), which also drives AP6xxx Wi-Fi/Bluetooth modules.
+It isn't an option of the Bluetooth stack (Bluedroid/Fluoride) itself.
+
+```text
+host address (from the HAL: ro.bt.bdaddr_path file or a bdaddr property,
+              e.g. persist.service.bdroid.bdaddr)
+        |
+        v
+libbt-vendor, after the firmware download
+        |-- USE_CONTROLLER_BDADDR = FALSE: write the host address into the chip (vendor HCI command)
+        |-- USE_CONTROLLER_BDADDR = TRUE:  Read_BD_ADDR; keep the chip's own (OTP) address if it isn't
+        |                                  00:00:00:00:00:00, otherwise write the host address
+        v
+chip BD_ADDR --HCI Read_BD_ADDR--> Bluetooth stack --> dumpsys bluetooth_manager
+```
+
+| `USE_CONTROLLER_BDADDR` | Chip has an address in OTP | Chip has no address (all zeros) |
+| --- | --- | --- |
+| `FALSE` (default) | Overwritten by the host address | Host address |
+| `TRUE` | OTP address is kept | Host address |
+
++ Use `TRUE` when the module vendor programs a unique address into each chip, and `FALSE` when the factory writes the address on the host side (for example into vendor storage, section 2).
++ With `TRUE`, the library only checks for all zeros. A module that ships with the **same** dummy address in OTP makes every board use that address, and boards near each other then conflict when pairing.
++ With `FALSE` and no host address provisioned, the chip gets the stack's generated `22:22:xx:xx:xx:xx` address (section 3).
+
+The default is set in `include/bt_vendor_brcm.h`. A board overrides it in its `include/vnd_<device>.txt` file (a line like `USE_CONTROLLER_BDADDR = TRUE`), which the build turns into the generated `vnd_buildcfg.h`. BSPs often carry their own copy of the library, so search the whole tree:
+
+```shell
+# in the AOSP/BSP source tree
+grep -rn USE_CONTROLLER_BDADDR hardware/ device/ vendor/
+
+# on the device: the vendor library logs the address it reads or writes while Bluetooth starts
+adb logcat -c
+adb shell svc bluetooth disable; adb shell svc bluetooth enable
+adb logcat -d | grep -iE "bt_hwcfg|bd_?addr"
+```
+
+Compare the result with `dumpsys bluetooth_manager` and with a second board: the address should be non-zero, match the source you expect (OTP or provisioned), and differ between boards.
 
 ## 4. Wi-Fi
 
@@ -299,6 +343,7 @@ To compare the APK certificate with the build's keys, see [../Signing/verify_pla
 
 + [MAC randomization behavior (AOSP)](https://source.android.com/docs/core/connect/wifi-mac-randomization-behavior)
 + [Bluetooth (AOSP)](https://source.android.com/docs/core/connect/bluetooth)
++ [`hardware/broadcom/libbt` (AOSP source)](https://android.googlesource.com/platform/hardware/broadcom/libbt/): Broadcom vendor library, `USE_CONTROLLER_BDADDR`
 + [dumpsys](https://developer.android.com/tools/dumpsys)
 + [Android 6.0 changes: access to hardware identifiers](https://developer.android.com/about/versions/marshmallow/android-6.0-changes#behavior-hardware-id)
 + [Restrictions on non-SDK interfaces](https://developer.android.com/guide/app-compatibility/restrictions-non-sdk-interfaces)

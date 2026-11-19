@@ -97,6 +97,7 @@ adb shell dmesg | grep -i mydaemon            # init messages also go to the ker
 + [../HAL/AIDL_HAL_impl.md](../HAL/AIDL_HAL_impl.md), [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md), [../IPC/AIDL_ndk_led_sysfs.md](../IPC/AIDL_ndk_led_sysfs.md), [../HW/Led_control.md](../HW/Led_control.md)
 + [../SELinux/SELinux_policy.md](../SELinux/SELinux_policy.md), [../HW/hw_control_sysfs.md](../HW/hw_control_sysfs.md), [../IPC/ServiceManager_ndk.md](../IPC/ServiceManager_ndk.md)
 + [JNI_intro.md](JNI_intro.md), [../HAL/HAL_libgpiod.md](../HAL/HAL_libgpiod.md), [../IPC/Binder_intro.md](../IPC/Binder_intro.md)
++ [../AOSP_cfg/system_properties.md](../AOSP_cfg/system_properties.md): property namespaces, `on property:` triggers, properties vs AIDL
 
 ## Reference
 

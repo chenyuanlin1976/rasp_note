@@ -212,6 +212,7 @@ sudo restorecon -Rv /usr/sbin/myapp /var/log/myapp
 + [SELinux_intro.md](SELinux_intro.md), [SELinux_DomainTran.md](SELinux_DomainTran.md), [SELinux_domains.md](SELinux_domains.md)
 + [avc_denied.md](avc_denied.md), [neverallow_error.md](neverallow_error.md)
 + [../HAL/AIDL_HAL_impl.md](../HAL/AIDL_HAL_impl.md), [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md): policy for real HALs
++ [../AOSP_cfg/system_properties.md](../AOSP_cfg/system_properties.md): property types (`vendor_internal_prop`, `vendor_public_prop`) and `property_contexts`
 
 ## Reference
 

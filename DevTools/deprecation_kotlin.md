@@ -74,12 +74,12 @@ just an annotation:
 | TypeScript / JavaScript | JSDoc `/** @deprecated Use functionB instead. */` (shown as strikethrough in editors) |
 | C# / .NET | `[Obsolete("Use FunctionB instead.", error: false)]`; `error: true` later to block compilation |
 | Python | `@warnings.deprecated` (3.13+) or `warnings.warn(..., DeprecationWarning)`, see [deprecation_python.md](deprecation_python.md) |
-| C | `[[deprecated("msg")]]` (C23) or compiler attributes, see [deprecation_c.md](deprecation_c.md) |
+| C, C++ | `[[deprecated("msg")]]` (C23, C++14) or compiler attributes, see [deprecation_c_cpp.md](deprecation_c_cpp.md) |
 
 ## Related notes
 
 + [deprecation_python.md](deprecation_python.md): the same task in Python
-+ [deprecation_c.md](deprecation_c.md): the same task in C
++ [deprecation_c_cpp.md](deprecation_c_cpp.md): the same task in C and C++
 
 ## Reference
 

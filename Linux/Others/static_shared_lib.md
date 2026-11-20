@@ -6,6 +6,12 @@ A library is pre-compiled code that programs reuse. Linux has two kinds:
 + **Shared library** (`.so`, "shared object"): the executable only records the library's name; the dynamic loader (`ld-linux*.so`) maps the library into memory when the program starts.
   It is the Linux counterpart of a Windows DLL.
 
+| Concept | Linux | macOS | Windows |
+| --- | --- | --- | --- |
+| Object file | `.o` | `.o` | `.obj` |
+| Static library | `.a` | `.a` | `.lib` |
+| Shared library | `.so` | `.dylib` | `.dll` (plus an import `.lib` for linking) |
+
 ## 1. Static vs shared
 
 | | `.a` static library | `.so` shared library |
@@ -156,7 +162,53 @@ objdump -T /lib/x86_64-linux-gnu/libc.so.6 | grep GLIBC_2.3   # versioned glibc 
 So a library built on a system with kernel 5.4 normally still works after upgrading to kernel 6.8 (if the C library is compatible).
 A `.ko` kernel module is different: it is tied to the exact kernel version and configuration it was built for (`vermagic`), see [../Kernel/kernel_module.md](../Kernel/kernel_module.md).
 
-## 7. Loading at run time: `dlopen()`
+## 7. API vs ABI compatibility
+
++ **API** (source level): the header. API-compatible means caller source still **compiles** against the new header.
++ **ABI** (binary level): the conventions compiled code relies on. ABI-compatible means a caller binary built against the old library still **runs** with the new `.so`, without a rebuild.
+
+| | Header (API) | ABI |
+| --- | --- | --- |
+| Checked at | Compile time | Link time and run time |
+| Defines | Declarations, struct definitions, macros, inline functions, templates | Register use, type sizes, struct offsets, symbol names, vtable layout |
+| Breaking it gives | Compile errors | Missing-symbol errors at load time, or silent wrong data and crashes |
+
+What an ABI fixes:
+
++ **Calling convention**: which registers or stack slots hold arguments and the return value (System V AMD64 on x86-64, AAPCS64 on arm64).
++ **Type sizes and alignment**: e.g. `long` is 64-bit on 64-bit Linux (LP64) but 32-bit on 64-bit Windows (LLP64); padding inside structs.
++ **Symbol names**: plain names in C; mangled names in C++ (overloads, namespaces, templates).
++ **C++ runtime**: vtable layout, inheritance offsets, exception unwinding (Itanium C++ ABI on Linux).
++ **Binary format and system calls**: ELF, Mach-O, PE (section 6).
+
+Changes that break the ABI although the header looks almost the same:
+
+1. Adding, removing, reordering, or resizing fields of a struct that callers allocate or access: `sizeof` and field offsets change.
+2. Struct members inside `#ifdef`: if the library and the caller are built with different macros, they read the same memory differently.
+3. Inline functions, macros, and templates in the header are compiled **into the caller**; old binaries keep the old code and old assumptions.
+4. Changing a function's parameter or return types, or removing a function.
+5. C++: adding a virtual function or a data member to a class; mixing incompatible compiler settings (`#pragma pack`, `-fshort-enums`, libstdc++ `_GLIBCXX_USE_CXX11_ABI`).
+
+Usually safe: adding new functions, and adding fields to a struct that callers only see through an opaque pointer (`struct foo;` in the header, allocated by a `foo_create()` function).
+
+Keep the exported ABI small by hiding everything that isn't public:
+
+```c
+/* mylib.h */
+#define MYLIB_API __attribute__((visibility("default")))
+
+MYLIB_API int add(int a, int b);
+```
+
+```shell
+gcc -c -fPIC -fvisibility=hidden mylib.c -o mylib.o   # only MYLIB_API symbols are exported
+nm -D --defined-only libmylib.so.1.0.0
+```
+
+When the ABI does break, bump the soname major number (section 4). `abidiff` (libabigail) compares the ABI of two library builds.
+To deprecate a function without breaking the ABI, see [../../DevTools/deprecation_c_cpp.md](../../DevTools/deprecation_c_cpp.md).
+
+## 8. Loading at run time: `dlopen()`
 
 Plugins are shared libraries loaded on request instead of at startup:
 
@@ -188,11 +240,18 @@ int main(void)
 Build with `gcc plugin.c -o plugin` (glibc 2.34 and newer have `dlopen` in libc; older versions need `-ldl`).
 Android's JNI `System.loadLibrary()` uses the same mechanism.
 
++ `RTLD_NOW` resolves all undefined symbols of the library inside `dlopen()`, so a missing symbol fails there. `RTLD_LAZY` resolves function symbols on first call, so the error can come later.
++ A symbol's value can legitimately be `NULL`. The strict check is: call `dlerror()` to clear old errors, call `dlsym()`, then call `dlerror()` again and treat a non-`NULL` result as the error.
++ If the plugin is C++, declare the exported functions `extern "C"` so `dlsym()` can find them by their plain name instead of the mangled one.
++ After `dlclose()`, function pointers obtained from that library must not be used.
++ The plugin is not checked against a header at load time; the function pointer type in the program must match the plugin's real signature (part of the ABI, section 7).
+
 ## Related notes
 
 + [../Kernel/kernel_module.md](../Kernel/kernel_module.md): `.ko` kernel modules and why they are tied to one kernel
-+ [../DevTools/CMakeLists_syntax.md](../../DevTools/CMakeLists_syntax.md): `add_library(STATIC|SHARED)`, cross-compiling toolchain files
-+ [../Android/Native/NDK_intro.md](../../Android/Native/NDK_intro.md): `.so` libraries in Android apps (Bionic, per-ABI builds)
++ [../../DevTools/CMakeLists_syntax.md](../../DevTools/CMakeLists_syntax.md): `add_library(STATIC|SHARED)`, cross-compiling toolchain files
++ [../../DevTools/deprecation_c_cpp.md](../../DevTools/deprecation_c_cpp.md): deprecating library functions without breaking the ABI
++ [../../Android/Native/NDK_intro.md](../../Android/Native/NDK_intro.md): `.so` libraries in Android apps (Bionic, per-ABI builds)
 + [../SysAdmin/apt_dpkg_cmds.md](../SysAdmin/apt_dpkg_cmds.md): installing `-dev` packages that provide headers and linker names
 
 ## Reference
@@ -202,3 +261,6 @@ Android's JNI `System.loadLibrary()` uses the same mechanism.
 + `ldconfig(8)`: <https://man7.org/linux/man-pages/man8/ldconfig.8.html>
 + `dlopen(3)`: <https://man7.org/linux/man-pages/man3/dlopen.3.html>
 + GCC link options: <https://gcc.gnu.org/onlinedocs/gcc/Link-Options.html>
++ GCC visibility attribute: <https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html>
++ libabigail (`abidiff`): <https://sourceware.org/libabigail/>
++ Itanium C++ ABI: <https://itanium-cxx-abi.github.io/cxx-abi/abi.html>

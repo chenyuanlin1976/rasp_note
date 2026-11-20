@@ -125,7 +125,7 @@ def test_function_a_warns_and_delegates():
 ## Related notes
 
 + [deprecation_kotlin.md](deprecation_kotlin.md): the same task in Kotlin, plus the release rollout lifecycle
-+ [deprecation_c.md](deprecation_c.md): the same task in C
++ [deprecation_c_cpp.md](deprecation_c_cpp.md): the same task in C and C++
 + [python_update.md](python_update.md): installing newer Python versions
 
 ## Reference

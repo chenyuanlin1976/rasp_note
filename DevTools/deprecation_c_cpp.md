@@ -1,9 +1,10 @@
-# Deprecating a Public Function in C
+# Deprecating a Public Function in C and C++
 
-C has no runtime warning system and no IDE auto-refactor like Kotlin's
+C and C++ have no runtime warning system and no IDE auto-refactor like Kotlin's
 `ReplaceWith`. Deprecation relies on a **compiler attribute** on the declaration
-(standard `[[deprecated]]` since C23, compiler extensions before that), a forwarding
-`function_a` that calls `function_b`, and clear header comments.
+(standard `[[deprecated]]` since C23 and C++14, compiler extensions before that), a
+forwarding `function_a` that calls `function_b`, and clear header comments.
+Sections 1 to 5 use C; section 6 adds what is different in C++.
 
 ## 1. Standard C23 `[[deprecated]]`
 
@@ -28,10 +29,14 @@ static inline int function_a(int arg1, const char *arg2) {
   no extra call overhead and keeps the logic in one place. For a shared library,
   see section 3.
 
-## 2. Portable macro (pre-C23, GCC, Clang, MSVC)
+## 2. Portable macro (pre-C23 / pre-C++14, GCC, Clang, MSVC)
+
+A public header is often included from both C and C++ code, so the macro checks both:
 
 ```c
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
+#if defined(__cplusplus) && __cplusplus >= 201402L
+#  define DEPRECATED(msg) [[deprecated(msg)]]
+#elif !defined(__cplusplus) && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
 #  define DEPRECATED(msg) [[deprecated(msg)]]
 #elif defined(__GNUC__) || defined(__clang__)
 #  define DEPRECATED(msg) __attribute__((deprecated(msg)))
@@ -50,10 +55,12 @@ int function_a(int x);
 Checking `__STDC_VERSION__` (instead of only `__has_c_attribute`) avoids using the
 `[[...]]` syntax in C11/C17 mode, where some compilers accept it only as an
 extension with a pedantic warning.
+MSVC reports `__cplusplus` as `199711L` unless `/Zc:__cplusplus` is set, so it falls
+through to the `__declspec` branch, which works as well.
 
 | Compiler | Spelling | Diagnostic |
 |---|---|---|
-| Any C23 compiler | `[[deprecated("msg")]]` | Warning |
+| Any C23 or C++14 compiler | `[[deprecated("msg")]]` | Warning |
 | GCC, Clang | `__attribute__((deprecated("msg")))` | `-Wdeprecated-declarations` (on by default); `-Werror=deprecated-declarations` makes it an error |
 | MSVC | `__declspec(deprecated("msg"))` | Warning C4996 |
 | Other | expands to nothing | None; code still compiles |
@@ -164,14 +171,80 @@ For ordinary functions, use the wrapper from sections 1 to 3: `&function_a` keep
 the type `int (*)(int)`, the symbol stays a function, and all logic stays in
 `function_b`.
 
+## 6. C++
+
+`[[deprecated]]` and `[[deprecated("msg")]]` are standard since C++14. Put the attribute
+on the declaration in the header. It isn't needed again on the out-of-line definition.
+
+```c++
+// math_api.h
+#pragma once
+
+int add_values(int a, int b);
+
+[[deprecated("Use add_values(int, int) instead")]]
+int add_legacy(int a, int b);
+```
+
+```c++
+// math_api.cpp
+#include "math_api.h"
+
+int add_values(int a, int b) { return a + b; }
+
+int add_legacy(int a, int b) { return add_values(a, b); }   // forward, keep one implementation
+```
+
+A call such as `add_legacy(1, 2)` gives, in GCC:
+`warning: 'int add_legacy(int, int)' is deprecated: Use add_values(int, int) instead [-Wdeprecated-declarations]`.
+
+C++ allows the attribute on more kinds of entities than C:
+
+```c++
+struct Calculator {
+    [[deprecated("Use compute() instead")]]
+    int run(int x);                          // member function
+};
+
+void process(int x);
+[[deprecated("Pass a value, not a raw pointer")]]
+void process(const int* p);                  // only this overload warns
+
+using OldHandler [[deprecated("Use NewHandler instead")]] = void (*)(int);   // alias
+
+class [[deprecated("Use Widget2 instead")]] Widget;                          // class
+
+enum class Mode { Fast, Slow [[deprecated("Use Fast")]] };                   // enumerator (C++17)
+
+namespace [[deprecated("Use lib::v2 instead")]] v1 { /* ... */ }             // namespace (C++17)
+```
+
+Differences from C:
+
++ **Header-only code**: a deprecated `inline` function or template is compiled into the
+  caller, so there is no exported symbol to keep. For a compiled `.so`, keep the real
+  function exported as in section 3.
++ **Function pointer alias**: the reasons in section 5 apply as well. In C++, a
+  namespace-scope `const` object has **internal** linkage, so a header definition
+  doesn't cause "multiple definition" errors, but every `.cpp` file gets its own copy and
+  there is still no function symbol for old binaries.
++ **Name mangling**: a C++ symbol name includes the parameter types. Changing
+  `int f(int)` to `int f(int, int = 0)` still compiles for callers, but it removes the
+  old symbol `_Z1fi`, so old binaries fail to load. Keep the old signature exactly and
+  add a new function instead.
++ **C library used from C++**: wrap the header declarations in `extern "C" { ... }`
+  (guarded by `#ifdef __cplusplus`); the `DEPRECATED` macro from section 2 works inside it.
+
 ## Related notes
 
 + [deprecation_kotlin.md](deprecation_kotlin.md): the same task in Kotlin, plus the release rollout lifecycle
 + [deprecation_python.md](deprecation_python.md): the same task in Python
++ [../Linux/Others/static_shared_lib.md](../Linux/Others/static_shared_lib.md): shared libraries, soname, and what breaks the ABI
 
 ## Reference
 
 + C attribute `deprecated` (cppreference): https://en.cppreference.com/w/c/language/attributes/deprecated
++ C++ attribute `deprecated` (cppreference): https://en.cppreference.com/w/cpp/language/attributes/deprecated
 + GCC common function attributes: https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html
 + GCC diagnostic pragmas: https://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Pragmas.html
 + MSVC `deprecated` declspec: https://learn.microsoft.com/en-us/cpp/cpp/deprecated-cpp

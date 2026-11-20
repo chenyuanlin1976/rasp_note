@@ -306,7 +306,7 @@ Converting ADC values: [../HW/ADC_values.md](../HW/ADC_values.md). GPIO ownershi
 
 + [adb_intro.md](adb_intro.md), [logcat_intro.md](logcat_intro.md)
 + [../AOSP_cfg/shutdown_flow.md](../AOSP_cfg/shutdown_flow.md): what happens after `svc power shutdown` or `reboot -p`
-+ [../AOSP_cfg/SettingsProvider_intro.md](../AOSP_cfg/SettingsProvider_intro.md), [../HW/ADC_values.md](../HW/ADC_values.md), [../HW/gpio_control.md](../HW/gpio_control.md)
++ [../AOSP_cfg/SettingsProvider_intro.md](../AOSP_cfg/SettingsProvider_intro.md), [../HW/ADC_values.md](../HW/ADC_values.md), [../HW/gpio_control.md](../HW/gpio_control.md), [../HW/pwm_control.md](../HW/pwm_control.md)
 
 ## Reference
 

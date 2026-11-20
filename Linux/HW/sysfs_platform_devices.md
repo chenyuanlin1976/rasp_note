@@ -143,6 +143,8 @@ echo 0 > $CHIP/unexport
 
 + If a kernel driver already uses the channel (for example `pwm-backlight`), `export` fails with `EBUSY`.
   Then control it through that driver's class instead, e.g. `/sys/class/backlight/<name>/brightness`.
++ Full PWM bring-up on RK3566/Android 14 (device tree mux, `ueventd.rc`, SELinux): [../../Android/HW/pwm_control.md](../../Android/HW/pwm_control.md).
+  A kernel driver that owns a PWM channel: [../Kernel/pwm_consumer_driver.md](../Kernel/pwm_consumer_driver.md).
 + Bring-up checklist when a backlight stays dark: does `fe6f0000.pwm` exist (node enabled)? Is `driver` bound?
   Is the pin muxed to PWM (`/sys/kernel/debug/pinctrl/`)? Is the backlight driver bound to it?
 
@@ -161,6 +163,7 @@ echo 0 > $CHIP/unexport
 + [sysfs_intro.md](sysfs_intro.md): the sysfs tree, attributes, and rules
 + [../DeviceTree/dts_driver_probe.md](../DeviceTree/dts_driver_probe.md): how a DT node becomes a probed platform device
 + [sysfs_led_class.md](sysfs_led_class.md): the LED class, another sysfs interface
++ [../../Android/HW/pwm_control.md](../../Android/HW/pwm_control.md), [../Kernel/pwm_consumer_driver.md](../Kernel/pwm_consumer_driver.md): PWM on RK3566, PWM consumer driver
 + [libgpiod_sysfs_cmp.md](libgpiod_sysfs_cmp.md): why GPIO moved from sysfs to `/dev/gpiochipN`
 + [../Power/suspend_resume_flow.md](../Power/suspend_resume_flow.md): system sleep, related to the `power/` attributes
 + [../Android/HAL/HAL_sysfsNodes.md](../../Android/HAL/HAL_sysfsNodes.md): sysfs nodes on Android (ueventd, SELinux labels)

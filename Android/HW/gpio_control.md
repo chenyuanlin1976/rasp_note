@@ -157,7 +157,7 @@ Three on/off GPIOs give only 7 colors plus off.
 For mixing and dimming, the channels must be on **PWM** outputs: `pwm-leds`, or the multicolor drivers
 (`leds-pwm-multicolor`, `leds-group-multicolor`, depending on the kernel version).
 These give one `/sys/class/leds/<name>/` with `multi_intensity` + `brightness`.
-Raw `/sys/class/pwm/pwmchipN/` also works for experiments.
+Raw `/sys/class/pwm/pwmchipN/` also works for experiments (see [pwm_control.md](pwm_control.md)).
 
 ## 5. Plain GPIOs (not LEDs)
 
@@ -247,7 +247,7 @@ Shell commands and `adb root` are for bring-up only. In a product:
 ## Related notes
 
 + [hw_control_sysfs.md](hw_control_sysfs.md), [../HAL/HAL_libgpiod.md](../HAL/HAL_libgpiod.md), [libgpiod_android.md](libgpiod_android.md)
-+ [Led_control.md](Led_control.md)
++ [Led_control.md](Led_control.md), [pwm_control.md](pwm_control.md): PWM on RK3566 (device tree, sysfs, permissions)
 + [gpio_kernel_config.md](gpio_kernel_config.md): device tree, kernel config and build for a GPIO
 + [input_key_flow.md](input_key_flow.md): buttons as `gpio-keys` input devices, from the kernel to an app
 + [../../Linux/HW/libgpiod_sysfs_cmp.md](../../Linux/HW/libgpiod_sysfs_cmp.md), [../../Linux/DeviceTree/dts_node_led_vs_gpio.md](../../Linux/DeviceTree/dts_node_led_vs_gpio.md)

@@ -168,10 +168,14 @@ Why AIDL usually wins for customer interfaces:
 boot-time configuration (including early boot, before framework services run), `persist.vendor.*` flags read at boot, starting/stopping `init` services,
 read-only device metadata or a readiness flag with write access locked down,
 and internal plumbing where your own privileged service writes a property to wake a daemon or HAL.
+A property used as a quick control switch during board bring-up is fine too, but replace it with a service before shipping.
 
 **Use a system service + AIDL** when customers build real applications on the device:
 GPIO/relay/LED/backlight, serial/CAN, display, USB/ADB/kiosk policy, power and watchdog control;
-anything that needs callbacks, per-app permissions, structured data, or multi-step operations with preconditions.
+anything that needs callbacks, per-app permissions, structured data, readback, or multi-step operations with preconditions.
+Two writers setting the same property race each other, and nobody gets an answer, so hardware control in particular belongs behind a service.
+For GPIO and LEDs the full stack is: device tree → kernel GPIO character device / LED class → native AIDL HAL in `vendor` → system app → customer app
+([../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md), [../HW/gpio_control.md](../HW/gpio_control.md), [../HW/Led_control.md](../HW/Led_control.md)).
 
 ### Hybrid pattern (usually the best fit)
 
@@ -189,6 +193,7 @@ The properties stay internal (or read-only for apps), so customers get a stable,
 + Third-party apps all run in the `untrusted_app` domain. A rule for that domain applies to **every** installed app, so never grant it write access to your properties.
   Third-party apps should reach device functions through a system app's bound service ([../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md)).
 + Reading a non-sensitive, read-only property (for example a firmware tag) is acceptable if your policy makes it readable, but treat its name as a public API you can't rename.
+  Some standard properties are deliberately unreadable for apps, for example `ro.serialno`; see [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md#6-example-device-info-and-bluetooth-control) for what apps can and can't read and how a system app provides the rest.
 + Apps you build into the image (platform-signed system apps) get their own domain (`system_app`, `platform_app`) and can be granted `get_prop` / `set_prop` on specific types.
 + There is no change listener for apps, no types, and no validation; wrap anything more than a flag in a service (section 5).
 

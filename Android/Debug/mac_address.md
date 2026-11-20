@@ -197,6 +197,7 @@ Normal apps can't read the real addresses:
 
 An app signed with the device's **platform key** gets the signature permissions that unlock the real addresses.
 The APIs return whatever the driver or Bluetooth stack reports, so on a board without provisioned MACs they still return the locally administered fallbacks from section 2.
+To pass the addresses on to a customer's app that isn't platform-signed, wrap these functions in a system app's bound service; see [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md#6-example-device-info-and-bluetooth-control).
 
 | Interface | API | Permissions | Notes |
 | --- | --- | --- | --- |
@@ -337,6 +338,7 @@ To compare the APK certificate with the build's keys, see [../Signing/verify_pla
 + [../../Linux/Network/network_cmds.md](../../Linux/Network/network_cmds.md), [../../Linux/HW/sysfs_intro.md](../../Linux/HW/sysfs_intro.md)
 + [../Signing/sign_apk.md](../Signing/sign_apk.md), [../Signing/sharedUserId.md](../Signing/sharedUserId.md), [../Signing/verify_platformKeys.md](../Signing/verify_platformKeys.md): platform key and `android.uid.system`
 + [../SELinux/SELinux_domains.md](../SELinux/SELinux_domains.md): `platform_app` and `system_app`
++ [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md): passing the MACs to apps that aren't platform-signed
 + [../../Comm/BLE_intro.md](../../Comm/BLE_intro.md), [../../Comm/WoL_intro.md](../../Comm/WoL_intro.md)
 
 ## Reference

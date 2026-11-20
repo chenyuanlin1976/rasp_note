@@ -120,7 +120,9 @@ nmcli device; nmcli device wifi list    # NetworkManager
 ping -c 4 8.8.8.8
 ```
 
-More: [../Linux/Network/network_cmds.md](../Linux/Network/network_cmds.md).
+More: [../Linux/Network/network_troubleshoot.md](../Linux/Network/network_troubleshoot.md) (diagnostics),
+[../Linux/Network/network_cmds.md](../Linux/Network/network_cmds.md) (interface configuration),
+[../Linux/Network/wifi_cmds.md](../Linux/Network/wifi_cmds.md) (Wi-Fi).
 
 ## 9. Packages (Debian/Ubuntu)
 
@@ -150,7 +152,8 @@ sudo timedatectl set-timezone Asia/Taipei
 + [bash_basic.md](bash_basic.md), [bash_recipes.md](bash_recipes.md), [grep_intro.md](grep_intro.md)
 + [../Linux/Files/rsync_cmds.md](../Linux/Files/rsync_cmds.md), [../Linux/Network/wget_cmds.md](../Linux/Network/wget_cmds.md), [../Linux/SysAdmin/apt_dpkg_cmds.md](../Linux/SysAdmin/apt_dpkg_cmds.md)
 + [../Linux/Kernel/kernel_module.md](../Linux/Kernel/kernel_module.md), [../Linux/Files/archive_compression.md](../Linux/Files/archive_compression.md)
-+ [../Linux/Network/network_cmds.md](../Linux/Network/network_cmds.md), [../Linux/Network/openssl_note.md](../Linux/Network/openssl_note.md), [../Linux/Files/checksumCmd.md](../Linux/Files/checksumCmd.md)
++ [../Linux/Network/network_cmds.md](../Linux/Network/network_cmds.md), [../Linux/Network/network_troubleshoot.md](../Linux/Network/network_troubleshoot.md), [../Linux/Network/wifi_cmds.md](../Linux/Network/wifi_cmds.md)
++ [../Linux/Network/openssl_note.md](../Linux/Network/openssl_note.md), [../Linux/Files/checksumCmd.md](../Linux/Files/checksumCmd.md)
 
 ## Reference
 

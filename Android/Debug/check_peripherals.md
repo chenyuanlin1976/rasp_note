@@ -231,6 +231,33 @@ adb shell cat /sys/class/power_supply/battery/temp          # tenths of °C
 + `dumpsys battery set ...` only **fakes** the reported values for testing. Run `dumpsys battery reset` afterwards
   (see [adb_shell_cmds.md](adb_shell_cmds.md#5-dumpsys)).
 
+Any app, including a 3rd-party app, can read the same values without a permission.
+The sticky `ACTION_BATTERY_CHANGED` broadcast carries the fields of `dumpsys battery`; `BatteryManager.getIntProperty()` is handy for one-off reads.
+
+```kotlin
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
+
+fun getBatteryPercent(context: Context): Int? {
+    // null receiver: returns the last sticky broadcast without registering anything
+    val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        ?: return null
+    val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+    val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+    return if (level >= 0 && scale > 0) level * 100 / scale else null
+}
+
+fun getBatteryCapacity(context: Context): Int? {
+    val bm = context.getSystemService(BatteryManager::class.java)
+    val capacity = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+    return capacity.takeIf { it != Int.MIN_VALUE }      // MIN_VALUE: not supported
+}
+```
+
+The app sees whatever the health HAL reports, so on a board without a battery it gets the same fixed BSP values as `dumpsys battery`.
+
 ## 8. RTC
 
 The RTC keeps the time while the board is off. It holds **UTC**.
@@ -258,6 +285,7 @@ adb shell settings put global auto_time 1
 
 + The time jumps back to a fixed date (often 2000, 1970, or the build date) after a power cycle: the RTC lost power (backup battery or supercap), or it isn't the `hctosys` RTC.
 + RTC wake-up alarm (root): `echo +60 > /sys/class/rtc/rtc0/wakealarm` sets an alarm 60 s ahead. `cat wakealarm` shows it, and `echo 0 > wakealarm` clears it.
++ Apps don't touch the RTC. They schedule `AlarmManager` `*_WAKEUP` alarms, which wake the system from suspend but not from power-off; see [../App/app_background_limits.md](../App/app_background_limits.md#4-wake-up-alarms).
 + How Android chooses between NTP, NITZ, and the RTC: [../AOSP_cfg/time_detection.md](../AOSP_cfg/time_detection.md).
 
 ## 9. One-shot summary script (host side)
@@ -288,6 +316,7 @@ echo "== rtc:       $(s 'cat /sys/class/rtc/rtc0/date /sys/class/rtc/rtc0/time |
 + [adb_intro.md](adb_intro.md), [adb_shell_cmds.md](adb_shell_cmds.md), [logcat_intro.md](logcat_intro.md)
 + [../AOSP_cfg/wifi_default.md](../AOSP_cfg/wifi_default.md), [../AOSP_cfg/time_detection.md](../AOSP_cfg/time_detection.md), [../AOSP_cfg/SettingsProvider_intro.md](../AOSP_cfg/SettingsProvider_intro.md)
 + [USB_port_speed.md](USB_port_speed.md), [../../Comm/USB_OTG.md](../../Comm/USB_OTG.md), [../../Comm/USB_CDC.md](../../Comm/USB_CDC.md)
++ [../App/app_background_limits.md](../App/app_background_limits.md): wake-up alarms for apps
 + [../../Linux/Network/network_cmds.md](../../Linux/Network/network_cmds.md), [../../Comm/BLE_intro.md](../../Comm/BLE_intro.md), [../../Linux/HW/sysfs_intro.md](../../Linux/HW/sysfs_intro.md)
 
 ## Reference
@@ -295,6 +324,7 @@ echo "== rtc:       $(s 'cat /sys/class/rtc/rtc0/date /sys/class/rtc/rtc0/time |
 + [Android Debug Bridge (adb)](https://developer.android.com/tools/adb)
 + [dumpsys](https://developer.android.com/tools/dumpsys)
 + [Health HAL (AOSP)](https://source.android.com/docs/core/perf/health)
++ [`BatteryManager`](https://developer.android.com/reference/android/os/BatteryManager)
 + [Linux power supply class (kernel docs)](https://docs.kernel.org/power/power_supply_class.html)
 + [USB Type-C connector class (kernel docs)](https://docs.kernel.org/driver-api/usb/typec.html)
 + [Real Time Clock (RTC) drivers for Linux (kernel docs)](https://docs.kernel.org/admin-guide/rtc.html)

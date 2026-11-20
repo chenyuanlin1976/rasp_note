@@ -183,10 +183,18 @@ Most of this is blocked for normal apps on Android 14, so the system app from se
 | Serial number (`ro.serialno`) | **No** | Property read is denied by SELinux. `Build.SERIAL` is deprecated (returns `UNKNOWN`), and since Android 10 `Build.getSerial()` needs `READ_PRIVILEGED_PHONE_STATE`, which third-party apps can't hold |
 | Wi-Fi MAC | **No** | `WifiInfo.getMacAddress()` returns `02:00:00:00:00:00` without `LOCAL_MAC_ADDRESS`; sysfs/netlink reads are blocked by SELinux; and the address on `wlan0` is randomized per network anyway |
 | Bluetooth MAC | **No** | `BluetoothAdapter.getAddress()` returns `02:00:00:00:00:00` without `LOCAL_MAC_ADDRESS` (signature permission) |
+| Ethernet MAC | **No** (on stock policy) | No permission exists; `NetworkInterface.getHardwareAddress()` returns `null` (netlink blocked for `targetSdk` 30+) and SELinux normally denies `/sys/class/net/eth0/address` |
 | Turn Bluetooth on | Only with a user prompt | `BluetoothAdapter.enable()` is deprecated in Android 13 and always fails for apps targeting API 33+ (system apps and device/profile owners are exempt). `ACTION_REQUEST_ENABLE` (needs `BLUETOOTH_CONNECT`) shows a confirmation dialog, which nobody answers on a headless device |
 | Turn Bluetooth off | **No** | No public API or intent for normal apps |
+| Battery level and charging state | **Yes** | `ACTION_BATTERY_CHANGED` or `BatteryManager`, no permission; see [../Debug/check_peripherals.md](../Debug/check_peripherals.md#7-battery-and-charger) |
+| Keep the device awake | **Yes** | Partial wake lock with the normal permission `WAKE_LOCK` |
+| Put the device to sleep | **No** | `PowerManager.goToSleep()` needs `DEVICE_POWER` (signature); only an active device admin can call `DevicePolicyManager.lockNow()` |
+| Wake from suspend at a set time | **Yes** | `AlarmManager` `RTC_WAKEUP` / `ELAPSED_REALTIME_WAKEUP`; exact alarms need `SCHEDULE_EXACT_ALARM` or `USE_EXACT_ALARM`. See [../App/app_background_limits.md](../App/app_background_limits.md#4-wake-up-alarms) |
+| Power on from off at a set time, program the RTC | **No** | No AOSP API; `/dev/rtc*` and `wakealarm` are closed to apps, and power-on alarms are PMIC/BSP-specific |
 
 Details of the MAC addresses (factory vs randomized, `getFactoryMacAddresses()`, required permissions) are in [../Debug/mac_address.md](../Debug/mac_address.md#7-read-the-factory-macs-from-a-platform-signed-app).
+A device owner app gets the Wi-Fi MAC from `DevicePolicyManager.getWifiMacAddress()`; there is no such call for Ethernet.
+If the customer only needs a stable ID for their own installation, a random UUID kept in app storage avoids hardware identifiers entirely.
 
 Don't work around this with `allow untrusted_app ...` rules or by giving customers your platform key: the first opens the data to every app, the second lets the customer's app do anything a system app can.
 
@@ -277,6 +285,8 @@ class DeviceInfoService : Service() {
 + [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md): bound-service basics
 + [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md): the native GPIO daemon behind the system app
 + [../Debug/mac_address.md](../Debug/mac_address.md): reading factory MACs in a platform-signed app (used in section 6)
++ [../App/app_background_limits.md](../App/app_background_limits.md): wake locks and wake-up alarms for normal apps
++ [../AOSP_cfg/sleep_flow.md](../AOSP_cfg/sleep_flow.md): who may put the device to sleep
 + [../AOSP_cfg/system_properties.md](../AOSP_cfg/system_properties.md): why not expose properties to customer apps
 + [../Signing/sign_apk.md](../Signing/sign_apk.md): platform key
 + [../App/jar_aar_intro.md](../App/jar_aar_intro.md), [../SELinux/SELinux_policy.md](../SELinux/SELinux_policy.md), [../SELinux/neverallow_error.md](../SELinux/neverallow_error.md)
@@ -289,3 +299,4 @@ class DeviceInfoService : Service() {
 + [`Build.getSerial()`](https://developer.android.com/reference/android/os/Build#getSerial())
 + [`BluetoothAdapter.enable()`](https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#enable())
 + [Bluetooth permissions (`BLUETOOTH_CONNECT`)](https://developer.android.com/develop/connectivity/bluetooth/bt-permissions)
++ [Best practices for unique identifiers](https://developer.android.com/identity/user-data-ids)

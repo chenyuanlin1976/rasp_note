@@ -1,6 +1,6 @@
 # App stopped state and background limits
 
-This note collects the rules that decide when an app's code may run without the user opening it: the stopped state after install, background service limits, wake locks, `android:persistent`, and starting an activity from the background.
+This note collects the rules that decide when an app's code may run without the user opening it: the stopped state after install, background service limits, wake locks, wake-up alarms, `android:persistent`, and starting an activity from the background.
 Most of these rules are stricter on every new Android release, so check the behavior-change pages for your `targetSdk`.
 
 ## 1. The stopped state
@@ -60,8 +60,33 @@ try {
 + Needs the `android.permission.WAKE_LOCK` permission (normal, granted at install).
 + To keep the **screen** on while an activity is visible, don't use a wake lock: set `android:keepScreenOn="true"` on a view or `FLAG_KEEP_SCREEN_ON` on the window.
 + WorkManager and foreground services already hold the wake locks they need.
++ An app can only keep the device **awake**. It can't force it to sleep: `PowerManager.goToSleep()` needs the signature permission `DEVICE_POWER`. The only route for a normal app is `DevicePolicyManager.lockNow()` as an active device admin. See [../AOSP_cfg/sleep_flow.md](../AOSP_cfg/sleep_flow.md#2-what-starts-it).
 
-## 4. `android:persistent`
+## 4. Wake-up alarms
+
+`AlarmManager` alarms of type `RTC_WAKEUP` (wall-clock time) or `ELAPSED_REALTIME_WAKEUP` (time since boot, better for intervals) wake the system from suspend.
+`AlarmManagerService` programs them into the kernel's alarm timers, which use the hardware RTC as the wakeup source while the system is suspended.
+The other alarm types wait until something else wakes the device.
+
+```kotlin
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+
+fun scheduleWakeAlarm(context: Context, triggerAtMillis: Long, operation: PendingIntent) {
+    val alarmManager = context.getSystemService(AlarmManager::class.java)
+    // Inexact: no special permission. Also fires in Doze, but rate-limited there.
+    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, operation)
+}
+```
+
++ **Exact alarms** (`setExact*()`, `setAlarmClock()`) need `SCHEDULE_EXACT_ALARM` on Android 12+ (a special app access the user can revoke; on Android 14 it is no longer pre-granted to most newly installed apps targeting 13+) or `USE_EXACT_ALARM` (Android 13+, meant for alarm clock and calendar apps). Check `AlarmManager.canScheduleExactAlarms()` first.
++ The `PendingIntent` usually targets a `BroadcastReceiver`. `AlarmManager` holds a wake lock only while `onReceive()` runs; longer work needs WorkManager or `goAsync()`.
++ Alarms wake a **suspended** system, not a powered-off one. Powering on from off needs a PMIC/RTC alarm and vendor-specific BSP support; AOSP has no app API for it. See [../AOSP_cfg/shutdown_flow.md](../AOSP_cfg/shutdown_flow.md#5-power-off-handler-who-talks-to-the-pmic).
++ Apps can't write `/dev/rtc*` or `/sys/class/rtc/rtc*/wakealarm` (file permissions and SELinux). Those are for root testing only; see [../Debug/check_peripherals.md](../Debug/check_peripherals.md#8-rtc).
++ Alarms are cleared when the app is force-stopped or the device reboots; re-schedule them from a `BOOT_COMPLETED` receiver ([boot_completed_receiver.md](boot_completed_receiver.md)).
+
+## 5. `android:persistent`
 
 ```xml
 <application android:persistent="true" ... >
@@ -71,7 +96,7 @@ This keeps the app's process running at all times and restarts it if it dies.
 It is honored **only for system apps** (in the system image); a normal app's setting is ignored.
 Use it only for core components that must always run (e.g. the phone process). It costs memory for the life of the device.
 
-## 5. Starting an activity from the background
+## 6. Starting an activity from the background
 
 Since **Android 10** (API 29), an app in the background can't start an activity whenever it likes.
 `FLAG_ACTIVITY_NEW_TASK` is still required when starting an activity from a non-activity `Context` (a service), but the flag doesn't bypass the restriction.
@@ -98,7 +123,7 @@ Full-screen intent notifications (`USE_FULL_SCREEN_INTENT`) are limited to calli
 **What to do instead:** post a notification with a `PendingIntent` and let the user tap it.
 For a call or alarm, use a high-priority notification with a full-screen intent.
 
-## 6. Comments
+## 7. Comments
 
 + **Design for being stopped.** A newly installed app runs nothing until the user opens it. If your product needs code running from first boot, it should be a preinstalled system app, not a downloaded one.
 + **Pick the lightest mechanism.** WorkManager for deferrable work, a foreground service for user-visible ongoing work, a bound service for client/server calls. A wake lock or `persistent` is the last resort.
@@ -111,6 +136,7 @@ For a call or alarm, use a high-priority notification with a full-screen intent.
 + [../IPC/AIDL_app_bound_svc.md](../IPC/AIDL_app_bound_svc.md): bound services and foreground services
 + [app_components.md](app_components.md): started vs. bound services, broadcast receivers
 + [boot_completed_receiver.md](boot_completed_receiver.md): running code at boot with `BOOT_COMPLETED`
++ [../AOSP_cfg/sleep_flow.md](../AOSP_cfg/sleep_flow.md): how wake locks and alarms interact with kernel suspend
 + [AndroidManifest.md](AndroidManifest.md): declaring services, receivers and permissions
 + [../Signing/sharedUserId.md](../Signing/sharedUserId.md): shared UIDs for platform apps
 + [android_class_hierarchy.md](android_class_hierarchy.md): why `this` is a `Context` in an `Activity` or `Service`
@@ -122,5 +148,7 @@ For a call or alarm, use a high-priority notification with a full-screen intent.
 + [Restrictions on starting activities from the background](https://developer.android.com/guide/components/activities/background-starts)
 + [Foreground services](https://developer.android.com/develop/background-work/services/fgs)
 + [Keep the device awake / wake locks](https://developer.android.com/develop/background-work/background-tasks/awake/wakelock)
++ [Schedule alarms](https://developer.android.com/develop/background-work/services/alarms/schedule)
++ [`AlarmManager`](https://developer.android.com/reference/android/app/AlarmManager)
 + [WorkManager](https://developer.android.com/develop/background-work/background-tasks/persistent)
 + [`<application>` element (android:persistent)](https://developer.android.com/guide/topics/manifest/application-element)

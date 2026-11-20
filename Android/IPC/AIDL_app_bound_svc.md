@@ -198,6 +198,7 @@ Notes:
 ## Related notes
 
 + [AIDL_intro.md](AIDL_intro.md), [AIDL_call_flow.md](AIDL_call_flow.md)
++ [AIDL_callback.md](AIDL_callback.md): pushing events from the service back to the client
 + [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)
 + [../Signing/sharedUserId.md](../Signing/sharedUserId.md): why cross-app calls use a bound service instead of a shared UID; [../App/ContentProvider_sharing.md](../App/ContentProvider_sharing.md)
 

@@ -82,7 +82,7 @@ The complete Android Studio walkthrough (Gradle, manifest, client lifecycle) is 
   A raw, untyped `List` works only in the Java backend and isn't allowed in stable interfaces.
 + **Java backend only**: `CharSequence`, `FileDescriptor`, and `Map` (the receiver gets a `HashMap`).
   The C++/NDK/Rust backends have no `Map`; use a `List` of key/value parcelables instead.
-+ Other AIDL interfaces (for callbacks), plus `parcelable` types (structured AIDL parcelables, or Java classes that implement `Parcelable`)
++ Other AIDL interfaces (for callbacks, see [AIDL_callback.md](AIDL_callback.md)), plus `parcelable` types (structured AIDL parcelables, or Java classes that implement `Parcelable`)
 + Constants (`const int VERSION = 1;`), `enum` types (`@Backing(type="int")`), and `union` types (Android 12+)
 
 The exact per-backend table is in the AOSP "AIDL backends" page.
@@ -160,6 +160,7 @@ Concepts:
 
 + [AIDL_backends.md](AIDL_backends.md): backends (Java / CPP / NDK / Rust)
 + [AIDL_call_flow.md](AIDL_call_flow.md): what happens during one call
++ [AIDL_callback.md](AIDL_callback.md): callbacks from the service back to the client
 + [../HAL/AIDL_HIDL_cmp.md](../HAL/AIDL_HIDL_cmp.md): why AIDL replaced HIDL
 
 Apps:

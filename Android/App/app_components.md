@@ -116,6 +116,8 @@ startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://developer.android.co
 An intent filter is not a security boundary: an exported component can be started with an explicit intent, whatever its filter says.
 Set `android:exported="false"` on internal components.
 
+Parts of an intent, binding a service in another app, and broadcasts: [intent_intro.md](intent_intro.md).
+
 ## 4. Example: a music player
 
 How the four components work together in a music streaming app:
@@ -144,6 +146,7 @@ How the four components work together in a music streaming app:
 
 + [AndroidManifest.md](AndroidManifest.md), [android_class_hierarchy.md](android_class_hierarchy.md), [app_architecture.md](app_architecture.md)
 + [app_background_limits.md](app_background_limits.md), [mediaPlayer_note.md](mediaPlayer_note.md), [boot_completed_receiver.md](boot_completed_receiver.md)
++ [intent_intro.md](intent_intro.md): explicit and implicit intents, binding a service, broadcasts
 + [ContentProvider_sharing.md](ContentProvider_sharing.md), [../IPC/AIDL_app_bound_svc.md](../IPC/AIDL_app_bound_svc.md)
 
 ## Reference

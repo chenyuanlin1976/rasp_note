@@ -1,4 +1,4 @@
-# Android Intent: explicit, implicit, and binding a service
+# Android Intent: explicit, implicit, binding a service, Android 14 rules
 
 An **`Intent`** is a message object that asks another app component for an action:
 open a screen (`Activity`), start or bind a `Service`, or deliver a broadcast to a `BroadcastReceiver`.
@@ -158,7 +158,61 @@ sendBroadcast(intent, "com.example.permission.CONTROL_PWM")
 + To receive only from apps that hold a permission, set `android:permission` on `<receiver>` or pass it to `registerReceiver()`.
 + Boot broadcasts in detail: [boot_completed_receiver.md](boot_completed_receiver.md).
 
-## 6. Checklist
+## 6. Android 12–14 rules that affect intents
+
+| Since | Rule (for apps that target that version) | What to do |
+| --- | --- | --- |
+| Android 12 | Every `PendingIntent` must say `FLAG_IMMUTABLE` or `FLAG_MUTABLE`, otherwise `IllegalArgumentException` | Use `FLAG_IMMUTABLE` unless the receiver must fill in data (inline reply, bubbles) |
+| Android 14 | Implicit intents are delivered only to **exported** components | Reach your own non-exported components with an explicit intent |
+| Android 14 | A **mutable** `PendingIntent` whose intent names no component or package throws an exception | Make it immutable, or set the component / package |
+| Android 14 | `registerReceiver()` must pass `RECEIVER_EXPORTED` or `RECEIVER_NOT_EXPORTED` (except for system-broadcast-only receivers), otherwise `SecurityException` | Use `RECEIVER_NOT_EXPORTED` for app-internal broadcasts; `ContextCompat.registerReceiver()` works on older versions too |
+| Android 14 | Broadcasts to **context-registered** receivers of a **cached** app are queued until the app leaves the cached state | For time-critical events, keep the handler in a foreground component, or use a bound service / Binder callback instead of a broadcast |
+
+```kotlin
+// Immutable PendingIntent with an explicit target
+val pi = PendingIntent.getActivity(
+    context, 0,
+    Intent(context, DetailActivity::class.java),
+    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+)
+
+// Receiver for this app's own broadcasts only
+ContextCompat.registerReceiver(context, receiver,
+    IntentFilter("com.example.pwm.action.DUTY_CHANGED"),
+    ContextCompat.RECEIVER_NOT_EXPORTED)
+```
+
++ **Intent redirection**: don't take an `Intent` out of another app's extras and start it with your app's identity;
+  that lets the caller reach your non-exported components. Hand a `PendingIntent` across apps instead.
+  `StrictMode.VmPolicy.Builder().detectUnsafeIntentLaunch()` (Android 12+) flags such launches.
++ More on background limits: [app_background_limits.md](app_background_limits.md).
+
+## 7. Intents on an embedded device (e.g. RK3566)
+
+On a board with your own system image (kiosk, panel, signage), intents connect your apps with the platform:
+
++ **Kiosk / custom launcher**: give the main activity `category.HOME` + `category.DEFAULT`, so the system starts it after boot
+  and on the Home key ([boot_completed_receiver.md](boot_completed_receiver.md)).
+
+```xml
+<activity android:name=".KioskActivity" android:exported="true">
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.HOME" />
+        <category android:name="android.intent.category.DEFAULT" />
+    </intent-filter>
+</activity>
+```
+
++ **Hardware events from your own system service** (GPIO key, HDMI state, UART): if you broadcast them,
+  scope the broadcast with `setPackage()` and a permission, so other apps can't receive them.
+  A system app can declare the action as `<protected-broadcast>` in its manifest, so only system processes can send it and no app can spoof it.
+  For a steady event stream, a bound service with an AIDL callback is better than broadcasts ([../IPC/AIDL_callback.md](../IPC/AIDL_callback.md)).
++ **Media and large data**: pass a `content://` URI with `FLAG_GRANT_READ_URI_PERMISSION`, never the bytes.
+  Video frames and camera streams go through `Surface` / `MediaCodec` ([mediaPlayer_note.md](mediaPlayer_note.md)).
+
+## 8. Checklist
+
 
 + Use an explicit intent (component, or action + `setPackage()`) for every service.
 + An external caller can start or bind a component only if it has `android:exported="true"`, the caller holds its `android:permission`,
@@ -184,6 +238,7 @@ More `am` commands: [../Debug/adb_shell_cmds.md](../Debug/adb_shell_cmds.md#1-am
 + [../Signing/signature_permission.md](../Signing/signature_permission.md): who may bind, caller checks
 + [../HW/pwm_control.md](../HW/pwm_control.md): the PWM service used as the example
 + [boot_completed_receiver.md](boot_completed_receiver.md), [app_background_limits.md](app_background_limits.md)
++ [mediaPlayer_note.md](mediaPlayer_note.md): passing media to a player
 
 ## Reference
 
@@ -192,3 +247,5 @@ More `am` commands: [../Debug/adb_shell_cmds.md](../Debug/adb_shell_cmds.md#1-am
 + [Bound services overview](https://developer.android.com/develop/background-work/services/bound-services)
 + [Broadcasts overview](https://developer.android.com/develop/background-work/background-tasks/broadcasts)
 + [Package visibility](https://developer.android.com/training/package-visibility)
++ [Behavior changes: apps targeting Android 14](https://developer.android.com/about/versions/14/behavior-changes-14)
++ [PendingIntent (Android API)](https://developer.android.com/reference/android/app/PendingIntent)

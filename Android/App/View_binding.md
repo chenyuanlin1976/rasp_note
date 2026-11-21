@@ -183,6 +183,7 @@ class MainActivity : AppCompatActivity() {
 
 ## Related notes
 
++ [activity_views.md](activity_views.md): the view hierarchy, widgets, layouts, Compose
 + [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md): `build.gradle(.kts)` syntax
 + [../IPC/AIDL_app_bound_svc.md](../IPC/AIDL_app_bound_svc.md): a different "binding", binding to a service
 

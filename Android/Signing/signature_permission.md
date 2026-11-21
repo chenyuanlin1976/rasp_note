@@ -185,6 +185,7 @@ Pick one key per APK with section 4. To accept callers with several keys, put th
 + [../IPC/AIDL_app_bound_svc.md](../IPC/AIDL_app_bound_svc.md), [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md)
 + [../HW/pwm_control.md](../HW/pwm_control.md): the PWM system app used as the example
 + [../App/AndroidManifest.md](../App/AndroidManifest.md): protection levels
++ [../App/app_permissions.md](../App/app_permissions.md): permissions overview, runtime requests, troubleshooting
 
 ## Reference
 

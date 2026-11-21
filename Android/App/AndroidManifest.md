@@ -185,6 +185,7 @@ It matches 3 things: `<action>`, `<category>`, and `<data>` (scheme, host, path,
 
 + `maxSdkVersion` requests a permission only on older releases, where it is still needed.
 + Declaring a permission in the manifest doesn't grant a `dangerous` one. The runtime request is still needed.
++ Runtime requests, caller checks, and troubleshooting: [app_permissions.md](app_permissions.md).
 + Custom permissions to protect a service or provider: [../Signing/signature_permission.md](../Signing/signature_permission.md),
   [../Signing/sharedUserId.md](../Signing/sharedUserId.md#51-limit-access-to-your-own-apps-signature-permissions),
   [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md).
@@ -238,6 +239,7 @@ More `aapt2` commands: [aapt_note.md](aapt_note.md). `dumpsys` and `pm`: [../Deb
 ## Related notes
 
 + [app_components.md](app_components.md), [app_architecture.md](app_architecture.md)
++ [app_permissions.md](app_permissions.md): permissions overview, runtime requests, troubleshooting
 + [app_project_structure.md](app_project_structure.md), [Groovy_kotlin_DSL.md](Groovy_kotlin_DSL.md), [../Build/Android_bp_intro.md](../Build/Android_bp_intro.md), [jar_aar_intro.md](jar_aar_intro.md)
 + [../IPC/AIDL_app_bound_svc.md](../IPC/AIDL_app_bound_svc.md), [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md), [ContentProvider_sharing.md](ContentProvider_sharing.md)
 + [../Signing/sharedUserId.md](../Signing/sharedUserId.md), [../Signing/sign_apk.md](../Signing/sign_apk.md), [aapt_note.md](aapt_note.md), [../Debug/adb_shell_cmds.md](../Debug/adb_shell_cmds.md)

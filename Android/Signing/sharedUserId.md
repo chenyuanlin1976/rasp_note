@@ -110,11 +110,13 @@ A custom permission with `protectionLevel="signature"` gives the same rule, but 
 + **Different signers** (Android 12, API 31+): use `protectionLevel="signature|knownSigner"` with `android:knownCerts`,
   which lists the SHA-256 digests of the other signing certificates.
 + On the server side, you can additionally check `Binder.getCallingUid()` / `getCallingPackage()`.
++ Choosing the key (own vs. platform) and checking callers in code: [signature_permission.md](signature_permission.md).
 
 ## Related notes
 
 + [../App/ContentProvider_sharing.md](../App/ContentProvider_sharing.md), [../IPC/AIDL_app_bound_svc.md](../IPC/AIDL_app_bound_svc.md), [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md)
 + [../SELinux/SELinux_domains.md](../SELinux/SELinux_domains.md), [sign_apk.md](sign_apk.md), [verify_platformKeys.md](verify_platformKeys.md)
++ [signature_permission.md](signature_permission.md): restricting who can bind a service
 
 ## Reference
 

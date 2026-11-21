@@ -185,7 +185,8 @@ It matches 3 things: `<action>`, `<category>`, and `<data>` (scheme, host, path,
 
 + `maxSdkVersion` requests a permission only on older releases, where it is still needed.
 + Declaring a permission in the manifest doesn't grant a `dangerous` one. The runtime request is still needed.
-+ Custom permissions to protect a service or provider: [../Signing/sharedUserId.md](../Signing/sharedUserId.md#51-limit-access-to-your-own-apps-signature-permissions),
++ Custom permissions to protect a service or provider: [../Signing/signature_permission.md](../Signing/signature_permission.md),
+  [../Signing/sharedUserId.md](../Signing/sharedUserId.md#51-limit-access-to-your-own-apps-signature-permissions),
   [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md).
 
 ## 7. Features and SDK levels

@@ -336,7 +336,7 @@ class PwmControlService : Service() {
 </application>
 ```
 
-+ `exported="true"` with `android:permission` lets only apps holding the permission bind. `signature` limits it to apps with the same key. For third-party apps choose another protection level ([../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md)).
++ `exported="true"` with `android:permission` lets only apps holding the permission bind. `signature` limits it to apps with the same key. For third-party apps choose another protection level ([../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md)); options and a caller check for this service: [../Signing/signature_permission.md](../Signing/signature_permission.md).
 + Clients bind with `bindService()` as in [../IPC/AIDL_app_bound_svc.md](../IPC/AIDL_app_bound_svc.md). On Android 11+ a client also needs a `<queries>` entry for the system app's package.
 + The system app's SELinux domain needs `hal_client_domain(<domain>, hal_pwm)`.
 + A Binder call blocks until the HAL has written sysfs. Call it off the main thread, and rate-limit slider updates (see [../../Comm/pwm_remote_ctrl.md](../../Comm/pwm_remote_ctrl.md) §2).

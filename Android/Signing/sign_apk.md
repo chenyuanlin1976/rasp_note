@@ -175,6 +175,7 @@ The key pair matches if the 2 hashes are equal.
 
 + [keytool_cmds.md](keytool_cmds.md), [verify_platformKeys.md](verify_platformKeys.md), [../../Linux/Network/openssl_note.md](../../Linux/Network/openssl_note.md)
 + [sharedUserId.md](sharedUserId.md): platform shared UIDs and signature permissions
++ [signature_permission.md](signature_permission.md): which key to sign a service and its callers with
 + [../AOSP_cfg/AOSP_preinstalled_apps.md](../AOSP_cfg/AOSP_preinstalled_apps.md), [../App/gradle_build.md](../App/gradle_build.md), [../App/Groovy_kotlin_DSL.md](../App/Groovy_kotlin_DSL.md)
 + [keystore_intro.md](keystore_intro.md): the runtime Android Keystore, a different topic
 

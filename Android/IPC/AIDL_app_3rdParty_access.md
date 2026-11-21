@@ -260,7 +260,8 @@ class DeviceInfoService : Service() {
 + Keep reads and control apart: `setBluetoothEnabled()` checks its own permission, so a read-only client can't toggle Bluetooth.
 + The customer's app is signed with **their** key, so a `signature` permission declared by your platform-signed app can never be granted to it.
   Use `android:protectionLevel="normal"` and, if only specific apps may call the service, check the caller in the service:
-  `Binder.getCallingUid()` → `packageManager.getPackagesForUid()` → compare the package's signing certificate digest with an allowlist.
+  `Binder.getCallingUid()` → `packageManager.getPackagesForUid()` → compare the package's signing certificate digest with an allowlist
+  (code in [../Signing/signature_permission.md](../Signing/signature_permission.md#3-caller-check-inside-the-service); on Android 12+ `signature|knownSigner` is an alternative).
 + AIDL methods run on Binder threads; return quickly. `enable()` / `disable()` only start the state change, so the customer should poll `BluetoothAdapter.isEnabled()` (or listen for `ACTION_STATE_CHANGED`) to see the result.
 
 ### 6.4 Decide with the customer
@@ -289,6 +290,7 @@ class DeviceInfoService : Service() {
 + [../AOSP_cfg/sleep_flow.md](../AOSP_cfg/sleep_flow.md): who may put the device to sleep
 + [../AOSP_cfg/system_properties.md](../AOSP_cfg/system_properties.md): why not expose properties to customer apps
 + [../Signing/sign_apk.md](../Signing/sign_apk.md): platform key
++ [../Signing/signature_permission.md](../Signing/signature_permission.md): signature permissions, caller checks, which key to sign with
 + [../App/jar_aar_intro.md](../App/jar_aar_intro.md), [../SELinux/SELinux_policy.md](../SELinux/SELinux_policy.md), [../SELinux/neverallow_error.md](../SELinux/neverallow_error.md)
 
 ## Reference

@@ -101,6 +101,7 @@ class MyAidlService : Service() {
 + Use `exported="false"` if only your own app binds.
 + If `exported="true"`, protect the service with `android:permission`. A `signature` permission allows only apps signed with your key.
   Otherwise, any app can call your service.
+  Which key, `knownSigner`, and checking callers signed with other keys: [../Signing/signature_permission.md](../Signing/signature_permission.md).
 
 ## 5. Bind from a client (Activity)
 
@@ -186,6 +187,8 @@ Notes:
 
 + The client requests the permission with `<uses-permission android:name="com.example.aidldemo.permission.BIND_MY_SERVICE" />`.
 + On the server, you can also check the caller with `Binder.getCallingUid()` and `packageManager.getPackagesForUid()`.
+  Do it in each AIDL method, not in `onBind()`, and compare the signing certificate, not only the package name
+  ([../Signing/signature_permission.md](../Signing/signature_permission.md#3-caller-check-inside-the-service)).
 
 ## 7. Best practices
 
@@ -200,6 +203,7 @@ Notes:
 + [AIDL_intro.md](AIDL_intro.md), [AIDL_call_flow.md](AIDL_call_flow.md)
 + [AIDL_callback.md](AIDL_callback.md): pushing events from the service back to the client
 + [AIDL_app_3rdParty_access.md](AIDL_app_3rdParty_access.md)
++ [../Signing/signature_permission.md](../Signing/signature_permission.md): restricting who can bind
 + [../Signing/sharedUserId.md](../Signing/sharedUserId.md): why cross-app calls use a bound service instead of a shared UID; [../App/ContentProvider_sharing.md](../App/ContentProvider_sharing.md)
 
 ## Reference

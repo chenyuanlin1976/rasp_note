@@ -80,6 +80,7 @@ just an annotation:
 
 + [deprecation_python.md](deprecation_python.md): the same task in Python
 + [deprecation_c_cpp.md](deprecation_c_cpp.md): the same task in C and C++
++ [kotlin_extension_functions.md](kotlin_extension_functions.md): Kotlin extension functions
 
 ## Reference
 

@@ -67,6 +67,7 @@ A small base current controls a larger collector current: I_C ≈ β × I_B.
 + **Switching**: drives LEDs, small loads, relay coils, or enable lines from a GPIO pin.
 + **Analog amplification**: audio stages and sensor front-ends.
 + It draws base current the whole time it is on, so for efficient high-current switching a MOSFET is usually the better choice.
+  BJT vs. MOSFET in detail, and sizing a GPIO-driven switch: [transistor_BJT_MOSFET.md](transistor_BJT_MOSFET.md).
 
 ### 3.3 MOSFET (field-effect transistor)
 
@@ -76,6 +77,7 @@ The gate voltage V_GS controls how well the channel conducts between drain and s
 + **Power switching**: the switches inside DC-DC converters, motor drivers, and load switches, thanks to low on-resistance (R_DS(on)).
 + **Load switches**: a P-channel MOSFET on the high side turns a whole rail on and off.
 + **Level shifting**: a single N-channel MOSFET with two pull-ups (e.g. BSS138) is a common bidirectional I2C level shifter (see [voltage_mismatch.md](voltage_mismatch.md)).
++ **GPIO-driven load switch**: a logic-level N-channel MOSFET on the low side, see [transistor_BJT_MOSFET.md](transistor_BJT_MOSFET.md#3-low-side-switch-for-a-gpio-12-v-load-33-v--5-v-pwm).
 
 ## 4. Comparison
 
@@ -194,6 +196,7 @@ Exact prefixes vary between vendors.
 ## Related notes
 
 + [voltage_mismatch.md](voltage_mismatch.md): 3.3 V vs. 5 V logic and level shifting
++ [transistor_BJT_MOSFET.md](transistor_BJT_MOSFET.md): BJT vs. MOSFET, switching a load from a GPIO
 + [rework_nouns.md](rework_nouns.md): rework vocabulary (populate, short, jumper)
 + [power_tree.md](power_tree.md): power tree and power-on/off sequencing
 + [../Linux/Power/regulators.md](../Linux/Power/regulators.md): PMICs, buck/LDO rails, Linux regulator framework

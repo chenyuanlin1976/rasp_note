@@ -1,8 +1,21 @@
 # Signing APKs (app keys and AOSP platform keys)
 
-Every APK must be signed before Android installs it.
-The signature identifies the **developer**, not the app's quality: updates must be signed with the same key,
-and signature permissions or shared UIDs compare certificates.
+Every APK must be signed before Android installs it. The signer uses a **private key**; the matching **certificate**
+(public key + subject) is stored in the APK, so the device can check 2 things:
+
++ **Authenticity**: who signed the app. Updates must be signed with the same key (or a rotated key, section 4),
+  otherwise the install fails with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`. Signature permissions and shared UIDs also compare certificates.
++ **Integrity**: the content hasn't changed since signing. Changing one byte breaks the signature.
+
+The signature identifies the **developer**, not the app's quality. The certificate is normally self-signed; no CA is involved.
+
+Which key to use:
+
+| Key | Used for | Note |
+| --- | --- | --- |
+| Debug key | Local development (`debug` build type) | Created automatically (section 1). Never for release |
+| Release / upload key | Distributing to users or app stores | Your own key, kept secret. With Play App Signing, it is the upload key (section 2) |
+| AOSP platform key (`platform`, `shared`, `media`, ...) | System apps on your own AOSP build | Gives signature permissions on images signed with that key (section 5). Use only when the app needs them |
 
 ## 1. Key files and keystores
 
@@ -34,8 +47,37 @@ keytool -list -v -keystore release.p12          # aliases, SHA-256 fingerprint
 ```
 
 + Keep the keystore and its passwords backed up. An app can't be updated without its key, except through key rotation (v3, section 4).
++ **Never commit** the keystore or its passwords to git. Keep them in CI secrets, a vault, or `~/.gradle/gradle.properties`.
 + With **Play App Signing**, this key is only the **upload key**. Google signs what users install with the app signing key.
-+ More `keytool` options: [keytool_cmds.md](keytool_cmds.md).
+  A lost upload key can be reset through Play Console support; a lost app signing key without Play App Signing can't be recovered.
++ More `keytool` options (inspect, convert JKS → PKCS12): [keytool_cmds.md](keytool_cmds.md).
+
+Release signing in Gradle, with the secrets read from Gradle properties (for example `~/.gradle/gradle.properties`, outside the repo,
+or `-P...` / `ORG_GRADLE_PROJECT_...` environment variables in CI):
+
+```kotlin
+// app/build.gradle.kts
+android {
+    signingConfigs {
+        create("release") {
+            storeFile = file(providers.gradleProperty("RELEASE_STORE_FILE").get())
+            storePassword = providers.gradleProperty("RELEASE_STORE_PASSWORD").get()
+            keyAlias = providers.gradleProperty("RELEASE_KEY_ALIAS").get()
+            keyPassword = providers.gradleProperty("RELEASE_KEY_PASSWORD").get()
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+}
+```
+
+`.get()` fails with a clear message if a property is missing, instead of signing with an empty password.
+Because `signingConfigs` is evaluated when the project is configured, this also stops debug builds on machines without the properties.
+If that is a problem, use `.orNull` and set `signingConfig` only when all 4 values are present.
+`./gradlew assembleRelease` (APK) or `./gradlew bundleRelease` (AAB) then produces a signed output.
 
 ## 3. Sign and verify with `apksigner`
 

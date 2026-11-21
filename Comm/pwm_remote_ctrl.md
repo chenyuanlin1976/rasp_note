@@ -90,6 +90,7 @@ The service on the device validates the request again (range, channel) and appli
 + [../Android/HW/pwm_control.md](../Android/HW/pwm_control.md): PWM on RK3566 / Android (device tree, sysfs, HAL, app)
 + [../Linux/Kernel/pwm_consumer_driver.md](../Linux/Kernel/pwm_consumer_driver.md): a kernel driver that owns a PWM
 + [../Embedded/RPi5_gpio_ctrl.md](../Embedded/RPi5_gpio_ctrl.md), [../Embedded/OPi5_gpio_ctrl.md](../Embedded/OPi5_gpio_ctrl.md)
++ [../HW/transistor_BJT_MOSFET.md](../HW/transistor_BJT_MOSFET.md): driving a PWM load (LED, fan, motor) from a GPIO with a MOSFET or BJT
 
 ## Reference
 

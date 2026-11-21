@@ -69,6 +69,21 @@ adb shell setprop vendor.rk_action.trigger 1
 | Java platform code | `android.os.SystemProperties.get` | `SystemProperties.set` | `SystemProperties.addChangeCallback` |
 | `.rc` files | `${name}` expansion | `setprop` | `on property:name=value` |
 
+Build and image version:
+
+```shell
+adb shell getprop ro.build.display.id            # Build.DISPLAY
+adb shell getprop ro.build.version.incremental   # Build.VERSION.INCREMENTAL
+adb shell getprop ro.build.fingerprint           # Build.FINGERPRINT; ro.vendor.build.fingerprint for the vendor image
+adb shell cat /proc/version                      # kernel version
+adb shell 'dmesg | grep -iE "wlan|wifi|firmware"' # Wi-Fi driver/firmware version, if the driver logs it (root on most builds)
+```
+
+Apps read the `ro.build.*` values through the public `android.os.Build` fields; no platform key is needed.
+For your own image version, define a vendor property (e.g. `ro.vendor.<company>.image_version` in `PRODUCT_VENDOR_PROPERTIES`)
+and read it in a system app or service, which returns it to other apps (see [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md#6-example-device-info-and-bluetooth-control)).
+The Wi-Fi MAC is not a property; see [../Debug/mac_address.md](../Debug/mac_address.md).
+
 `android.os.SystemProperties` is `@hide`. Only platform code (system apps built with the platform) should use it.
 Third-party apps that reach it through reflection depend on hidden APIs and on SELinux allowing the read, so don't build a customer interface on that.
 For typed, versioned properties in platform code, see `sysprop_library` ("Implementing system properties as APIs" in the references).
@@ -204,6 +219,7 @@ The properties stay internal (or read-only for apps), so customers get a stable,
 + [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md), [../IPC/AIDL_app_bound_svc.md](../IPC/AIDL_app_bound_svc.md), [../HAL/AIDL_HAL_impl.md](../HAL/AIDL_HAL_impl.md)
 + [SettingsProvider_intro.md](SettingsProvider_intro.md): `Settings.*` as the app-level alternative for user settings
 + [../Debug/adb_shell_cmds.md](../Debug/adb_shell_cmds.md)
++ [../Debug/mac_address.md](../Debug/mac_address.md): Wi-Fi, Bluetooth, and Ethernet MACs
 
 ## Reference
 

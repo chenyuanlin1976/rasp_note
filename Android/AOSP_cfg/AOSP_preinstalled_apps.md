@@ -16,6 +16,23 @@ The build installs each app under `out/target/product/<device>/<partition>/`, th
 | `/vendor/app/` | `vendor: true` | Apps tied to the SoC/hardware |
 
 `priv-app` gives the app access to `privileged` permissions (`signature|privileged`), but only the ones listed in a `privapp-permissions` allowlist (section 2.3).
+
+The install location and the signing key are **independent**:
+
+| Setting | Decides |
+| --- | --- |
+| Location (`privileged: true` → `priv-app`) | Whether the app may get `privileged` permissions (if allowlisted) |
+| Key (`certificate` / `presigned`) | The app's identity: `signature` permissions, `android:sharedUserId="android.uid.system"`, which updates are accepted |
+
+An app in `priv-app` is **not** signed with the platform key unless its module says `certificate: "platform"` (`LOCAL_CERTIFICATE := platform` in `Android.mk`).
+Without a `certificate`, the build uses the default key (`testkey` unless the product sets another).
+Neither setting gives direct access to hardware nodes; see [../HW/hw_control_sysfs.md](../HW/hw_control_sysfs.md#2-why-an-app-cant-use-it).
+
+Check which key a built or installed APK carries, and compare the SHA-256 digest with your `platform.x509.pem` (details in [../Signing/verify_platformKeys.md](../Signing/verify_platformKeys.md)):
+
+```shell
+apksigner verify --print-certs out/target/product/<device>/product/priv-app/MyApp/MyApp.apk | grep SHA-256
+```
 Since Treble, the partitions are updated separately, so put your apps in `/product` or `/system_ext` rather than `/system`.
 
 All preinstalled apps are **system apps**: a factory reset doesn't remove them, and a user can only disable them or remove their updates.
@@ -151,6 +168,7 @@ adb shell dumpsys package com.example.myapp | grep -A20 "install permissions"   
 + [../Signing/sign_apk.md](../Signing/sign_apk.md), [../Signing/verify_platformKeys.md](../Signing/verify_platformKeys.md): app and platform keys
 + [../App/AndroidManifest.md](../App/AndroidManifest.md): `signature|privileged` permissions
 + [../Signing/sharedUserId.md](../Signing/sharedUserId.md), [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md): a privileged system app that exposes a service
++ [../HW/hw_control_sysfs.md](../HW/hw_control_sysfs.md): why neither `priv-app` nor the platform key gives hardware access
 
 ## Reference
 

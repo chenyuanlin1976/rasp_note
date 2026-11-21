@@ -138,6 +138,7 @@ If nothing probes, follow [dts_driver_probe.md](dts_driver_probe.md#5-debugging-
 + [dts_driver_probe.md](dts_driver_probe.md): matching, `probe()`, and probe debugging
 + [dts_pinctrl_gpio_direction.md](dts_pinctrl_gpio_direction.md): pinctrl for a GPIO, RK3566 example
 + [../HW/sysfs_platform_devices.md](../HW/sysfs_platform_devices.md): the probed devices in `/sys/devices/platform`
++ [../Kernel/driver_porting.md](../Kernel/driver_porting.md): porting an existing driver (RTC, Wi-Fi) to a board
 
 ## Reference
 

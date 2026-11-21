@@ -119,6 +119,27 @@ For maximum compatibility, sign with all needed schemes. `apksigner` does this b
 
 ## 5. Sign an app with the AOSP platform key
 
+An app needs the platform key only for identity tied to the platform signature of **that** ROM:
+
+| Need | Platform key? |
+| --- | --- |
+| `android:sharedUserId="android.uid.system"` | **Yes.** Otherwise the install fails with `INSTALL_FAILED_SHARED_USER_INCOMPATIBLE` ([sharedUserId.md](sharedUserId.md)) |
+| A framework permission with `protectionLevel="signature"` (defined by `android`) | **Yes** |
+| A framework permission with `signature\|privileged` | **No**, if the app is in `priv-app` and the permission is allowlisted ([../AOSP_cfg/AOSP_preinstalled_apps.md](../AOSP_cfg/AOSP_preinstalled_apps.md)) |
+| A custom `signature` permission defined by a platform-signed app | Yes for the caller, unless the service uses `knownSigner` or a caller check ([signature_permission.md](signature_permission.md)) |
+| Hidden APIs (`platform_apis: true` in the AOSP tree) | Usually built with `certificate: "platform"` |
+| GPIO, PWM, sysfs, `/dev` nodes | **No.** DAC + SELinux decide; use a daemon or HAL ([../HW/hw_control_sysfs.md](../HW/hw_control_sysfs.md)) |
+| Wi-Fi MAC, build version | **No** for `Build.*`; the factory MAC needs `LOCAL_MAC_ADDRESS` ([../Debug/mac_address.md](../Debug/mac_address.md)) |
+| A normal or third-party app | **No.** Don't ship it with the platform key |
+
+Check what a given app actually needs:
+
+```shell
+aapt2 dump xmltree app.apk --file AndroidManifest.xml | grep -iE "sharedUserId|permission"   # what it declares and requests
+adb shell dumpsys package com.example.myapp | grep -E "granted=false"                       # signature permissions not granted
+adb logcat | grep -iE "PackageManager|INSTALL_FAILED|Permission Denial"                     # install or call failures
+```
+
 Apps built **in the AOSP tree** are signed by the build: `certificate: "platform"` in `Android.bp`
 (`LOCAL_CERTIFICATE := platform` in `Android.mk`). Nothing manual is needed.
 

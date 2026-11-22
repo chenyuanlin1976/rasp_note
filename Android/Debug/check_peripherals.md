@@ -185,6 +185,7 @@ adb shell dmesg | grep -iE 'tcpm|fusb302|husb311'
 + Kernels 6.0+ also export the PD capabilities (source and sink PDOs) under `/sys/class/usb_power_delivery/`, if the driver registers them.
 + Test with chargers that offer 5, 9, 12, and 15 V, and with a PD-capable USB-C power meter between charger and board.
 + CC-pin roles, DRP, and `DR_Swap`/`PR_Swap`: [../../Comm/USB_OTG.md](../../Comm/USB_OTG.md#22-usb-c-the-cc-pins).
++ The TCPC/TCPM driver, device tree, and bring-up checklist: [../../Linux/Kernel/typec_pd_driver.md](../../Linux/Kernel/typec_pd_driver.md).
 
 ## 7. Battery and charger
 

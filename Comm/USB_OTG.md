@@ -155,6 +155,7 @@ Changing `dr_mode` in the device tree is the cleaner fix for a product. Use the 
 ## Related notes
 
 + [USB_CDC.md](USB_CDC.md): CDC-ACM serial ports, gadget setup
++ [../Linux/Kernel/typec_pd_driver.md](../Linux/Kernel/typec_pd_driver.md): Type-C/PD controller drivers (TCPC/TCPM), device tree, bring-up
 + [../Android/Debug/USB_port_speed.md](../Android/Debug/USB_port_speed.md): USB 2.0 vs 3.0 host controllers
 + [../Linux/DeviceTree/dts_node_regulator_fixed.md](../Linux/DeviceTree/dts_node_regulator_fixed.md): a GPIO-switched 5 V VBUS regulator
 + [../Android/HW/gpio_control.md](../Android/HW/gpio_control.md): `vcc5v0-otg-regulator` in the RK3566 GPIO list

@@ -69,7 +69,7 @@ How to lay these layers out in packages and Gradle modules: [app_project_structu
 ## Related notes
 
 + [app_components.md](app_components.md), [android_class_hierarchy.md](android_class_hierarchy.md)
-+ [app_project_structure.md](app_project_structure.md), [View_binding.md](View_binding.md)
++ [app_project_structure.md](app_project_structure.md), [View_binding.md](View_binding.md), [compose_intro.md](compose_intro.md)
 + [../IPC/Binder_intro.md](../IPC/Binder_intro.md), [../../DevTools/layered_arch_blueprint.md](../../DevTools/layered_arch_blueprint.md)
 
 ## Reference

@@ -1,4 +1,4 @@
-# Activity UI: views, view groups, and Compose `setContent`
+# Activity UI: views, view groups, and Compose
 
 An **Activity** is one screen of an app. It doesn't draw anything itself: it owns a **window**,
 and the content of that window is a tree of **`View`** objects (or, with Jetpack Compose, composable functions).
@@ -97,41 +97,16 @@ class MainActivity : AppCompatActivity() {
 Views may only be touched from the **main (UI) thread**. Post results from worker threads back with coroutines on `Dispatchers.Main` or `runOnUiThread {}`.
 For type-safe access without `findViewById`, use View Binding: [View_binding.md](View_binding.md).
 
-### 4.2 Jetpack Compose and `setContent`
+### 4.2 Jetpack Compose
 
 For new UI, Google recommends **Jetpack Compose**: the UI is written as `@Composable` Kotlin functions, with no XML layout and no `View` objects per widget.
-When the state changes, Compose re-runs (recomposes) the affected functions.
-
-An activity hands its window to Compose with `setContent { }` instead of `setContentView()`:
+The activity calls `setContent { }` instead of `setContentView()`:
 
 ```kotlin
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {                    // a new project uses its generated theme, e.g. MyAppTheme { }
-                Surface {
-                    MainScreen()
-                }
-            }
-        }
+        setContent { MainScreen() }            // instead of setContentView(R.layout.activity_main)
     }
 }
 
@@ -148,36 +123,7 @@ fun MainScreen() {
 }
 ```
 
-+ **`setContent` is an extension function** on `androidx.activity.ComponentActivity`
-  (`fun ComponentActivity.setContent(parent: CompositionContext? = null, content: @Composable () -> Unit)`),
-  from the `androidx.activity:activity-compose` library.
-  That's why it can be called inside `MainActivity` like a member, and why it must be imported.
-  Extension functions in general: [../../DevTools/kotlin_extension_functions.md](../../DevTools/kotlin_extension_functions.md).
-+ **Which activity class**: `ComponentActivity` or a subclass (`FragmentActivity`, `AppCompatActivity`). A plain `android.app.Activity` doesn't have it.
-+ **Trailing lambda**: `content` is the last parameter, so `setContent { ... }` is the same as `setContent(content = { ... })`.
-  The lambda is `@Composable`, so composables can be called directly in it; it becomes the root of the Compose UI tree.
-+ **Theme and root container**: wrap the screen in the app theme and a `Surface` (or `Scaffold`), so colors, typography and the background apply everywhere.
-+ **Naming**: composables that emit UI are named in PascalCase (`MainScreen`), like classes.
-+ A function that calls composables must itself be `@Composable`; calling one from normal code is a compile error.
-+ `remember { mutableStateOf(...) }` keeps the state across recompositions, but not across a configuration change.
-  Use `rememberSaveable` or a `ViewModel` for that ([app_architecture.md](app_architecture.md)).
-
-Pass data and event callbacks into a screen as ordinary parameters (state hoisting), so the screen doesn't own the state:
-
-```kotlin
-setContent {
-    MaterialTheme {
-        MainScreen(
-            userName = "Alex",
-            onItemClick = { id -> viewModel.select(id) }   // a normal lambda, not @Composable
-        )
-    }
-}
-
-@Composable
-fun MainScreen(userName: String, onItemClick: (Int) -> Unit) { /* ... */ }
-```
-
+`setContent`, state, and state hoisting: [compose_intro.md](compose_intro.md).
 Views and Compose can be mixed: `ComposeView` puts composables in a view layout, `AndroidView` puts a `View` (e.g. a `PlayerView`) in Compose.
 
 ## Related notes
@@ -187,7 +133,7 @@ Views and Compose can be mixed: `ComposeView` puts composables in a view layout,
 + [app_components.md](app_components.md): the activity lifecycle
 + [app_architecture.md](app_architecture.md): `ViewModel` and UI state
 + [mediaPlayer_note.md](mediaPlayer_note.md): video in a `SurfaceView` / `PlayerView`
-+ [../../DevTools/kotlin_extension_functions.md](../../DevTools/kotlin_extension_functions.md): extension functions such as `setContent`
++ [compose_intro.md](compose_intro.md): Jetpack Compose, `setContent`, state
 
 ## Reference
 
@@ -197,5 +143,3 @@ Views and Compose can be mixed: `ComposeView` puts composables in a view layout,
 + [Create dynamic lists with RecyclerView](https://developer.android.com/develop/ui/views/layout/recyclerview)
 + [Jetpack Compose](https://developer.android.com/develop/ui/compose)
 + [State and Jetpack Compose](https://developer.android.com/develop/ui/compose/state)
-+ [Compose: Thinking in Compose](https://developer.android.com/develop/ui/compose/mental-model)
-+ [Compose and other libraries: Activity](https://developer.android.com/develop/ui/compose/libraries#activity)

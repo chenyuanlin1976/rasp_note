@@ -3,7 +3,7 @@
 An **extension function** adds a function to an existing type without inheriting from it or changing its source.
 It is called with the same dot syntax as a member function.
 Many Android APIs are extensions, for example Compose's `ComponentActivity.setContent { }`
-([../Android/App/activity_views.md](../Android/App/activity_views.md#42-jetpack-compose-and-setcontent)) and most of `androidx.core:core-ktx`.
+([../Android/App/compose_intro.md](../Android/App/compose_intro.md#2-setcontent-from-the-activity-to-compose)) and most of `androidx.core:core-ktx`.
 
 ## 1. Syntax
 
@@ -85,7 +85,7 @@ val sb = buildString {        // StringBuilder.() -> Unit
 ## Related notes
 
 + [deprecation_kotlin.md](deprecation_kotlin.md): deprecating Kotlin APIs
-+ [../Android/App/activity_views.md](../Android/App/activity_views.md): `setContent { }` in an activity
++ [../Android/App/compose_intro.md](../Android/App/compose_intro.md): `setContent { }` in an activity
 + [../Android/App/Groovy_kotlin_DSL.md](../Android/App/Groovy_kotlin_DSL.md): Gradle Kotlin DSL, built on lambdas with receivers
 
 ## Reference

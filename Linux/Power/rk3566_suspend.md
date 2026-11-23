@@ -155,6 +155,7 @@ How to narrow it down:
 + [../../Android/AOSP_cfg/shutdown_flow.md](../../Android/AOSP_cfg/shutdown_flow.md): power-off through the RK809
 + [../../Android/HW/input_key_flow.md](../../Android/HW/input_key_flow.md): `gpio-keys`, `wakeup-source`, `WAKE` key flag
 + [../../Android/Debug/uart_console.md](../../Android/Debug/uart_console.md): UART console on RK3566
++ [../../Android/Debug/suspend_blockers.md](../../Android/Debug/suspend_blockers.md): checklist when the board doesn't suspend (ADB, USB, wake locks, drivers)
 + [../../HW/power_tree.md](../../HW/power_tree.md): power-on/off sequencing and back-powering between rails
 
 ## Reference

@@ -137,6 +137,7 @@ adb shell cat /sys/kernel/debug/wakeup_sources       # root, debugfs
 + [shutdown_flow.md](shutdown_flow.md): the power-off path
 + [../App/app_background_limits.md](../App/app_background_limits.md): wake locks for apps
 + [../HW/input_key_flow.md](../HW/input_key_flow.md): power key and `wakeup-source`
++ [../Debug/suspend_blockers.md](../Debug/suspend_blockers.md): checklist when the device doesn't suspend (ADB, USB, wake locks, drivers)
 
 ## Reference
 

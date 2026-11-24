@@ -44,6 +44,50 @@ vendor: android.hardware.light-service.<board>            system_server: LightsS
 + The node name comes from the device tree: the `label`, or `function` + `color` in newer bindings ([../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md)).
   If the table and the DT don't match, the light is missing or every write fails.
 
+### 2.1 The board table
+
+In the example (section 4), the table is a compile-time array that maps a `LightType` to an LED class directory:
+
+```c++
+constexpr BoardLed kBoardLeds[] = {
+        {LightType::BATTERY, "/sys/class/leds/sys_led_r"},
+        {LightType::NOTIFICATIONS, "/sys/class/leds/sys_led_g"},
+};
+```
+
+The constructor turns each entry whose `brightness` is writable into an `HwLight`, and `setLightState()` finds the directory by `id`.
+An entry whose node is missing (for example on another board variant) is skipped, so the HAL still starts.
+
+**Which types to list.** A type is useful only if something calls it:
+
+| Type | Who drives it |
+| --- | --- |
+| `BATTERY`, `NOTIFICATIONS` | `BatteryService`, `NotificationManagerService` ([../HW/notification_led.md](../HW/notification_led.md)) |
+| `ATTENTION` | `NotificationManagerService`, only if `config_useAttentionLight` is `true` |
+| `BACKLIGHT` | `DisplayManagerService`, only if the display has no Composer brightness control. The node is usually `/sys/class/backlight/<name>/`, not an LED, and needs its own scaling ([../HW/LightsService_intro.md](../HW/LightsService_intro.md#33-backlight-brightness-is-8-bit)) |
+| `MICROPHONE` and later types | A privileged app through `LightsManager` ([../HW/LightsService_intro.md](../HW/LightsService_intro.md#2-system-lights-vs-lights-that-apps-can-use)) |
+| `BLUETOOTH`, `WIFI`, `KEYBOARD`, `BUTTONS` | System types, so apps can't use them through `LightsManager`. Stock AOSP has no caller for `BLUETOOTH` / `WIFI`, so such a light does nothing without a framework change |
+
+Check which types have a caller in your source tree with `grep -rn "LIGHT_ID_" frameworks/base/services/`.
+For a Wi-Fi or Bluetooth status LED, a kernel trigger is usually simpler than the HAL: for example `phy0rx` / `phy0tx` (mac80211) or `bluetooth-power`, if the driver provides them. The `bcmdhd` Wi-Fi driver, common on RK3566 boards, doesn't use mac80211, so it has no `phy0*` triggers ([../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md)).
+
+**Extra fields, when the board needs them:**
+
+| Field | When | Note |
+| --- | --- | --- |
+| `max_brightness` override | Rarely | Read `<dir>/max_brightness` at startup (as the example does): `1` for `leds-gpio`, often `255` for `leds-pwm`. Hard-code it only if the driver reports a wrong value |
+| Red, green, blue paths | One `LightType` drives a tri-color LED made of 3 LED class devices | Split `color` into channels ([section 3](#3-state-updates-setlightstate)). A multicolor LED class device instead has one `brightness` plus `multi_intensity` |
+| Blink support | Never as a fixed flag | Read `<dir>/trigger` at startup and check that `timer` is in the list. If it isn't, enable `CONFIG_LEDS_TRIGGER_TIMER` rather than blinking in the HAL |
+| Active-low | Never in the HAL | Set the polarity in the device tree (`GPIO_ACTIVE_LOW`). The LED class then shows the logical state: `brightness=0` is off for every driver. Inverting in the HAL breaks triggers, because writing `0` also removes the trigger |
+
+Check the table against the target:
+
+```shell
+# every directory in kBoardLeds[] must exist (names from the DT label, or function + color)
+adb shell ls -ld /sys/class/leds/sys_led_r /sys/class/leds/sys_led_g
+adb shell cat /sys/class/leds/sys_led_r/max_brightness /sys/class/leds/sys_led_r/trigger
+```
+
 ## 3. State updates: `setLightState()`
 
 `HwLightState` fields and how a sysfs HAL usually handles them:
@@ -71,7 +115,7 @@ Write order for one LED (`LED=/sys/class/leds/<name>`):
 ## 4. Example: a minimal sysfs Lights HAL (NDK backend)
 
 2 single-color LEDs from a `gpio-leds` node: red for battery, green for notifications.
-There is no RGB mixing, no shared LED, and no backlight.
+There is no RGB mixing, no shared LED, and no backlight. The board table is explained in [section 2.1](#21-the-board-table).
 
 ### Lights.h
 

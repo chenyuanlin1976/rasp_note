@@ -95,7 +95,7 @@ LED class driver: brightness_set()  ->  GPIO / PWM / PMIC register
 4. The kernel calls the LED driver's `store()` → `brightness_set()`, and the driver programs the hardware.
 
 The AOSP *default* Lights HAL (`hardware/interfaces/light/aidl/default`) is only a stub that logs.
-Device HALs (under `device/<vendor>/...` or `vendor/...`) contain the real sysfs code.
+Device HALs (under `device/<vendor>/...` or `vendor/...`) contain the real sysfs code; see [AIDL_HAL_lights.md](AIDL_HAL_lights.md) for an example.
 
 ## 5. When do you need a HAL and not plain sysfs?
 
@@ -114,6 +114,7 @@ Device HALs (under `device/<vendor>/...` or `vendor/...`) contain the real sysfs
 + [HAL_intro.md](HAL_intro.md), [../HW/hw_control_sysfs.md](../HW/hw_control_sysfs.md)
 + [../IPC/AIDL_ndk_led_sysfs.md](../IPC/AIDL_ndk_led_sysfs.md): an AIDL service that writes LED sysfs nodes
 + [../HW/Led_control.md](../HW/Led_control.md)
++ [AIDL_HAL_lights.md](AIDL_HAL_lights.md): a Lights AIDL HAL that writes LED sysfs nodes (RK3566)
 + [../HW/LightsService_intro.md](../HW/LightsService_intro.md): the framework side (`LightsService`) that calls the Lights HAL
 
 ## Reference

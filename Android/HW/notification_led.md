@@ -94,6 +94,7 @@ For approach C:
 
 + [LightsService_intro.md](LightsService_intro.md): `LightsService`, system lights, the state cache, sysfs permissions
 + [Led_control.md](Led_control.md): Lights HAL vs. vendor LED HAL, kernel blink triggers
++ [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md): the HAL side of `setLightState()` (color, `TIMED` blinking, sysfs)
 + [gpio_control.md](gpio_control.md): notification LED and `LightsManager` from an app
 + [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md): vendor GPIO HAL for approach C
 + [../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md), [../../Linux/DeviceTree/dts_node_led_vs_gpio.md](../../Linux/DeviceTree/dts_node_led_vs_gpio.md)

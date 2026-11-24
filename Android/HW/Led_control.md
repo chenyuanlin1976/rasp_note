@@ -35,6 +35,7 @@ interface ILights {
 
 + A device implements `ILights` in `/vendor/bin/hw/` and maps each `HwLight` to a `/sys/class/leds/<name>` directory.
   AOSP's `hardware/interfaces/light/aidl/default` is a Rust example that only logs and stores the state (no hardware access), so it is a template, not a driver.
+  A sysfs implementation for RK3566 (C++ NDK, VINTF, SELinux) is in [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md).
 + `FlashMode.TIMED` with `flashOnMs` / `flashOffMs` is naturally implemented with the kernel `timer` trigger (section 3).
 + `HwLightState.color` is ARGB. A single-color LED uses a brightness value derived from it, and an on/off LED is on for any non-zero color.
 + AOSP policy already has the domain `hal_light_default`, the attribute `hal_light`, and the type `sysfs_leds` (for `/sys/class/leds`).
@@ -145,6 +146,7 @@ Check this on the target with `ls -lZ` after `trigger=timer`.
 ## Related notes
 
 + [../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md), [../../Linux/DeviceTree/dts_node_led_vs_gpio.md](../../Linux/DeviceTree/dts_node_led_vs_gpio.md)
++ [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md): implementing the Lights HAL (`getLights()`, `setLightState()`, sysfs writes)
 + [LightsService_intro.md](LightsService_intro.md): `LightsService` in `system_server`, system vs. app-usable lights, backlight scaling
 + [notification_led.md](notification_led.md): how `NotificationManagerService` drives the notification LED, and why it stays off
 + [Led_blink_two_leds.md](Led_blink_two_leds.md): bring-up recipe for blinking two LEDs in phase, and debugging one that doesn't blink

@@ -5,7 +5,7 @@ It sits between the framework clients (display, battery, notifications) and the 
 The HAL writes the kernel's `/sys/class/leds/...` and `/sys/class/backlight/...` nodes.
 
 This note covers the framework side, its pitfalls, and whether a non-LED GPIO should go through it.
-For the HAL interface, the sysfs writes, and the SELinux rules, see [Led_control.md](Led_control.md#11-the-standard-lights-hal).
+For the HAL implementation (`getLights()`, `setLightState()`, sysfs writes, VINTF, SELinux), see [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md).
 
 ## 1. The layers
 
@@ -35,6 +35,9 @@ DisplayManagerService     BatteryService     NotificationManagerService     priv
 | Kernel and device tree | The RK3566 `.dts` declares `gpio-leds`, `pwm-leds`, or `pwm-backlight` nodes. The drivers create the sysfs nodes |
 
 + The AIDL Lights HAL exists since Android 11. If no AIDL HAL is declared in the VINTF manifest, `LightsService` falls back to the deprecated HIDL `android.hardware.light@2.0`. A new Android 14 device should implement the AIDL HAL.
++ `LightsService` keeps 2 lookup tables. `mLightsById` holds every `HwLight` and serves `LightsManager` sessions and `dumpsys lights`.
+  `mLightsByType` holds one `LightImpl` per system type, which the system services get with `LightsManager.getLight(LIGHT_ID_*)`.
+  If the HAL reports 2 lights of the same system type, the system services use only the first one.
 + The camera flash is not a light here. The Camera HAL controls it.
 + AOSP's `hardware/interfaces/light/aidl/default` only logs. The board's HAL (from the Rockchip SDK or your own) contains the real sysfs code.
 
@@ -88,7 +91,7 @@ The HAL runs as a non-root user in `hal_light_default`. It needs:
 + SELinux: a `genfscon` label (`sysfs_leds` for LEDs) and `allow` rules for `hal_light_default`.
 
 An `EACCES` or an `avc: denied` in `logcat` means one of these is missing.
-The exact rules are in [Led_control.md](Led_control.md#5-why-the-app-cant-write-sysfs-itself) and [hw_control_sysfs.md](hw_control_sysfs.md).
+The exact rules are in [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md#5-init-vintf-ueventd-selinux) and [hw_control_sysfs.md](hw_control_sysfs.md).
 
 ## 4. Inspect and test
 
@@ -139,6 +142,7 @@ To choose between `gpio-leds` and a plain GPIO in the device tree, see [../../Li
 + [Led_control.md](Led_control.md): choosing between the Lights HAL, a vendor LED HAL, and sysfs; blinking in the kernel
 + [gpio_control.md](gpio_control.md): RK3566 GPIO numbering, notification LED and `LightsManager` from an app
 + [notification_led.md](notification_led.md): how `NotificationManagerService` drives the notification LED, and why it stays off
++ [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md): implementing the Lights HAL for RK3566 (C++ NDK example, VINTF, SELinux)
 + [../HAL/HAL_sysfsNodes.md](../HAL/HAL_sysfsNodes.md): how a Lights HAL wraps sysfs
 + [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md), [../HAL/AIDL_HAL_impl.md](../HAL/AIDL_HAL_impl.md), [hw_control_sysfs.md](hw_control_sysfs.md)
 + [../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md), [../../Linux/DeviceTree/dts_node_led_vs_gpio.md](../../Linux/DeviceTree/dts_node_led_vs_gpio.md)

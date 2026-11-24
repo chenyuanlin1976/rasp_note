@@ -57,10 +57,10 @@ Bring-up test on a userdebug build:
 
 ```shell
 adb root
-adb shell 'LED=/sys/class/leds/sys_led_r; cat $LED/max_brightness $LED/trigger'
-adb shell 'LED=/sys/class/leds/sys_led_r; echo none > $LED/trigger; cat $LED/max_brightness > $LED/brightness'   # on
-adb shell 'echo 0 > /sys/class/leds/sys_led_r/brightness'                                                      # off
-adb shell 'LED=/sys/class/leds/sys_led_r; echo timer > $LED/trigger; echo 500 > $LED/delay_on; echo 500 > $LED/delay_off'
+adb shell 'LED=/sys/class/leds/led_r; cat $LED/max_brightness $LED/trigger'
+adb shell 'LED=/sys/class/leds/led_r; echo none > $LED/trigger; cat $LED/max_brightness > $LED/brightness'   # on
+adb shell 'echo 0 > /sys/class/leds/led_r/brightness'                                                      # off
+adb shell 'LED=/sys/class/leds/led_r; echo timer > $LED/trigger; echo 500 > $LED/delay_on; echo 500 > $LED/delay_off'
 ```
 
 The state is lost at reboot. Set a boot default in the device tree (`default-state`, `linux,default-trigger`)

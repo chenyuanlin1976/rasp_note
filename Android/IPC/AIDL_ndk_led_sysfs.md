@@ -77,7 +77,7 @@ class LedControlService : public aidl::com::example::led::BnLedControl {
 
   private:
     bool writeAttr(const char* attr, const std::string& value);
-    std::string mDir;            // e.g. "/sys/class/leds/sys_led_r"
+    std::string mDir;            // e.g. "/sys/class/leds/led_r"
     std::string mMaxBrightness;  // read from max_brightness: 1 for a GPIO LED, 255 for many PWM LEDs
 };
 ```
@@ -148,7 +148,7 @@ ScopedAStatus LedControlService::setLedState(int32_t state, int32_t delayOnMs, i
 int main() {
     ABinderProcess_setThreadPoolMaxThreadCount(0);   // single binder thread = main thread (no locking needed)
 
-    auto service = ndk::SharedRefBase::make<LedControlService>("/sys/class/leds/sys_led_r");
+    auto service = ndk::SharedRefBase::make<LedControlService>("/sys/class/leds/led_r");
     const std::string instance = std::string(LedControlService::descriptor) + "/default";
 
     binder_exception_t err = AServiceManager_addService(service->asBinder().get(), instance.c_str());

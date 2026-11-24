@@ -28,7 +28,7 @@ You get triggers, a stable sysfs name, and no custom code for blinking.
         pinctrl-0 = <&led_pins>;                     /* mux the pins as GPIO, set pulls */
 
         led-0 {
-            label = "sys_led_r";                     /* -> /sys/class/leds/sys_led_r */
+            label = "led_r";                         /* -> /sys/class/leds/led_r */
             gpios = <&gpio4 RK_PD5 GPIO_ACTIVE_HIGH>;
             default-state = "off";                   /* "on" | "off" | "keep" */
             linux,default-trigger = "heartbeat";     /* optional: "timer", "default-on", "mmc0", ... */
@@ -69,9 +69,9 @@ You get triggers, a stable sysfs name, and no custom code for blinking.
   ```text
   # Android vendor init .rc (on Linux: a systemd unit or udev rule writing the same files)
   on boot
-      write /sys/class/leds/sys_led_r/trigger timer
-      write /sys/class/leds/sys_led_r/delay_on 100
-      write /sys/class/leds/sys_led_r/delay_off 900
+      write /sys/class/leds/led_r/trigger timer
+      write /sys/class/leds/led_r/delay_on 100
+      write /sys/class/leds/led_r/delay_off 900
   ```
 
 + Use the `pattern` trigger (`led-pattern` property / `pattern` file) for arbitrary sequences.
@@ -126,9 +126,9 @@ and **power rails** in `regulator-fixed` (see [dts_node_regulator_fixed.md](dts_
 ## 3. Checking the result
 
 ```shell
-ls /sys/class/leds/                          # sys_led_r, green:status ?
-cat /sys/class/leds/sys_led_r/trigger        # [heartbeat] marks the active trigger
-gpioinfo gpiochip4 | grep -E "29:|used"      # line 29 used by "sys_led_r" (LED case) or unused (GPIO case)
+ls /sys/class/leds/                          # led_r, green:status ?
+cat /sys/class/leds/led_r/trigger            # [heartbeat] marks the active trigger
+gpioinfo gpiochip4 | grep -E "29:|used"      # line 29 used by "led_r" (LED case) or unused (GPIO case)
 cat /sys/kernel/debug/gpio                   # alternative (root, debugfs mounted; not on Android user builds)
 cat /sys/kernel/debug/pinctrl/*/pinmux-pins  # which function/owner each pin has
 ```

@@ -50,8 +50,8 @@ In the example (section 4), the table is a compile-time array that maps a `Light
 
 ```c++
 constexpr BoardLed kBoardLeds[] = {
-        {LightType::BATTERY, "/sys/class/leds/sys_led_r"},
-        {LightType::NOTIFICATIONS, "/sys/class/leds/sys_led_g"},
+        {LightType::BATTERY, "/sys/class/leds/led_r"},
+        {LightType::NOTIFICATIONS, "/sys/class/leds/led_g"},
 };
 ```
 
@@ -84,8 +84,8 @@ Check the table against the target:
 
 ```shell
 # every directory in kBoardLeds[] must exist (names from the DT label, or function + color)
-adb shell ls -ld /sys/class/leds/sys_led_r /sys/class/leds/sys_led_g
-adb shell cat /sys/class/leds/sys_led_r/max_brightness /sys/class/leds/sys_led_r/trigger
+adb shell ls -ld /sys/class/leds/led_r /sys/class/leds/led_g
+adb shell cat /sys/class/leds/led_r/max_brightness /sys/class/leds/led_r/trigger
 ```
 
 ## 3. State updates: `setLightState()`
@@ -133,7 +133,7 @@ namespace aidl::android::hardware::light::impl {
 
 struct LedNode {
     HwLight light;          // id, ordinal, type reported to LightsService
-    std::string dir;        // e.g. /sys/class/leds/sys_led_r
+    std::string dir;        // e.g. /sys/class/leds/led_r
     int maxBrightness = 1;  // read from max_brightness at startup
 };
 
@@ -175,8 +175,8 @@ struct BoardLed {
     const char* dir;
 };
 constexpr BoardLed kBoardLeds[] = {
-        {LightType::BATTERY, "/sys/class/leds/sys_led_r"},
-        {LightType::NOTIFICATIONS, "/sys/class/leds/sys_led_g"},
+        {LightType::BATTERY, "/sys/class/leds/led_r"},
+        {LightType::NOTIFICATIONS, "/sys/class/leds/led_g"},
 };
 
 bool writeFile(const std::string& path, const std::string& value) {
@@ -366,8 +366,8 @@ adb shell ps -AZ | grep -i light
 adb shell dumpsys lights
 
 # the LED's attributes, their owners, and labels (blink attributes appear only with trigger=timer)
-adb shell ls -lZ /sys/class/leds/sys_led_g/
-adb shell cat /sys/class/leds/sys_led_g/max_brightness /sys/class/leds/sys_led_g/trigger
+adb shell ls -lZ /sys/class/leds/led_g/
+adb shell cat /sys/class/leds/led_g/max_brightness /sys/class/leds/led_g/trigger
 
 # HAL log and SELinux denials
 adb logcat -s lights-rk3566 LightsService

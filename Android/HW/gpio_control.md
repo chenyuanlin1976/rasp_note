@@ -32,6 +32,7 @@ getSystemService(NotificationManager::class.java).createNotificationChannel(chan
 ```
 
 Most current phones have no notification LED (they use an always-on display), and the system can ignore the request.
+How the framework drives the LED, and why it often stays off on a custom board: [notification_led.md](notification_led.md).
 
 ### 2.2 `LightsManager` (Android 12, API 31+)
 
@@ -247,7 +248,8 @@ Shell commands and `adb root` are for bring-up only. In a product:
 ## Related notes
 
 + [hw_control_sysfs.md](hw_control_sysfs.md), [../HAL/HAL_libgpiod.md](../HAL/HAL_libgpiod.md), [libgpiod_android.md](libgpiod_android.md)
-+ [Led_control.md](Led_control.md), [pwm_control.md](pwm_control.md): PWM on RK3566 (device tree, sysfs, permissions)
++ [Led_control.md](Led_control.md), [LightsService_intro.md](LightsService_intro.md), [notification_led.md](notification_led.md)
++ [pwm_control.md](pwm_control.md): PWM on RK3566 (device tree, sysfs, permissions)
 + [gpio_kernel_config.md](gpio_kernel_config.md): device tree, kernel config and build for a GPIO
 + [input_key_flow.md](input_key_flow.md): buttons as `gpio-keys` input devices, from the kernel to an app
 + [../../Linux/HW/libgpiod_sysfs_cmp.md](../../Linux/HW/libgpiod_sysfs_cmp.md), [../../Linux/DeviceTree/dts_node_led_vs_gpio.md](../../Linux/DeviceTree/dts_node_led_vs_gpio.md)

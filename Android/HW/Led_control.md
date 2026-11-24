@@ -145,6 +145,8 @@ Check this on the target with `ls -lZ` after `trigger=timer`.
 ## Related notes
 
 + [../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md), [../../Linux/DeviceTree/dts_node_led_vs_gpio.md](../../Linux/DeviceTree/dts_node_led_vs_gpio.md)
++ [LightsService_intro.md](LightsService_intro.md): `LightsService` in `system_server`, system vs. app-usable lights, backlight scaling
++ [notification_led.md](notification_led.md): how `NotificationManagerService` drives the notification LED, and why it stays off
 + [Led_blink_two_leds.md](Led_blink_two_leds.md): bring-up recipe for blinking two LEDs in phase, and debugging one that doesn't blink
 + [gpio_control.md](gpio_control.md), [../IPC/AIDL_ndk_led_sysfs.md](../IPC/AIDL_ndk_led_sysfs.md), [../HAL/AIDL_HAL_impl.md](../HAL/AIDL_HAL_impl.md)
 + [hw_control_sysfs.md](hw_control_sysfs.md), [../HAL/HAL_sysfsNodes.md](../HAL/HAL_sysfsNodes.md), [../SELinux/neverallow_error.md](../SELinux/neverallow_error.md)

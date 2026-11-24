@@ -114,6 +114,7 @@ Device HALs (under `device/<vendor>/...` or `vendor/...`) contain the real sysfs
 + [HAL_intro.md](HAL_intro.md), [../HW/hw_control_sysfs.md](../HW/hw_control_sysfs.md)
 + [../IPC/AIDL_ndk_led_sysfs.md](../IPC/AIDL_ndk_led_sysfs.md): an AIDL service that writes LED sysfs nodes
 + [../HW/Led_control.md](../HW/Led_control.md)
++ [../HW/LightsService_intro.md](../HW/LightsService_intro.md): the framework side (`LightsService`) that calls the Lights HAL
 
 ## Reference
 

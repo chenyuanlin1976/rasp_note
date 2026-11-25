@@ -145,7 +145,7 @@ Debug from the bottom up. First make sure the kernel can switch the LED by writi
 | `SecurityException` from `LightsManager` | The caller lacks `CONTROL_DEVICE_LIGHTS` (not a privileged or platform-signed app, or missing from the privapp permission allowlist) |
 | A light is missing from `LightsManager.getLights()` | Expected for system types (section 2). Otherwise the HAL doesn't report it: check `dumpsys lights` and the HAL's light table |
 | A light is missing from `dumpsys lights` | The HAL didn't report it in `getLights()`, or the HAL wasn't declared or didn't start. `LightsService` reads the light list once when it starts, so a HAL fix needs a reboot |
-| `dumpsys lights` shows the new state, but the LED doesn't change | The HAL's sysfs write failed: DAC or SELinux (section 3.4), a wrong node name, or the wrong `id` mapping |
+| `dumpsys lights` shows the new state, but the LED doesn't change | The HAL's sysfs write failed: DAC or SELinux (section 3.4), a wrong node name, or the wrong `id` mapping (section 4.2). Or the write worked, but a kernel trigger from the device tree (`linux,default-trigger`, e.g. `heartbeat`) still drives the LED because the HAL doesn't write `trigger=none`, or the node exists but this board variant has no LED fitted |
 | The LED changes, then something else switches it back | Another logical light shares the LED (section 3.2), framework policy owns that system type, or a higher-priority session requests the light (section 2.1) |
 | A session light stays on after the app is "done" | The app or one of its services still holds the session open (section 2.1) |
 
@@ -177,6 +177,62 @@ adb logcat -d | grep -iE 'light|avc'
 + The open `LightsManager` sessions with their requests.
 
 It doesn't mark which lights `LightsManager.getLights()` hides. Work that out from the type (section 2), or compare with what `getLights()` returns in a test app.
+
+Example from an RK3566 board:
+
+```text
+LightsById:
+  Light id=0 ordinal=0 color=ff666666, type=0
+  Light id=1 ordinal=0 color=00000000, type=3
+```
+
+| Field | Meaning |
+| --- | --- |
+| `id` | Chosen by the HAL in `getLights()`. It is not a sysfs path or a pin; the HAL maps it to a node (section 4.2) |
+| `ordinal` | Index among the lights of the same type |
+| `color` | Last state sent to the HAL, as ARGB `0xAARRGGBB`. `00000000` is off. For `BACKLIGHT`, each RGB byte holds the brightness `0..255` (section 3.3): `ff666666` is `0x66` = 102, about 40 % |
+| `type` | The `LightType` number ([table](../HAL/AIDL_HAL_lights.md#2-discovery-getlights)): here `0` = `BACKLIGHT`, `3` = `BATTERY` |
+
++ This board reports only a backlight and a battery LED. There is no `NOTIFICATIONS` light, so the notification LED can't work ([notification_led.md](notification_led.md#2-why-the-led-stays-off)).
+  Both are system types, so `LightsManager.getLights()` returns an empty list.
++ The `BACKLIGHT` color changes only when `DisplayManagerService` uses the `LightsService` path (section 3.3). If the display uses Composer brightness, the value stays the same while the brightness slider moves.
++ `LightType` is a fixed AOSP enum. A vendor can't add its own types; it only chooses the `id`s and which types to report.
+
+### 4.2 From a light `id` to its sysfs node
+
+Neither `dumpsys lights` nor `LightsService` knows the sysfs path. The mapping is in the HAL's board table ([../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md#21-the-board-table)).
+
+1. **Find the HAL and its table.** List the candidate nodes and the HAL process on the target:
+
+   ```shell
+   adb shell ls -l /sys/class/leds/ /sys/class/backlight/
+   adb shell ps -A | grep -i light
+   adb shell ls /vendor/bin/hw | grep -i light
+   ```
+
+   In the BSP source, search the HAL for its table, for example `grep -rn "LightType::\|/sys/class/leds\|/sys/class/backlight" device/ hardware/ vendor/`.
+   The location depends on the BSP. Match the node names with the LED `label`s in the board's `.dts` under `arch/arm64/boot/dts/rockchip/`.
+
+2. **Confirm on the target.** Change a light from the framework, then compare `dumpsys lights` with the nodes. The light whose `color` changes together with one node's `brightness` is the match.
+
+   | Light | How to change it |
+   | --- | --- |
+   | `BATTERY` | Plug or unplug the charger, or fake it with `dumpsys battery` (below) |
+   | `BACKLIGHT` | The brightness slider, or `adb shell settings put system screen_brightness 50` with auto-brightness off |
+   | `NOTIFICATIONS` | See [notification_led.md](notification_led.md#3-test) |
+
+   ```shell
+   # fake a low battery on AC power, then restore the real values
+   adb shell dumpsys battery set ac 1
+   adb shell dumpsys battery set level 10
+   adb shell dumpsys lights
+   adb shell 'for d in /sys/class/leds/*; do echo "$d brightness=$(cat $d/brightness) trigger=$(grep -o "\[[^]]*\]" $d/trigger)"; done'
+   adb shell dumpsys battery reset
+   ```
+
+   The active trigger is the one in `[...]`. Anything other than `[none]` means the kernel, not only the HAL, changes that LED.
+
+3. **Check the HAL's log.** If the HAL logs its writes or errors, `adb logcat | grep -iE 'light|avc'` shows which node it opened and whether the write failed.
 
 | Compare | Shows |
 | --- | --- |

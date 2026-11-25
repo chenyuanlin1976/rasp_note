@@ -37,7 +37,7 @@ vendor: android.hardware.light-service.<board>            system_server: LightsS
 | --- | --- |
 | `id` | Chosen by the HAL and unique. `LightsService` passes it back in every `setLightState()` call |
 | `ordinal` | Index among lights of the same type (`0` for the first) |
-| `type` | `LightType`: `BACKLIGHT` (0), `KEYBOARD` (1), `BUTTONS` (2), `BATTERY` (3), `NOTIFICATIONS` (4), `ATTENTION` (5), `BLUETOOTH` (6), `WIFI` (7), `MICROPHONE` (8), ... |
+| `type` | `LightType`: `BACKLIGHT` (0), `KEYBOARD` (1), `BUTTONS` (2), `BATTERY` (3), `NOTIFICATIONS` (4), `ATTENTION` (5), `BLUETOOTH` (6), `WIFI` (7), `MICROPHONE` (8), `CAMERA` (9, added in a later interface version; check the `LightType.aidl` of the version your device uses). The enum is fixed: a vendor can't add types |
 
 + Report only lights whose sysfs node exists and is writable. Then `dumpsys lights` shows what really works, and the framework doesn't drive a missing LED.
 + The HAL needs a board table that maps each light to a node: compiled in (simplest), a config file in `/vendor/etc`, or system properties.

@@ -192,6 +192,7 @@ To choose between `gpio-leds` and a plain GPIO in the device tree, see [../../Li
 + [Led_control.md](Led_control.md): choosing between the Lights HAL, a vendor LED HAL, and sysfs; blinking in the kernel
 + [gpio_control.md](gpio_control.md): RK3566 GPIO numbering, notification LED and `LightsManager` from an app
 + [notification_led.md](notification_led.md): how `NotificationManagerService` drives the notification LED, and why it stays off
++ [LightsService_platform_app.md](LightsService_platform_app.md): what a platform-signed app can do with lights, and a custom binder service in `system_server`
 + [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md): implementing the Lights HAL for RK3566 (C++ NDK example, VINTF, SELinux)
 + [../HAL/HAL_sysfsNodes.md](../HAL/HAL_sysfsNodes.md): how a Lights HAL wraps sysfs
 + [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md), [../HAL/AIDL_HAL_impl.md](../HAL/AIDL_HAL_impl.md), [hw_control_sysfs.md](hw_control_sysfs.md)

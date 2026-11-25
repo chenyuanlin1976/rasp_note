@@ -127,10 +127,26 @@ An app needs the platform key only for identity tied to the platform signature o
 | A framework permission with `protectionLevel="signature"` (defined by `android`) | **Yes** |
 | A framework permission with `signature\|privileged` | **No**, if the app is in `priv-app` and the permission is allowlisted ([../AOSP_cfg/AOSP_preinstalled_apps.md](../AOSP_cfg/AOSP_preinstalled_apps.md)) |
 | A custom `signature` permission defined by a platform-signed app | Yes for the caller, unless the service uses `knownSigner` or a caller check ([signature_permission.md](signature_permission.md)) |
-| Hidden APIs (`platform_apis: true` in the AOSP tree) | Usually built with `certificate: "platform"` |
+| Hidden APIs (`platform_apis: true` in the AOSP tree) | Usually built with `certificate: "platform"`. Platform-signed apps are exempt from the non-SDK interface restrictions |
 | GPIO, PWM, sysfs, `/dev` nodes | **No.** DAC + SELinux decide; use a daemon or HAL ([../HW/hw_control_sysfs.md](../HW/hw_control_sysfs.md)) |
 | Wi-Fi MAC, build version | **No** for `Build.*`; the factory MAC needs `LOCAL_MAC_ADDRESS` ([../Debug/mac_address.md](../Debug/mac_address.md)) |
 | A normal or third-party app | **No.** Don't ship it with the platform key |
+
+The platform key is a **framework** identity: the package manager and `system_server` compare it with the certificate of `framework-res.apk`.
+It doesn't change what the kernel enforces:
+
+| | Platform-signed app | App signed with any other key |
+| --- | --- | --- |
+| Linux UID | Its own app UID; `system` (1000) only with `sharedUserId="android.uid.system"`. Never `root` (0) | Its own app UID |
+| SELinux domain | `platform_app` (`system_app` with the system UID) ([../SELinux/SELinux_domains.md](../SELinux/SELinux_domains.md)) | `untrusted_app`, or `priv_app` if it is a privileged app |
+| Signature permissions | Those defined by `android` and by other platform-signed apps | Only those defined by apps signed with the same key |
+| sysfs, `/dev`, SELinux rules | Still enforced. Signing never bypasses DAC or SELinux | Same |
+| Install and update | Only on builds signed with the same platform key. On another ROM (other OEM key, or AOSP test keys) signature permissions aren't granted and `sharedUserId="android.uid.system"` fails to install | Any build. Updates must use the same key as the installed version |
+
++ Your board's BSP may still use the public AOSP test keys. Then the "platform key" is known to everyone, and any app signed with it gets platform privileges.
+  Build a product with your own keys ([verify_platformKeys.md](verify_platformKeys.md)).
++ For hardware control on a board such as RK3566, don't put the hardware access into a platform-signed app.
+  Put it in a HAL or daemon with its own SELinux domain, and let the app call it through Binder ([../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md)).
 
 Check what a given app actually needs:
 

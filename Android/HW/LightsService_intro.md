@@ -52,8 +52,20 @@ DisplayManagerService     BatteryService     NotificationManagerService     priv
 | Listed by `LightsManager.getLights()` | No | Yes |
 
 The `LightsManager` API needs `CONTROL_DEVICE_LIGHTS` (signature|privileged).
-A session's request is undone when the session is closed.
+A session's request is undone when the session is closed or its process dies.
 For the app side, see [gpio_control.md](gpio_control.md#22-lightsmanager-android-12-api-31).
+
+Two classes are called `LightsManager`. Don't mix them up:
+
+| | `android.hardware.lights.LightsManager` | `com.android.server.lights.LightsManager` |
+| --- | --- | --- |
+| Kind | Public SDK API (Android 12, API 31+) | Internal abstract class, local service in `system_server` |
+| Used by | Privileged apps and system apps | `BatteryService`, `NotificationManagerService`, `DisplayManagerService` |
+| Reaches `LightsService` through | Binder service `lights` (`ILightsManager`) | A direct Java call (same process) |
+| Lights it can control | Only the non-system types | The system types (`getLight(LIGHT_ID_*)`) |
+| Model | `openSession()`, `LightsRequest`, `requestLights()`; reverted on close | Set a `LogicalLight`'s state directly; stays until changed |
+
+Neither one talks to the HAL. Only `LightsService` holds the `ILights` binder.
 
 ## 3. Pitfalls
 
@@ -94,6 +106,19 @@ An `EACCES` or an `avc: denied` in `logcat` means one of these is missing.
 The exact rules are in [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md#5-init-vintf-ueventd-selinux) and [hw_control_sysfs.md](hw_control_sysfs.md).
 
 ## 4. Inspect and test
+
+Debug from the bottom up. First make sure the kernel can switch the LED by writing `/sys/class/leds/<name>/brightness`, and only then look at the HAL and the framework.
+
+| Symptom | Where to look |
+| --- | --- |
+| Writing `brightness` by hand does nothing | Kernel side: the `.dts` LED node (pin, `GPIO_ACTIVE_*`, pinctrl), the driver (`leds-gpio`, `leds-pwm`), and the board wiring |
+| `SecurityException` from `LightsManager` | The caller lacks `CONTROL_DEVICE_LIGHTS` (not a privileged or platform-signed app, or missing from the privapp permission allowlist) |
+| A light is missing from `LightsManager.getLights()` | Expected for system types (section 2). Otherwise the HAL doesn't report it: check `dumpsys lights` and the HAL's light table |
+| `dumpsys lights` shows the new state, but the LED doesn't change | The HAL's sysfs write failed: DAC or SELinux (section 3.4), a wrong node name, or the wrong `id` mapping |
+| The LED changes, then something else switches it back | Another logical light shares the LED (section 3.2), or framework policy owns that system type |
+
+`LightsManager` and `LightsService` work with the logical lights that the HAL reports, never with RK3566 pin names such as `GPIO0_C5`.
+The mapping from a light `id` to a sysfs node, and from that node to a pin, lives in the HAL and the device tree.
 
 ```shell
 # lights reported by the HAL, their types, and the current state

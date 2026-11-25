@@ -67,6 +67,30 @@ Two classes are called `LightsManager`. Don't mix them up:
 
 Neither one talks to the HAL. Only `LightsService` holds the `ILights` binder.
 
+### 2.1 Who wins when several clients want a light
+
+`LightsService` arbitrates only between `LightsManager` sessions.
+For system lights there is nothing to arbitrate in the framework, because each type has one owner.
+
+| | System lights | Other lights (sessions) |
+| --- | --- | --- |
+| Who sets them | One framework service per type: `BatteryService` sets `BATTERY`, `NotificationManagerService` sets `NOTIFICATIONS` and `ATTENTION` | Any number of sessions from privileged apps |
+| Several requests at once | Not arbitrated: the owner sets the state directly and it stays until the owner changes it | The highest-priority session that requests the light wins |
+| A request ends | Doesn't apply | The light falls back to the next session's request, or turns off if no session requests it |
+
+How sessions are resolved:
+
++ Each session holds one `LightState` per light `id`. `requestLights(LightsRequest)` sets them. `LightsRequest.Builder.clearLight(light)` removes one light from the session's request.
++ Sessions can have a priority. Newer API levels add `openSession(int priority)`; check the [`LightsManager`](https://developer.android.com/reference/android/hardware/lights/LightsManager) reference for your API level.
++ After every change (a new request, `close()`, or the process dying, which `LightsService` sees as binder death), `LightsService` recomputes every non-system light from all open sessions.
+  A light that no session requests is turned off.
++ Only the result goes to the HAL, and only if it differs from the last state sent (section 3.1).
+
+A closed session or a dead process can't keep a light on.
+If a session light stays on, a live process still holds an open session, for example a service that never calls `close()`.
+
+Arbitration works per logical light `id`. It doesn't help when the HAL maps several lights to one physical LED (section 3.2).
+
 ## 3. Pitfalls
 
 ### 3.1 Unchanged requests don't reach the HAL
@@ -80,7 +104,7 @@ If a client sends the same state again, `LightsService` doesn't call the HAL.
 
 ### 3.2 Several light types on one physical LED
 
-`LightsService` treats each `HwLight` as independent.
+`LightsService` treats each `HwLight` as independent, and neither system lights nor session arbitration (section 2.1) look past the light `id`.
 If the HAL maps more than one type to the same LED (for example `BATTERY` and `NOTIFICATIONS` on one RGB LED, which is common on small boards), **the HAL must arbitrate**.
 It keeps the latest state of each logical light and decides which one wins (usually notification over battery).
 Without this, the last writer wins, and turning off the notification also turns off the charging indication.
@@ -115,7 +139,8 @@ Debug from the bottom up. First make sure the kernel can switch the LED by writi
 | `SecurityException` from `LightsManager` | The caller lacks `CONTROL_DEVICE_LIGHTS` (not a privileged or platform-signed app, or missing from the privapp permission allowlist) |
 | A light is missing from `LightsManager.getLights()` | Expected for system types (section 2). Otherwise the HAL doesn't report it: check `dumpsys lights` and the HAL's light table |
 | `dumpsys lights` shows the new state, but the LED doesn't change | The HAL's sysfs write failed: DAC or SELinux (section 3.4), a wrong node name, or the wrong `id` mapping |
-| The LED changes, then something else switches it back | Another logical light shares the LED (section 3.2), or framework policy owns that system type |
+| The LED changes, then something else switches it back | Another logical light shares the LED (section 3.2), framework policy owns that system type, or a higher-priority session requests the light (section 2.1) |
+| A session light stays on after the app is "done" | The app or one of its services still holds the session open (section 2.1) |
 
 `LightsManager` and `LightsService` work with the logical lights that the HAL reports, never with RK3566 pin names such as `GPIO0_C5`.
 The mapping from a light `id` to a sysfs node, and from that node to a pin, lives in the HAL and the device tree.

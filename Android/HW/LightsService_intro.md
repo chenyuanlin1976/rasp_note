@@ -51,6 +51,12 @@ DisplayManagerService     BatteryService     NotificationManagerService     priv
 | Who controls them | Framework policy only (battery level, notifications, display) | Privileged apps, through `android.hardware.lights.LightsManager` sessions |
 | Listed by `LightsManager.getLights()` | No | Yes |
 
++ The split depends only on the `type` that the HAL reports, not on the caller or on what the LED means.
+  In `LightsService.java`, `LightImpl.isSystemLight()` checks whether the type is one of the system light IDs (below `LightsManager.LIGHT_ID_COUNT`).
+  The binder service skips those lights in `getLights()` and rejects session requests for them.
++ `MICROPHONE` is a non-system type, even though it is an indicator. The camera and microphone privacy indicators on the screen come from SystemUI, not from `LightsService`.
++ So whether an app can control a board LED is decided in the vendor HAL: the type it gives the LED in `getLights()`.
+
 The `LightsManager` API needs `CONTROL_DEVICE_LIGHTS` (signature|privileged).
 A session's request is undone when the session is closed or its process dies.
 For the app side, see [gpio_control.md](gpio_control.md#22-lightsmanager-android-12-api-31).
@@ -138,6 +144,7 @@ Debug from the bottom up. First make sure the kernel can switch the LED by writi
 | Writing `brightness` by hand does nothing | Kernel side: the `.dts` LED node (pin, `GPIO_ACTIVE_*`, pinctrl), the driver (`leds-gpio`, `leds-pwm`), and the board wiring |
 | `SecurityException` from `LightsManager` | The caller lacks `CONTROL_DEVICE_LIGHTS` (not a privileged or platform-signed app, or missing from the privapp permission allowlist) |
 | A light is missing from `LightsManager.getLights()` | Expected for system types (section 2). Otherwise the HAL doesn't report it: check `dumpsys lights` and the HAL's light table |
+| A light is missing from `dumpsys lights` | The HAL didn't report it in `getLights()`, or the HAL wasn't declared or didn't start. `LightsService` reads the light list once when it starts, so a HAL fix needs a reboot |
 | `dumpsys lights` shows the new state, but the LED doesn't change | The HAL's sysfs write failed: DAC or SELinux (section 3.4), a wrong node name, or the wrong `id` mapping |
 | The LED changes, then something else switches it back | Another logical light shares the LED (section 3.2), framework policy owns that system type, or a higher-priority session requests the light (section 2.1) |
 | A session light stays on after the app is "done" | The app or one of its services still holds the session open (section 2.1) |
@@ -160,6 +167,23 @@ adb shell ls -lZ /sys/class/leds/*/brightness
 adb shell ps -AZ | grep -i light
 adb logcat -d | grep -iE 'light|avc'
 ```
+
+### 4.1 Reading `dumpsys lights`
+
+`dumpsys lights` prints `LightsService`'s internal state. The exact format depends on the Android version, but it contains:
+
++ The HAL that `LightsService` uses (AIDL `ILights` or the HIDL fallback).
++ Every light the HAL reported, system and non-system, with its `id`, `ordinal`, type, and last state.
++ The open `LightsManager` sessions with their requests.
+
+It doesn't mark which lights `LightsManager.getLights()` hides. Work that out from the type (section 2), or compare with what `getLights()` returns in a test app.
+
+| Compare | Shows |
+| --- | --- |
+| `dumpsys lights` vs. the HAL's light table | Whether `LightsService` got every light from the HAL |
+| `dumpsys lights` vs. `LightsManager.getLights()` in the app | Which lights are system types (listed by `dumpsys` only) |
+| Sessions in `dumpsys lights` before and after the app's request | Whether the request reached `LightsService`, and which session wins (section 2.1) |
+| Last state in `dumpsys lights` vs. the sysfs node | Whether the HAL's write worked (section 3.4) |
 
 ## 5. Can a non-LED GPIO go through LightsService?
 

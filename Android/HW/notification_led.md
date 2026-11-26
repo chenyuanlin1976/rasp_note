@@ -93,6 +93,7 @@ For approach C:
 ## Related notes
 
 + [LightsService_intro.md](LightsService_intro.md): `LightsService`, system lights, the state cache, sysfs permissions
++ [battery_led.md](battery_led.md): the battery LED, which often shares the physical LED with the notification light
 + [LightsService_platform_app.md](LightsService_platform_app.md): controlling lights from a platform-signed app instead of through notifications
 + [Led_control.md](Led_control.md): Lights HAL vs. vendor LED HAL, kernel blink triggers
 + [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md): the HAL side of `setLightState()` (color, `TIMED` blinking, sysfs)

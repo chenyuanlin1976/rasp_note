@@ -33,6 +33,20 @@ kernel: /sys/class/leds/<led>/
 
 The attention light (`LIGHT_ID_ATTENTION`) is separate. NMS uses it only if `config_useAttentionLight` is `true`.
 
+### 1.1 What a third-party app can and can't do
+
+An ordinary app can **request** the notification light, but it can't **control** the LED.
+It needs no permission for the request. `CONTROL_DEVICE_LIGHTS` and platform signing are only for `LightsManager`, and that API doesn't reach the system lights anyway ([LightsService_platform_app.md](LightsService_platform_app.md)).
+
+| The app can | The app can't |
+| --- | --- |
+| Enable lights on its channel (`enableLights(true)`) when it creates it | Change the channel's light setting later, except with a new channel ID or a reinstall |
+| Set a color (`setLightColor()`) | Make the LED show that color. A one-color LED looks the same for every color (section 2) |
+| Post notifications on that channel | Override the user (global `notification_light_pulse` setting, the channel's setting in Settings) or DND |
+| | Override NMS policy: no light while the screen is on or during a call, and only the most recent notification with a light is shown |
+| | Choose the LED, pin, or sysfs node. That is the Lights HAL's board table |
+| | Win against the battery light if both share one physical LED. The HAL decides ([LightsService_intro.md](LightsService_intro.md#32-several-light-types-on-one-physical-led)) |
+
 ## 2. Why the LED stays off
 
 | Cause | What to check or change |
@@ -69,6 +83,15 @@ adb shell input keyevent KEYCODE_SLEEP
 `cmd notification post` uses the shell's own notification channel, which may not have lights enabled.
 If nothing happens, test with a small app whose channel uses `enableLights(true)` ([gpio_control.md](gpio_control.md#21-notification-led-api-26)).
 To check the HAL and the LED independently of NMS, write the sysfs node directly on a userdebug build ([Led_control.md](Led_control.md#2-on-and-off)).
+
+To follow the light decision in the AOSP source, search NMS for the light code.
+Newer releases move part of it to `NotificationAttentionHelper.java` in the same directory, so search both if the first one finds nothing:
+
+```shell
+cd frameworks/base/services/core/java/com/android/server/notification/
+grep -n "updateLightsLocked\|mNotificationLight\|config_intrusiveNotificationLed" \
+    NotificationManagerService.java NotificationAttentionHelper.java 2>/dev/null
+```
 
 ## 4. Driving a non-LED GPIO from notifications
 

@@ -153,6 +153,7 @@ Check this on the target with `ls -lZ` after `trigger=timer`.
 + [gpio_control.md](gpio_control.md), [../IPC/AIDL_ndk_led_sysfs.md](../IPC/AIDL_ndk_led_sysfs.md), [../HAL/AIDL_HAL_impl.md](../HAL/AIDL_HAL_impl.md)
 + [hw_control_sysfs.md](hw_control_sysfs.md), [../HAL/HAL_sysfsNodes.md](../HAL/HAL_sysfsNodes.md), [../SELinux/neverallow_error.md](../SELinux/neverallow_error.md)
 + [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md): exposing the LED to 3rd-party apps through a system app
++ [rgb_led_customer_app.md](rgb_led_customer_app.md): RGB LED for a customer app (public interface, vendor HAL, hand-off checklist)
 
 ## Reference
 

@@ -1,6 +1,9 @@
 # Notification LED on Android 14 (RK3566)
 
-How `NotificationManagerService` (NMS) turns a posted notification into a blinking LED through `LightsService` and the Lights AIDL HAL.
+The notification light is a hardware indicator LED (often RGB, on the front bezel or the board) that blinks while the screen is off to signal unread notifications.
+The system owns it: an app can only request a light for its own notifications.
+
+This note shows how `NotificationManagerService` (NMS) turns a posted notification into a blinking LED through `LightsService` and the Lights AIDL HAL.
 It also explains why the LED often stays off on a custom RK3566 board, and how to react to notifications with a GPIO that isn't an LED.
 
 For the app side (`NotificationChannel.enableLights()`), see [gpio_control.md](gpio_control.md#21-notification-led-api-26).
@@ -30,6 +33,8 @@ kernel: /sys/class/leds/<led>/
 2. **NMS** decides whether the notification may use the light (section 2). From all such notifications it takes the most recent one and uses its color and blink times. Without explicit values, it uses the framework defaults `config_defaultNotificationColor`, `config_defaultNotificationLedOn` and `config_defaultNotificationLedOff` (in AOSP: white, 500 ms on, 2000 ms off).
 3. **`LightsService`** forwards the state to the HAL. It only sends changes (see [LightsService_intro.md](LightsService_intro.md#31-unchanged-requests-dont-reach-the-hal)).
 4. **The Lights HAL** finds the sysfs node for the light `id`. `HwLightState` has no type field: the type belongs to the `HwLight` that the HAL reported in `getLights()`.
+   The HAL works with `LightType` (`NOTIFICATIONS`); the `LIGHT_ID_*` constants exist only in the framework.
+5. **The kernel** exposes the LED as an LED class device under `/sys/class/leds/`. The RK3566 device tree declares it as `gpio-leds`, `pwm-leds`, or a node for an I2C LED controller (for example `leds-aw2013` or the `leds-lp55xx` family). An RGB LED is either 3 devices (one per color) or one multicolor device. Each device has `brightness` (`0` to `max_brightness`, which is `1` for a GPIO LED), `trigger`, and, with `trigger=timer`, `delay_on` / `delay_off` ([../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md)).
 
 The attention light (`LIGHT_ID_ATTENTION`) is separate. NMS uses it only if `config_useAttentionLight` is `true`.
 
@@ -52,8 +57,8 @@ It needs no permission for the request. `CONTROL_DEVICE_LIGHTS` and platform sig
 | Cause | What to check or change |
 | --- | --- |
 | The device has no notification light for NMS | `config_intrusiveNotificationLed` is `false` in AOSP. Set it to `true` in the device's framework overlay (`overlay/frameworks/base/core/res/res/values/config.xml`). If it is `false`, NMS never touches the light |
-| The user setting is off | `adb shell settings get system notification_light_pulse` must be `1` |
-| The HAL doesn't report a `NOTIFICATIONS` light | `adb shell dumpsys lights` must list it. Otherwise `LightsService` has nothing to forward to |
+| The user setting is off | The **Blink light** toggle in Settings > Notifications, stored as `notification_light_pulse`: `adb shell settings get system notification_light_pulse` must be `1`. Settings shows the toggle only if `config_intrusiveNotificationLed` is `true` |
+| The HAL doesn't report a `NOTIFICATIONS` light | `adb shell dumpsys lights` must list it. Otherwise `LightsService` has nothing to forward to. A BSP HAL written for a board without an indicator LED often reports only `BACKLIGHT`: add the LED to the HAL's board table ([../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md#21-the-board-table)) |
 | The screen is on, or a call is active | NMS turns the light off while the screen is on or during a call. Test with the screen off |
 | The channel has no light | Channel created without `enableLights(true)`, or created earlier with lights disabled |
 | Importance or DND | Low-importance notifications don't blink, and a DND policy can suppress lights |
@@ -96,6 +101,7 @@ grep -n "updateLightsLocked\|mNotificationLight\|config_intrusiveNotificationLed
 ## 4. Driving a non-LED GPIO from notifications
 
 NMS has no GPIO API. It only knows notification effects: sound, vibration, and the notification and attention lights.
+The same limits apply if you want an indicator that reacts to other apps' notifications: an app can't drive the light for notifications it didn't post.
 There are 3 ways to make a notification switch a GPIO (relay, buzzer, external signal):
 
 | Approach | How | Assessment |
@@ -118,6 +124,7 @@ For approach C:
 + [LightsService_intro.md](LightsService_intro.md): `LightsService`, system lights, the state cache, sysfs permissions
 + [battery_led.md](battery_led.md): the battery LED, which often shares the physical LED with the notification light
 + [LightsService_platform_app.md](LightsService_platform_app.md): controlling lights from a platform-signed app instead of through notifications
++ [rgb_led_customer_app.md](rgb_led_customer_app.md): a custom RGB LED interface for a customer app's own states
 + [Led_control.md](Led_control.md): Lights HAL vs. vendor LED HAL, kernel blink triggers
 + [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md): the HAL side of `setLightState()` (color, `TIMED` blinking, sysfs)
 + [gpio_control.md](gpio_control.md): notification LED and `LightsManager` from an app

@@ -285,6 +285,7 @@ class DeviceInfoService : Service() {
 
 + [AIDL_app_bound_svc.md](AIDL_app_bound_svc.md): bound-service basics
 + [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md): the native GPIO daemon behind the system app
++ [../HW/rgb_led_customer_app.md](../HW/rgb_led_customer_app.md): the same pattern for an RGB LED shared with a customer app
 + [../Debug/mac_address.md](../Debug/mac_address.md): reading factory MACs in a platform-signed app (used in section 6)
 + [../App/app_background_limits.md](../App/app_background_limits.md): wake locks and wake-up alarms for normal apps
 + [../AOSP_cfg/sleep_flow.md](../AOSP_cfg/sleep_flow.md): who may put the device to sleep

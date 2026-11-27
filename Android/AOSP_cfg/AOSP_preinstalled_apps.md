@@ -23,6 +23,7 @@ The install location and the signing key are **independent**:
 | --- | --- |
 | Location (`privileged: true` → `priv-app`) | Whether the app may get `privileged` permissions (if allowlisted) |
 | Key (`certificate` / `presigned`) | The app's identity: `signature` permissions, `android:sharedUserId="android.uid.system"`, which updates are accepted |
+| Both, plus `sharedUserId` | The SELinux domain: `untrusted_app` (ordinary app), `priv_app` (priv-app with another key), `platform_app` (platform key), `system_app` (system UID) ([../SELinux/SELinux_domains.md](../SELinux/SELinux_domains.md)) |
 
 An app in `priv-app` is **not** signed with the platform key unless its module says `certificate: "platform"` (`LOCAL_CERTIFICATE := platform` in `Android.mk`).
 Without a `certificate`, the build uses the default key (`testkey` unless the product sets another).

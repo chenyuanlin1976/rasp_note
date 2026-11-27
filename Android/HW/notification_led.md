@@ -36,6 +36,12 @@ kernel: /sys/class/leds/<led>/
    The HAL works with `LightType` (`NOTIFICATIONS`); the `LIGHT_ID_*` constants exist only in the framework.
 5. **The kernel** exposes the LED as an LED class device under `/sys/class/leds/`. The RK3566 device tree declares it as `gpio-leds`, `pwm-leds`, or a node for an I2C LED controller (for example `leds-aw2013` or the `leds-lp55xx` family). An RGB LED is either 3 devices (one per color) or one multicolor device. Each device has `brightness` (`0` to `max_brightness`, which is `1` for a GPIO LED), `trigger`, and, with `trigger=timer`, `delay_on` / `delay_off` ([../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md)).
 
+Each layer knows only the one below it, so neither the app nor the framework knows the hardware.
+The app knows its channel, NMS knows the logical light `LIGHT_ID_NOTIFICATIONS`, and `LightsService` knows the HAL's light `id`.
+Only the HAL and the device tree know the sysfs node and the pin.
+Moving the LED to another pin, or from GPIO to PWM, changes only the `.dts` and the HAL's board table, not apps or framework code.
+The Binder call from `LightsService` to the HAL is also the Treble boundary between the system and vendor partitions ([../HAL/AIDL_HAL_intro.md](../HAL/AIDL_HAL_intro.md)).
+
 Turning the LED off takes the same path.
 NMS calls `turnOff()` when the last notification with a light is dismissed, cancelled, or times out (`setTimeoutAfter()`), and also when the screen turns on.
 `LightsService` sends a state with color `0` and `FlashMode.NONE`, and the HAL writes `brightness` = `0`, which also removes the `timer` trigger ([../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md#3-state-updates-setlightstate)).

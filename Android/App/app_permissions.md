@@ -27,9 +27,31 @@ This note is the overview. Details are in the notes linked from each section.
 + `signature|privileged` is an **or**: a platform-signed app gets it through its signature;
   an app signed with another key gets it only from a privileged location **and** the allowlist.
 + Some permissions aren't granted by either way and need the user to turn them on in Settings
-  (special app access, e.g. `SYSTEM_ALERT_WINDOW`, `MANAGE_EXTERNAL_STORAGE`).
+  (special app access, e.g. `SYSTEM_ALERT_WINDOW`, `MANAGE_EXTERNAL_STORAGE`). These carry the `appop` flag (section 1.1).
 
 The full table with more manifest details is in [AndroidManifest.md](AndroidManifest.md#6-permissions).
+
+### 1.1 Base types and flags
+
+A `protectionLevel` is one **base type**, optionally followed by **flags** joined with `|`.
+Each flag adds another way to get the permission. The app needs to meet only one of them, which is why `signature|privileged` is an **or**.
+
+The base types are `normal`, `dangerous`, `signature`, and `internal` (Android 12, API 31+).
+An `internal` permission is granted only through its flags, for example `internal|role`.
+
+| Flag | Also grants the permission to | Note |
+| --- | --- | --- |
+| `privileged` | A privileged app listed in a `privapp-permissions` allowlist (section 5) | Old name `system`; `signatureOrSystem` is the deprecated spelling of `signature\|privileged` |
+| `knownSigner` | Apps whose certificate digest is in `android:knownCerts` (Android 12+) | [../Signing/signature_permission.md](../Signing/signature_permission.md) |
+| `role` | The app that holds a given role (Android 10+), such as the default dialer | |
+| `appop` | Apps whose app op is allowed, usually by the user on the special app access screen | `PACKAGE_USAGE_STATS`, `SYSTEM_ALERT_WINDOW` |
+| `development` | Any app that requests it, by `adb shell pm grant` | For development and testing |
+| `installer` | The system package installer | |
+| `preinstalled` | Any app preinstalled on the system image, privileged or not | |
+| `pre23` | Apps that target API 22 or lower | Legacy |
+| `setup` | The setup wizard | |
+
+The exact level of a framework permission is in `frameworks/base/core/res/AndroidManifest.xml`, or on the device with `adb shell dumpsys package permission <name>`.
 
 ## 2. Request a permission
 

@@ -6,7 +6,7 @@ The system owns it: an app can only request a light for its own notifications.
 This note shows how `NotificationManagerService` (NMS) turns a posted notification into a blinking LED through `LightsService` and the Lights AIDL HAL.
 It also explains why the LED often stays off on a custom RK3566 board, and how to react to notifications with a GPIO that isn't an LED.
 
-For the app side (`NotificationChannel.enableLights()`), see [gpio_control.md](gpio_control.md#21-notification-led-api-26).
+For the app side (`NotificationChannel.enableLights()`), see section 1.3.
 For `LightsService` itself, see [LightsService_intro.md](LightsService_intro.md).
 
 ## 1. From notification to LED
@@ -30,7 +30,7 @@ kernel: /sys/class/leds/<led>/
 ```
 
 1. **The app** asks for a light on its notification channel (Android 8+). The channel's light setting is fixed when the channel is first created; to change it, the app must use a new channel ID or be reinstalled.
-2. **NMS** decides whether the notification may use the light (section 2). From all such notifications it takes the most recent one and uses its color and blink times. Without explicit values, it uses the framework defaults `config_defaultNotificationColor`, `config_defaultNotificationLedOn` and `config_defaultNotificationLedOff` (in AOSP: white, 500 ms on, 2000 ms off).
+2. **NMS** decides whether the notification may use the light (section 2). From all such notifications it takes the most recent one and uses its light. The color is the channel's `lightColor`, or `config_defaultNotificationColor` if the channel has none. The blink times are always the framework defaults `config_defaultNotificationLedOn` and `config_defaultNotificationLedOff`, because a channel has no blink times. In AOSP the defaults are white, 500 ms on, 2000 ms off. Only apps that target API 25 or lower still use per-notification values (section 1.2).
 3. **`LightsService`** forwards the state to the HAL. It only sends changes (see [LightsService_intro.md](LightsService_intro.md#31-unchanged-requests-dont-reach-the-hal)).
 4. **The Lights HAL** finds the sysfs node for the light `id`. `HwLightState` has no type field: the type belongs to the `HwLight` that the HAL reported in `getLights()`.
    The HAL works with `LightType` (`NOTIFICATIONS`); the `LIGHT_ID_*` constants exist only in the framework.
@@ -52,6 +52,7 @@ It needs no permission for the request. `CONTROL_DEVICE_LIGHTS` and platform sig
 | --- | --- |
 | Enable lights on its channel (`enableLights(true)`) when it creates it | Change the channel's light setting later, except with a new channel ID or a reinstall (section 1.2) |
 | Set a color (`setLightColor()`) | Make the LED show that color. A one-color LED looks the same for every color (section 2) |
+| | Choose the blink times or brightness. NMS uses the framework defaults for every channel (section 1) |
 | Post notifications on that channel | Override the user (global `notification_light_pulse` setting, the channel's setting in Settings) or DND |
 | | Override NMS policy: no light while the screen is on or during a call, and only the most recent notification with a light is shown |
 | | Choose the LED, pin, or sysfs node. That is the Lights HAL's board table |
@@ -72,6 +73,63 @@ A channel's behavior is fixed once the channel exists:
   Don't create one channel per color. For app-defined colors, use a custom interface ([rgb_led_customer_app.md](rgb_led_customer_app.md)).
 
 Even a correct channel only **requests** a color. Many phones have no notification LED at all (they use an always-on display or edge lighting), a one-color LED shows its own color for every request, and an OEM image may ignore light requests from third-party apps.
+
+### 1.3 App example
+
+Every app uses the same API, including a `priv-app` or a platform-signed app.
+Installing the app in `/system/priv-app/` doesn't change the notification light; it matters only if the app needs privileged permissions for something else.
+For notification access (section 1.4), a listener needs user consent or a pre-grant, not a privileged permission.
+
+On Android 13+, an app that targets API 33+ needs the runtime permission `POST_NOTIFICATIONS`. Without it, `notify()` posts nothing.
+The user grants it; a preinstalled app can have it pre-granted through the image's default-permissions XML.
+
+```xml
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+```
+
+```kotlin
+class LedNotifier(private val context: Context) {
+
+    private val nm = context.getSystemService(NotificationManager::class.java)
+
+    init {
+        // DEFAULT or higher; LOW importance doesn't blink.
+        // If the channel already exists, this doesn't change its light settings (section 1.2).
+        val channel = NotificationChannel(
+            CHANNEL_ID, "Message alerts", NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            enableLights(true)
+            lightColor = Color.GREEN
+        }
+        nm.createNotificationChannel(channel)
+    }
+
+    fun show(id: Int, title: String, text: String) {
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_message)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setAutoCancel(true)
+            .build()
+        nm.notify(id, notification)
+    }
+
+    fun clear(id: Int) = nm.cancel(id)
+
+    companion object {
+        const val CHANNEL_ID = "messages_led_green"
+    }
+}
+```
+
+### 1.4 Lighting the LED for other apps' notifications
+
+The light shows only notifications that the app posted itself.
+An app with a `NotificationListenerService` ([../App/notification_listener.md](../App/notification_listener.md)) can relay them. When a watched notification is posted, it posts its own notification on its own light channel (`LedNotifier.show()`). When the watched notification is removed or read, it cancels its own notification (`LedNotifier.clear()`).
+
++ The listener also sees its own notifications. Ignore your own package, or the relay notification triggers itself.
++ The relay notification shows up in the notification shade, and NMS policy still applies: screen off only, DND, and the user setting.
++ For app-defined colors or states that don't follow the notification policy, use a custom LED interface instead ([rgb_led_customer_app.md](rgb_led_customer_app.md)).
 
 ## 2. Why the LED stays off
 
@@ -97,6 +155,7 @@ The overlay value is a build-time resource. Rebuild and reflash (or update the o
 adb shell cmd overlay lookup android android:bool/config_intrusiveNotificationLed
 adb shell settings get system notification_light_pulse
 adb shell dumpsys notification --noredact | grep -iE 'light|led'
+adb shell dumpsys notification --noredact | grep messages_led_green   # the channel: mLights=true, mLightColor=...
 
 # what LightsService knows and last sent
 adb shell dumpsys lights
@@ -116,7 +175,7 @@ Then test the clear path: wake the screen, dismiss the notification, and turn th
 The LED must stay off. Waking the screen alone isn't a test, because NMS turns the light off while the screen is on anyway.
 
 `cmd notification post` uses the shell's own notification channel, which may not have lights enabled.
-If nothing happens, test with a small app whose channel uses `enableLights(true)` ([gpio_control.md](gpio_control.md#21-notification-led-api-26)).
+If nothing happens, test with a small app whose channel uses `enableLights(true)` (section 1.3).
 To check the HAL and the LED independently of NMS, write the sysfs node directly on a userdebug build ([Led_control.md](Led_control.md#2-on-and-off)).
 
 To follow the light decision in the AOSP source, search NMS for the light code.

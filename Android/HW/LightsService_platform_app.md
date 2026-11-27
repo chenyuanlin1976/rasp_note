@@ -1,8 +1,12 @@
-# Controlling lights from a platform-signed app (Android 14, RK3566)
+# Controlling lights from a platform-signed or privileged app (Android 14, RK3566)
 
 An app can't call `LightsService` (`com.android.server.lights.LightsService`) directly.
 It runs inside `system_server`, and its internal API (`com.android.server.lights.LightsManager`, `LogicalLight`) is a local service that only code in the same process can get.
 Signing an app with the platform key doesn't change that, because the app still runs in its own process.
+
+The same is true for an app installed in `/system/priv-app/` or `/system_ext/priv-app/` without the platform key.
+It can be granted allowlisted privileged permissions such as `CONTROL_DEVICE_LIGHTS`, but it still runs as an ordinary app process in the `priv_app` SELinux domain.
+It gets no access to `system_server` internals, system lights, or `/sys/class/leds/`.
 
 This note explains what the platform key does give you, which path to use for which light, and how to add your own binder service in `system_server` when nothing else fits.
 For `LightsService` itself (system lights, sessions, the state cache), see [LightsService_intro.md](LightsService_intro.md).
@@ -43,7 +47,7 @@ adb shell dumpsys lights              # lights reported by the HAL, with id, typ
 | --- | --- | --- |
 | Light up a LED when a notification arrives | A notification channel with `enableLights(true)`; NMS drives `NOTIFICATIONS` ([notification_led.md](notification_led.md)) | None, but `config_intrusiveNotificationLed` must be `true` |
 | Control a non-system light (for example `MICROPHONE`) from your app | The public `android.hardware.lights.LightsManager` with `CONTROL_DEVICE_LIGHTS` ([gpio_control.md](gpio_control.md#22-lightsmanager-android-12-api-31)) | None |
-| Control a product-specific indicator (status, recording, RF on) | A vendor LED HAL called through Binder by your system app ([Led_control.md](Led_control.md)) | None; vendor HAL + SELinux |
+| Control a product-specific indicator (status, recording, RF on), or set any RGB color from your app | A vendor LED HAL called through Binder by your system app ([Led_control.md](Led_control.md)). For a customer app signed with another key, see [rgb_led_customer_app.md](rgb_led_customer_app.md) | None; vendor HAL + SELinux |
 | Override a system light (for example force the battery LED) from your app | A custom binder service in `system_server` (section 3) | A `frameworks/base` patch |
 
 The first 3 rows cover almost every product. Section 3 is a framework patch that you must carry through every Android update, and it fights with the framework's own policy (section 3.4).
@@ -144,7 +148,8 @@ type led_control_service, system_server_service, service_manager_type;
 # service_contexts
 led_control    u:object_r:led_control_service:s0
 
-# client: the platform-signed app's domain (platform_app, or your own domain)
+# client: the app's domain (platform_app if platform-signed, priv_app for a priv-app
+# with another key, or your own domain)
 allow platform_app led_control_service:service_manager find;
 ```
 
@@ -180,6 +185,7 @@ adb logcat -d | grep -iE 'led_control|avc'    # SecurityException or SELinux den
 + [notification_led.md](notification_led.md): driving the notification LED from a notification channel
 + [gpio_control.md](gpio_control.md): notification LED and `LightsManager` from an app
 + [Led_control.md](Led_control.md): Lights HAL vs. vendor LED HAL
++ [rgb_led_customer_app.md](rgb_led_customer_app.md): RGB LED interfaces for a customer app signed with its own key
 + [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md): implementing the Lights HAL on RK3566
 + [../Signing/sign_apk.md](../Signing/sign_apk.md), [../Signing/sharedUserId.md](../Signing/sharedUserId.md): platform key and `android.uid.system`
 + [../IPC/AIDL_app_3rdParty_access.md](../IPC/AIDL_app_3rdParty_access.md): exposing a system service to other apps through a system app

@@ -38,8 +38,11 @@ DisplayManagerService     BatteryService     NotificationManagerService     priv
 + `LightsService` keeps 2 lookup tables. `mLightsById` holds every `HwLight` and serves `LightsManager` sessions and `dumpsys lights`.
   `mLightsByType` holds one `LightImpl` per system type, which the system services get with `LightsManager.getLight(LIGHT_ID_*)`.
   If the HAL reports 2 lights of the same system type, the system services use only the first one.
++ System services call methods on their `LogicalLight`: `setBrightness()`, `setColor()`, `setFlashing(color, mode, onMs, offMs)`, `pulse()` and `turnOff()`.
+  `LightImpl` turns each call into an `HwLightState` and sends it with `ILights.setLightState(id, state)`.
 + The camera flash is not a light here. The Camera HAL controls it.
 + AOSP's `hardware/interfaces/light/aidl/default` only logs. The board's HAL (from the Rockchip SDK or your own) contains the real sysfs code.
++ The HAL should report only lights that are fitted on the board. For a reported light with no LED behind it, the framework's requests silently do nothing.
 
 ## 2. System lights vs. lights that apps can use
 

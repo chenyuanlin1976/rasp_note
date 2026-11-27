@@ -36,6 +36,11 @@ kernel: /sys/class/leds/<led>/
    The HAL works with `LightType` (`NOTIFICATIONS`); the `LIGHT_ID_*` constants exist only in the framework.
 5. **The kernel** exposes the LED as an LED class device under `/sys/class/leds/`. The RK3566 device tree declares it as `gpio-leds`, `pwm-leds`, or a node for an I2C LED controller (for example `leds-aw2013` or the `leds-lp55xx` family). An RGB LED is either 3 devices (one per color) or one multicolor device. Each device has `brightness` (`0` to `max_brightness`, which is `1` for a GPIO LED), `trigger`, and, with `trigger=timer`, `delay_on` / `delay_off` ([../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md)).
 
+Turning the LED off takes the same path.
+NMS calls `turnOff()` when the last notification with a light is dismissed, cancelled, or times out (`setTimeoutAfter()`), and also when the screen turns on.
+`LightsService` sends a state with color `0` and `FlashMode.NONE`, and the HAL writes `brightness` = `0`, which also removes the `timer` trigger ([../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md#3-state-updates-setlightstate)).
+If another notification with a light is still active, NMS switches to that one instead of turning the LED off.
+
 The attention light (`LIGHT_ID_ATTENTION`) is separate. NMS uses it only if `config_useAttentionLight` is `true`.
 
 ### 1.1 What a third-party app can and can't do
@@ -45,12 +50,28 @@ It needs no permission for the request. `CONTROL_DEVICE_LIGHTS` and platform sig
 
 | The app can | The app can't |
 | --- | --- |
-| Enable lights on its channel (`enableLights(true)`) when it creates it | Change the channel's light setting later, except with a new channel ID or a reinstall |
+| Enable lights on its channel (`enableLights(true)`) when it creates it | Change the channel's light setting later, except with a new channel ID or a reinstall (section 1.2) |
 | Set a color (`setLightColor()`) | Make the LED show that color. A one-color LED looks the same for every color (section 2) |
 | Post notifications on that channel | Override the user (global `notification_light_pulse` setting, the channel's setting in Settings) or DND |
 | | Override NMS policy: no light while the screen is on or during a call, and only the most recent notification with a light is shown |
 | | Choose the LED, pin, or sysfs node. That is the Lights HAL's board table |
 | | Win against the battery light if both share one physical LED. The HAL decides ([LightsService_intro.md](LightsService_intro.md#32-several-light-types-on-one-physical-led)) |
+
+### 1.2 Per-notification lights before Android 8, channels since
+
+Before Android 8.0 (API 26), each notification carried its own light: the `Notification` fields `ledARGB`, `ledOnMS`, `ledOffMS` with `FLAG_SHOW_LIGHTS`, or `NotificationCompat.Builder.setLights(argb, onMs, offMs)`.
+Two notifications of one app could blink in different colors.
+These APIs are deprecated since API 26. An app that targets API 26+ must post on a channel, and only the channel's light setting counts.
+
+A channel's behavior is fixed once the channel exists:
+
++ A second `createNotificationChannel()` with the same ID changes only the name and description, and can lower the importance if the user hasn't changed it. Lights, color, sound, and vibration stay as they were.
++ The user can change or turn off the channel in **Settings > Apps > [app name] > Notifications**, and the app can't override that.
++ The only way to change the color is a new channel ID (and `deleteNotificationChannel()` for the old one).
+  Re-creating a deleted channel with the same ID restores it with its old settings, and Settings shows how many channels an app has deleted.
+  Don't create one channel per color. For app-defined colors, use a custom interface ([rgb_led_customer_app.md](rgb_led_customer_app.md)).
+
+Even a correct channel only **requests** a color. Many phones have no notification LED at all (they use an always-on display or edge lighting), a one-color LED shows its own color for every request, and an OEM image may ignore light requests from third-party apps.
 
 ## 2. Why the LED stays off
 
@@ -83,7 +104,16 @@ adb shell dumpsys lights
 # post a notification from the shell, then turn the screen off
 adb shell cmd notification post -t "LED test" led_test "Testing the notification light"
 adb shell input keyevent KEYCODE_SLEEP
+
+# while the LED blinks: the sysfs state the HAL wrote
+adb shell 'for f in /sys/class/leds/*/; do echo "$f: $(cat $f/brightness) $(grep -o "\[[^]]*\]" $f/trigger)"; done'
+
+# denied writes show up as avc messages
+adb logcat -d | grep -iE 'avc: denied|lights'
 ```
+
+Then test the clear path: wake the screen, dismiss the notification, and turn the screen off again.
+The LED must stay off. Waking the screen alone isn't a test, because NMS turns the light off while the screen is on anyway.
 
 `cmd notification post` uses the shell's own notification channel, which may not have lights enabled.
 If nothing happens, test with a small app whose channel uses `enableLights(true)` ([gpio_control.md](gpio_control.md#21-notification-led-api-26)).
@@ -112,7 +142,7 @@ There are 3 ways to make a notification switch a GPIO (relay, buzzer, external s
 
 For approach C:
 
-+ The listener needs notification access.
++ The listener (callbacks, filtering, granting access) is described in [../App/notification_listener.md](../App/notification_listener.md). It needs notification access.
   For testing: `adb shell cmd notification allow_listener <package>/<listener class>`.
   In a product, pre-grant it to the system app (for example with the framework overlay `config_defaultListenerAccessPackages`).
 + The GPIO side is a vendor AIDL HAL with libgpiod: [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md).
@@ -129,6 +159,7 @@ For approach C:
 + [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md): the HAL side of `setLightState()` (color, `TIMED` blinking, sysfs)
 + [gpio_control.md](gpio_control.md): notification LED and `LightsManager` from an app
 + [../HAL/AIDL_HAL_gpio.md](../HAL/AIDL_HAL_gpio.md): vendor GPIO HAL for approach C
++ [../App/notification_listener.md](../App/notification_listener.md): `NotificationListenerService` for approach C
 + [../../Linux/HW/sysfs_led_class.md](../../Linux/HW/sysfs_led_class.md), [../../Linux/DeviceTree/dts_node_led_vs_gpio.md](../../Linux/DeviceTree/dts_node_led_vs_gpio.md)
 
 ## Reference

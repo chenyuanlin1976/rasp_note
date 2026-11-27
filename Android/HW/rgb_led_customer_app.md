@@ -7,6 +7,10 @@ This note covers the split between them: which interfaces exist, what goes into 
 If the LED only has to show notifications, you need no custom interface. Use the standard notification light ([notification_led.md](notification_led.md)).
 A custom interface is for app-defined states that don't fit the notification policy (the notification light is used only while the screen is off and can be suppressed by DND).
 
+The customer app can also light the LED for **other** apps' notifications, for example a chat app on the same device.
+It then adds a `NotificationListenerService` that filters those notifications and calls `setState()` / `clearState()` on this interface ([../App/notification_listener.md](../App/notification_listener.md)).
+The listener only provides the events. It doesn't give the app access to the LED.
+
 ## 1. Two interfaces, not one
 
 ```text
@@ -135,6 +139,7 @@ interface IRgbLed {
 + [../HAL/AIDL_HAL_lights.md](../HAL/AIDL_HAL_lights.md): color-to-sysfs conversion and write order
 + [../HAL/AIDL_HAL_impl.md](../HAL/AIDL_HAL_impl.md): building and registering a vendor AIDL HAL
 + [notification_led.md](notification_led.md): the standard notification light, and reacting to other apps' notifications
++ [../App/notification_listener.md](../App/notification_listener.md): `NotificationListenerService`, notification access
 + [LightsService_platform_app.md](LightsService_platform_app.md): controlling the standard lights from a platform-signed app
 + [../IPC/AIDL_callback.md](../IPC/AIDL_callback.md), [../Signing/signature_permission.md](../Signing/signature_permission.md), [../App/jar_aar_intro.md](../App/jar_aar_intro.md)
 

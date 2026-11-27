@@ -14,6 +14,51 @@ Sections 1 to 5 use a GPIO service as the example. Section 6 applies the same pa
 
 ## 1. Choose the architecture
 
+### Overview: two paths to the hardware
+
+A customer's app reaches the board's hardware in one of 2 ways.
+Standard features go through the public SDK and the framework's own services. Vendor features go through a vendor system app:
+
+```text
+ customer's APK (signed with the customer's key)
+ +---------------------------------+   +-----------------------------------+
+ | vendor features                 |   | standard features                 |
+ | AIDL client (AAR from vendor)   |   | SDK: SensorManager, BatteryManager|
+ |                                 |   | NotificationManager, AlarmManager |
+ +----------------+----------------+   +-----------------+-----------------+
+                  | bindService(), Binder                | Binder (inside the SDK classes)
+                  v                                      v
+ +---------------------------------+   +-----------------------------------+
+ | vendor system app (priv-app,    |-->| system_server                     |
+ | platform-signed)                |   | SensorService, BatteryService,    |
+ | HwControlService: caller check, |   | NotificationManagerService ->     |
+ | arbitration                     |   | LightsService, AlarmManagerService|
+ +----------------+----------------+   +-----------------+-----------------+
+                  | Binder (hal_client_domain)           | Binder
+                  v                                      v
+ +---------------------------------+   +-----------------------------------+
+ | vendor AIDL HAL                 |   | standard AIDL HALs                |
+ | vendor.<company>.hardware.*     |   | Sensors, Health, Lights           |
+ +----------------+----------------+   +-----------------+-----------------+
+                  v                                      v
+ +---------------------------------------------------------------------------+
+ | kernel: GPIO, PWM, I2C, LED class, power_supply, RTC                      |
+ +---------------------------------------------------------------------------+
+```
+
++ **Left: vendor features.** The vendor system app calls its own vendor HAL directly, not through `system_server`.
+  The arrow to `system_server` is for features that have an SDK API that only privileged apps may use. Examples are switching Bluetooth on or off and reading the factory MAC addresses (section 6).
++ **Right: standard features.** These need no vendor code in the app. The SDK classes call the system service through Binder, and the service is the only HAL client.
+  The app gets only what the SDK and its permissions allow. For example, `LightsService` is reached only through notifications ([../HW/notification_led.md](../HW/notification_led.md)).
+
+| SDK API | Service in `system_server` | HAL | Kernel |
+| --- | --- | --- | --- |
+| `SensorManager` | `SensorService` | Sensors AIDL HAL | Sensor drivers (I2C/SPI, often IIO) |
+| `BatteryManager`, `ACTION_BATTERY_CHANGED` | `BatteryService` | Health AIDL HAL | `power_supply` class |
+| `NotificationManager` (channel lights) | `NotificationManagerService` → `LightsService` | Lights AIDL HAL | LED class ([../HW/LightsService_intro.md](../HW/LightsService_intro.md)) |
+| `AlarmManager` | `AlarmManagerService` | None: it uses the kernel's alarm clocks directly | `alarmtimer`, backed by the RTC |
+| `Settings.System` / `Settings.Global` | `SettingsProvider` | None | None: values are stored under `/data/system/users/<id>/` ([../AOSP_cfg/SettingsProvider_intro.md](../AOSP_cfg/SettingsProvider_intro.md)) |
+
 ### Approach A: system app as a proxy (recommended)
 
 ```text
